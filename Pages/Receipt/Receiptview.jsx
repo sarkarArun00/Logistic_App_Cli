@@ -4,15 +4,15 @@ import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, } from 're
 // import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium, Montserrat_400Regular } from '@expo-google-fonts/montserrat';
 
 function Receiptview({navigation}) {
-    const [fontsLoaded] = useFonts({
-        Montserrat_600SemiBold,
-        Montserrat_500Medium,
-        Montserrat_400Regular,
-    });
+    // const [fontsLoaded] = useFonts({
+    //     Montserrat_600SemiBold,
+    //     Montserrat_500Medium,
+    //     Montserrat_400Regular,
+    // });
 
-    if (!fontsLoaded) {
-        return null;
-    }
+    // if (!fontsLoaded) {
+    //     return null;
+    // }
 
   return (
     <SafeAreaView style={styles.container}>

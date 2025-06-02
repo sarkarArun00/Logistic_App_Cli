@@ -10,12 +10,8 @@ export const AppProvider = ({ children }) => {
 
   const fetchNotifications = async () => {
     try {
-      const userId = await AsyncStorage.getItem("user_id");
-      const request = {
-        userId,
-        moduleName: "Logistic",
-      };
-      const response = await TaskService.getAllGeneralNotifications(request);
+      const response = await TaskService.getAllGeneralNotifications();
+      console.log("NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN:", response);
       if(response.status==1) {
         setNotifications(response.data);
         setNotificationCount(response.data?.length || 0);

@@ -47,14 +47,8 @@ const header = ({ navigation }) => {
 
 
   const checkNewNotifications = async () => {
-    const userId = await AsyncStorage.getItem("user_id");
-    let request = {
-      userId: userId,
-      moduleName: "Logistic"
-      
-    };
     
-    const response = await TaskService.getAllGeneralNotifications(request);
+    const response = await TaskService.getAllGeneralNotifications();
     if(response.status==1) {
       const notifications = response.data;
       

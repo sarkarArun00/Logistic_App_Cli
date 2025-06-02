@@ -28,7 +28,7 @@ const attachAuthInterceptor = (instance) => {
 const createApiClient = (baseURL) => {
   const instance = axios.create({
     baseURL,
-    timeout: 1000,
+    timeout: 3000,
     headers: {
       "accept": "application/json"
     },

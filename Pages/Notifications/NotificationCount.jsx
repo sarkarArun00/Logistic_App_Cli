@@ -15,12 +15,7 @@ const NotificationCount = ({ navigation }) => {
 
   const fetchData = async () => {
     try {
-      const userId = await AsyncStorage.getItem("user_id");
-      let request = {
-        "userId": userId,
-        "moduleName": "Logistic",
-      }
-      const response = await TaskService.getAllGeneralNotifications(request);
+      const response = await TaskService.getAllGeneralNotifications();
       if (response.status == 1) {
         setNotifications(response.data);
         const stored = await AsyncStorage.getItem("seenNotificationIds");

@@ -109,6 +109,10 @@ android {
             signingConfig signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+
+            shrinkResources true
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
 }
@@ -116,7 +120,7 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
     // debugImplementation("com.facebook.flipper:flipper:0.125.0")
     // debugImplementation 'com.facebook.flipper:flipper:0.125.0'
     // releaseImplementation 'com.facebook.flipper:flipper-noop:0.125.0'

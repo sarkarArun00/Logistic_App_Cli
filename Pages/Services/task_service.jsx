@@ -18,9 +18,9 @@ const TaskService = {
     }
   },
 
-  getAllGeneralNotifications: async (data) => {
+  getAllGeneralNotifications: async () => {
     try {
-      const response = await globalApiClient.post('notification/getAllGeneralNotifications', data);
+      const response = await apiClient.get('/notification/getAllLogisticNotifications');
       return response.data;
     } catch (error) {
       throw null;

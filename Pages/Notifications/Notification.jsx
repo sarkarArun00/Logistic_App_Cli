@@ -19,12 +19,7 @@ function Notification({ navigation }) {
     useEffect(() => {
 
         const markAllAsSeen = async () => {
-            const userId = await AsyncStorage.getItem("user_id");
-            let request = {
-                userId,
-                moduleName: "Logistic"
-            };
-            const response = await TaskService.getAllGeneralNotifications(request);
+            const response = await TaskService.getAllGeneralNotifications();
             if (response.status == 1) {
                 const ids = response.data.map(n => n.id);
                 await AsyncStorage.setItem("seenNotificationIds", JSON.stringify(ids));
@@ -53,12 +48,8 @@ function Notification({ navigation }) {
 
     const fetchData = async () => {
         try {
-            const userId = await AsyncStorage.getItem("user_id");
-            let request = {
-                userId,
-                moduleName: "Logistic",
-            };
-            const response = await TaskService.getAllGeneralNotifications(request);
+            const response = await TaskService.getAllGeneralNotifications();
+            console.log("NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN:", response);
             if (response.status == 1) {
 
                 const allNotifications = response.data;

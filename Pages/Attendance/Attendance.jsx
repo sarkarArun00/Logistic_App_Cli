@@ -44,7 +44,7 @@ function Attendance({ navigation }) {
     const [markedDates, setMarkedDates] = useState({});
     const [loading, setLoading] = useState(true);
     const { showAlertModal, hideAlert } = useGlobalAlert();
-    const { attendance, setAttendanceDetails } = useState([]);
+    const [attendance, setAttendance] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
 
 
@@ -65,6 +65,10 @@ function Attendance({ navigation }) {
 
         getUserData();
 
+        const today = new Date();
+        const currentMonthDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
+        fetchAttendanceData(currentMonthDate);
+
         return () => clearInterval(timerRef.current);
 
 
@@ -73,9 +77,6 @@ function Attendance({ navigation }) {
 
     useFocusEffect(
         useCallback(() => {
-            const today = new Date();
-            const currentMonthDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
-            fetchAttendanceData(currentMonthDate);
 
             const debugAsyncStorage = async () => {
                 try {
@@ -123,6 +124,7 @@ function Attendance({ navigation }) {
                 }
             };
 
+
             init();
             return () => {
                 console.log('Attendance Page Unfocused');
@@ -131,16 +133,23 @@ function Attendance({ navigation }) {
         }, [])
     );
 
+    const handleMonthChange = (month) => {
+        const selectedMonthDate = `${month.year}-${String(month.month).padStart(2, '0')}-01`;
+        fetchAttendanceData(selectedMonthDate);
+    };
+
     const fetchAttendanceData = async (monthDate) => {
         try {
             const userId = await AsyncStorage.getItem("user_id");
+            if (!userId) return showAlertModal("User ID not found", true);
 
+            // setLoading(true);
             const response = await TaskService.getEmpMonthlyShiftRoster({
                 employeeId: userId,
-                monthDate: monthDate,
+                monthDate,
             });
 
-            if (response && Array.isArray(response.data?.data)) {
+            if (response?.data?.data && Array.isArray(response.data.data)) {
                 const uniqueDates = Array.from(
                     new Set(response.data.data.map(item => item.weekDate))
                 );
@@ -150,8 +159,8 @@ function Attendance({ navigation }) {
                     dateMarks[date] = {
                         customStyles: {
                             container: {
-                                backgroundColor: '#3085FE', // green background
-                                borderRadius: 20,           // round shape
+                                backgroundColor: '#3085FE',
+                                borderRadius: 20,
                             },
                             text: {
                                 color: 'white',
@@ -159,15 +168,15 @@ function Attendance({ navigation }) {
                             },
                         },
                     };
-                });;
+                });
 
                 setMarkedDates(dateMarks);
+                setLoading(false);
             } else {
                 console.warn("Unexpected API format or empty data:", response);
             }
         } catch (error) {
-            showAlertModal('Failed to fetch attendance data:' + error, true);
-            sho
+            showAlertModal('Failed to fetch attendance data: ' + error.message, true);
         } finally {
             setLoading(false);
         }
@@ -190,28 +199,27 @@ function Attendance({ navigation }) {
             }
         }));
 
+        // try {
         const userId = await AsyncStorage.getItem("user_id");
-        let request = {
-            "employeeId": Number(userId),
-            "loginDate": day.dateString
-        }
+        if (!userId) return showAlertModal("User ID not found", true);
+
+        const request = {
+            employeeId: Number(userId),
+            loginDate: day.dateString
+        };
 
         const response = await TaskService.getLoginByDate(request);
-        setAttendanceDetails(response)
-        console.log('sssssssssssssssssssssssssss 2', response)
         if (response.status == 1) {
-            Alert.alert("Attendance Details", `Log In: ${response.data?.loginTime || 'N/A'}\nLog Out: ${response.data?.logoutTime || 'N/A'}\nDuration: ${response.data?.duration?.hours || 0}h ${response.data?.duration?.minutes || 0}m`);
+            setAttendance(response.data);
         } else {
-            showAlertModal('Failed to fetch attendance details for the selected date.', true);
+            showAlertModal(response.message || 'Failed to fetch attendance details for the selected date.', true);
+            setAttendance([]);
         }
-
+        // } catch (error) {
+        //     showAlertModal("Error fetching attendance details: " + error.message, true);
+        // }
     };
 
-    const handleMonthChange = (month) => {
-        const selectedMonthDate = `${month.year}-${String(month.month).padStart(2, '0')}-01`;
-        setLoading(true);
-        fetchAttendanceData(selectedMonthDate);
-    };
 
     const getTimeAgo = (timestamp) => {
         if (!timestamp) return 'N/A';
@@ -313,6 +321,12 @@ function Attendance({ navigation }) {
         }, 1000);
     }
 
+    const getCurrentMonthDate = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        return `${year}-${month}-01`;
+    }
     // const handleAutoCheckout = async () => {
     //     const userId = await AsyncStorage.getItem('user_id');
 
@@ -346,7 +360,8 @@ function Attendance({ navigation }) {
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
-
+        const currentMonth = getCurrentMonthDate();
+        handleMonthChange({ year: parseInt(currentMonth.slice(0, 4)), month: parseInt(currentMonth.slice(5, 7)) });
         wait(2000).then(() => setRefreshing(false));
     }, []);
 
@@ -484,14 +499,14 @@ function Attendance({ navigation }) {
                 <View style={styles.card}>
                     <View style={styles.section}>
                         <Text style={styles.label}>Log In</Text>
-                        <Text style={styles.value}>09:30 Am</Text>
+                        <Text style={styles.value}>{attendance?.login || "N/A"}</Text>
                     </View>
 
                     <View style={styles.divider} />
 
                     <View style={styles.section}>
                         <Text style={styles.label}>Log Out</Text>
-                        <Text style={styles.value}>09:30 Pm</Text>
+                        <Text style={styles.value}>{attendance?.logout || "N/A"}</Text>
                     </View>
 
                     <View style={styles.divider} />

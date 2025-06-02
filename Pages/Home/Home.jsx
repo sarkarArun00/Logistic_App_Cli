@@ -32,8 +32,7 @@ export default function Home({ navigation }) {
     const [displayTime, setDisplayTime] = useState(null);
 
     const { showAlertModal, hideAlert } = useGlobalAlert();
-    const [latitude, setLatitude] = useState(null);
-    const [longitude, setLongitude] = useState(null);
+    const [location, setLocation] = useState(false);
 
 
     useEffect(() => {
@@ -129,50 +128,74 @@ export default function Home({ navigation }) {
     };
 
 
-    async function requestPermission() {
-        if (Platform.OS === 'android') {
+    const requestLocationPermission = async () => {
+        try {
             const granted = await PermissionsAndroid.request(
                 PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                {
+                    title: 'Geolocation Permission',
+                    message: 'Can we access your location?',
+                    buttonNeutral: 'Ask Me Later',
+                    buttonNegative: 'Cancel',
+                    buttonPositive: 'OK',
+                },
             );
-            return granted === PermissionsAndroid.RESULTS.GRANTED;
+            console.log('granted', granted);
+            if (granted === 'granted') {
+                console.log('You can use Geolocation');
+                return true;
+            } else {
+                console.log('You cannot use Geolocation');
+                return false;
+            }
+        } catch (err) {
+            return false;
         }
-        return true;
-    }
+    };
 
     const getCurrentLocation = async () => {
-        const hasPermission = await requestPermission();
-        if (!hasPermission) return;
-
-        Geolocation.getCurrentPosition(
-            (position) => {
-                console.log('User location:', position);
-            },
-            (error) => {
-                console.error('Location error:', error);
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 15000,
-                maximumAge: 10000,
-                forceRequestLocation: true,
-                showLocationDialog: true,
-            },
-        );
+        const result = requestLocationPermission();
+        result.then(res => {
+            console.log('res is:', res);
+            if (res) {
+                Geolocation.getCurrentPosition(
+                    position => {
+                        console.log(position);
+                        setLocation(position);
+                    },
+                    error => {
+                        // See error code charts below.
+                        console.log(error.code, error.message);
+                        setLocation(false);
+                    },
+                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
+                );
+            }
+        });
+        console.log(location);
     };
 
     const handleSwipe = async () => {
         try {
-            getCurrentLocation();
-            return
+
+            const location = await getCurrentLocation();
+            if (!location) {
+                showAlertModal('Location permission denied or unavailable.', true);
+                return;
+            }
+
+            const { latitude, longitude } = location;
+
             const userId = await AsyncStorage.getItem("user_id");
             const request = {
                 employeeId: userId,
                 loginDate: new Date().toISOString().split('T')[0],
                 latitude: latitude,
-                longitude: latitude,
+                longitude: longitude,
             };
             console.log("Request Dataaaaaaaaaaaaaaaaaaa:", request);
             console.log("Request Dataaaaaaaaaaaaaaaaaaa:", request);
+            return
             if (!isCheckedIn) {
                 const response = await AuthService.attendanceCheckIn(request);
                 if (response.status == 1) {
