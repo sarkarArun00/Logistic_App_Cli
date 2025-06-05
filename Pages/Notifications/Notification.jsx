@@ -49,7 +49,6 @@ function Notification({ navigation }) {
     const fetchData = async () => {
         try {
             const response = await TaskService.getAllGeneralNotifications();
-            console.log("NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN:", response);
             if (response.status == 1) {
 
                 const allNotifications = response.data;
@@ -71,12 +70,12 @@ function Notification({ navigation }) {
 
 
     const filteredNotifications = () => {
-        if (selectedTab === 'Unread') {
+        if (selectedTab === 'Approval') {
             return notifications.filter(n => n.status == '0');
         }
-        if (selectedTab === 'Read') {
-            return notifications.filter(n => n.status == '1');
-        }
+        // if (selectedTab === 'Read') {
+        //     return notifications.filter(n => n.status == '1');
+        // }
         return notifications;
     };
 
@@ -109,19 +108,19 @@ function Notification({ navigation }) {
                     <Image style={{ width: 14, height: 14, }} source={require('../../assets/leftarrow.png')} />
                     <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Notifications</Text>
                 </TouchableOpacity>
-                <View style={{ position: 'relative', width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
-                    {/* <TouchableOpacity onPress={() => navigation.navigate('Notification')}>
+                {/* <View style={{ position: 'relative', width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
+                    <TouchableOpacity onPress={() => navigation.navigate('Notification')}>
                         <Image style={{ width: 18, height: 18, }} source={require('../../assets/noti.png')} />
-                    </TouchableOpacity> */}
+                    </TouchableOpacity>
                     <NotificationCount></NotificationCount>
-                    {/* <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>{notifications?.length}</Text> */}
-                </View>
+                    <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>{notifications?.length}</Text>
+                </View> */}
             </View>
 
             <View style={styles.tabs}>
                 <View style={styles.borderLine}></View>
                 {/* , 'Unread', 'Read' */}
-                {['All'].map((tab) => (
+                {['All','Approval'].map((tab) => (
                     <TouchableOpacity
                         key={tab}
                         style={[

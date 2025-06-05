@@ -72,7 +72,7 @@ function Assigned({ navigation }) {
             }
 
         } catch (error) {
-            // console.error('Error fetching tasks:', error);
+            console.error('Error fetching tasks:', error);
         } finally {
             setLoading(false);
         }
@@ -82,7 +82,6 @@ function Assigned({ navigation }) {
         try {
             const response = await TaskService.acceptTask({ taskId: task_Id });
             if (response.status == 1) {
-                setAlertMessage("Task Accepted Successfully!");
                 showAlertModal("Task Accepted Successfully!", false);
                 setTimeout(() => {
                     hideAlert();
@@ -90,7 +89,7 @@ function Assigned({ navigation }) {
 
                 sentNotification(task_Id);
             } else {
-                Alert.alert("Error", "Failed to accept task. Please try again.");
+                showAlertModal("Error Failed to accept task. Please try again.",  true);
             }
         } catch (error) {
             console.error('Error accepting task:', error);

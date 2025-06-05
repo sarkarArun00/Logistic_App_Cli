@@ -17,7 +17,7 @@ import TaskService from '../Services/task_service';
 
 import { Calendar } from 'react-native-calendars';
 import { useGlobalAlert } from '../../Context/GlobalAlertContext'
-
+import Geolocation from '@react-native-community/geolocation';
 
 
 const wait = (timeout) => {
@@ -47,7 +47,8 @@ function Attendance({ navigation }) {
     const [attendance, setAttendance] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
 
-
+    const [latitude, setLatitude] = useState(null);
+    const [longitude, setLongitude] = useState(null);
 
 
 
@@ -77,7 +78,6 @@ function Attendance({ navigation }) {
 
     useFocusEffect(
         useCallback(() => {
-
             const debugAsyncStorage = async () => {
                 try {
                     const keys = await AsyncStorage.getAllKeys();
@@ -126,6 +126,7 @@ function Attendance({ navigation }) {
 
 
             init();
+            getCurrentLocation();
             return () => {
                 console.log('Attendance Page Unfocused');
                 clearInterval(timerRef.current);
@@ -242,25 +243,81 @@ function Attendance({ navigation }) {
     };
 
 
+    const requestLocationPermission = async () => {
+        if (Platform.OS === 'ios') {
+            const auth = Geolocation.requestAuthorization('whenInUse');
+            return auth === 'granted';
+        }
+
+        if (Platform.OS === 'android') {
+            try {
+                const granted = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                    {
+                        title: 'Location Permission',
+                        message: 'We need to access your location to continue.',
+                        buttonNeutral: 'Ask Me Later',
+                        buttonNegative: 'Cancel',
+                        buttonPositive: 'OK',
+                    }
+                );
+
+                return granted === PermissionsAndroid.RESULTS.GRANTED;
+            } catch (err) {
+                console.warn('Permission error:', err);
+                return false;
+            }
+        }
+
+        return false;
+    };
+
+    const getCurrentLocation = async () => {
+        // const hasPermission = await requestLocationPermission();
+
+        // if (!hasPermission) {
+        //     showAlertModal('Location permission denied or unavailable.', true);
+        //     return;
+        // }
+
+        Geolocation.getCurrentPosition(
+            position => {
+                const { latitude, longitude } = position.coords;
+                console.log('Location fetched:', latitude, longitude);
+                setLatitude(latitude);
+                setLongitude(longitude);
+            },
+            error => {
+                console.error('Location Error:', error.code, error.message);
+                showAlertModal('Unable to fetch location. Please try again.', true);
+                setLatitude(null);
+                setLongitude(null);
+            },
+            {
+                enableHighAccuracy: false,
+                timeout: 30000,
+                maximumAge: 10000,
+                forceRequestLocation: true, // Optional but useful on Android
+                showLocationDialog: true,   // Optional, opens system dialog if GPS is off
+            }
+        );
+    };
+
     const handleSwipe = async () => {
+
+        // await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
         const userId = await AsyncStorage.getItem("user_id");
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-        Vibration.vibrate(500);
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-            showAlertModal('Permission Denied, Location permission is required.', true);
+        if (latitude === null || longitude === null) {
+            showAlertModal('Unable to fetch location. Please try again.', true);
             swipeRef.current?.reset();
             return;
         }
 
-        const location = await Location.getCurrentPositionAsync({});
-        const { latitude, longitude } = location.coords;
-
         const request = {
             employeeId: userId,
             loginDate: new Date().toISOString().split('T')[0],
-            latitude: latitude.toString(),
-            longitude: longitude.toString(),
+            latitude: latitude,
+            longitude: longitude,
         };
 
         if (!isCheckedIn) {
@@ -279,8 +336,10 @@ function Attendance({ navigation }) {
                 setCheckInTime(isoString);
                 setCheckInTimeDisplay(formattedTime);
                 setIsCheckedIn(true);
-
+                Vibration.vibrate(500);
                 startTimer(now);
+                setLatitude(null);
+                setLongitude(null);
                 // startAutoCheckoutTimer(now);
             } else {
                 showAlertModal('Failed to check in, Please try again.', true);
@@ -296,6 +355,9 @@ function Attendance({ navigation }) {
                 setCheckInTimeDisplay(null);
                 setWorkingDuration('00:00');
                 clearInterval(timerRef.current);
+                Vibration.vibrate(500);
+                setLatitude(null);
+                setLongitude(null);
             } else {
                 showAlertModal('Failed to check out, Please try again..', true);
             }

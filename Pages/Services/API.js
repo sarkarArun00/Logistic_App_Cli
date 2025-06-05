@@ -2,10 +2,10 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Base URLs
-// const BASE_API_URL = "http://192.168.1.12:4501";
-// const GLOBAL_API_URL = "http://192.168.1.12:4001/global/";
-const BASE_API_URL = "https://limstest.nirnayanhealthcare.com/";
-const GLOBAL_API_URL = "https://limsapi-dev.nirnayanhealthcare.com/global/";
+const BASE_API_URL = "http://192.168.1.12:4501";
+const GLOBAL_API_URL = "http://192.168.1.12:4001/global/";
+// const BASE_API_URL = "https://limstest.nirnayanhealthcare.com/";
+// const GLOBAL_API_URL = "https://limsapi-dev.nirnayanhealthcare.com/global/";
 const GOOGLE_MAPS_APIKEY = "AIzaSyAeQzuOcT3aIg5Ql2__hJ2bDli20jCA-Bo";
 
 // Shared Auth Interceptor

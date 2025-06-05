@@ -323,6 +323,16 @@ const TaskService = {
       throw error;
     }
   },
+  
+  getReceiptById: async (data) => {
+    try {
+      const response = await apiClient.post('/accounts/receipt/getReceiptById',data);
+      return response.data;
+    } catch (error) {
+      useGlobalAlert(error.response?.data || error.message, true);
+      throw error;
+    }
+  },
 
   handleReceiptDownload: async (url) => {
     const { showAlertModal, hideAlert } = useGlobalAlert();

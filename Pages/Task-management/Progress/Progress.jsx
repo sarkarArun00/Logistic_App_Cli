@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, Button, FlatList, Alert } from 'react-native'
+import { StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, PermissionsAndroid, FlatList, Alert } from 'react-native'
 // import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium, Montserrat_400Regular } from '@expo-google-fonts/montserrat'
 import { Picker } from '@react-native-picker/picker';
 import { Checkbox } from 'react-native-paper';
@@ -10,12 +10,15 @@ import TaskStatusTabs from '../TaskStatusTabs'
 import TaskService from '../../Services/task_service';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NotificationCount from '../../Notifications/NotificationCount';
+import { launchCamera } from 'react-native-image-picker';
 
 // import * as ImagePicker from 'expo-image-picker';
 // import * as ImageManipulator from 'expo-image-manipulator';
 
 import GlobalStyles from '../../GlobalStyles';
 import { Vibration } from 'react-native';
+import ImageResizer from 'react-native-image-resizer';
+import { readFile } from 'react-native-fs'; // For base64
 
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
 
@@ -61,6 +64,7 @@ function Progress({ navigation }) {
 
     useEffect(() => {
         fetchData();
+         console.log('Fetched tasks:', itemInfo);
     }, []);
 
     const fetchData = async () => {
@@ -68,8 +72,9 @@ function Progress({ navigation }) {
             const response = await TaskService.getMyInProgressTasks();
             setAllTasksData(response.data || []);
             setVisibleTasks(response.data?.slice(0, 5) || []);
+
         } catch (error) {
-            // console.error('Error fetching tasks:', error);
+            console.error('Error fetching tasks:', error);
         } finally {
             setLoading(false);
         }
@@ -132,9 +137,6 @@ function Progress({ navigation }) {
         }
     };
 
-
-
-
     // Camera End
     const handleOpenModal = async (task) => {
         try {
@@ -155,22 +157,68 @@ function Progress({ navigation }) {
     // Camera Open
     const requestPermission = async (type) => {
         try {
-            let permission;
-            if (type === 'camera') {
-                permission = await ImagePicker.requestCameraPermissionsAsync();
-                console.log("Camera permission response:", permission);
-            } else {
-                permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-                console.log("Gallery permission response:", permission);
+            if (Platform.OS === 'android') {
+                if (type === 'camera') {
+                    const granted = await PermissionsAndroid.request(
+                        PermissionsAndroid.PERMISSIONS.CAMERA,
+                        {
+                            title: 'Camera Permission',
+                            message: 'App needs access to your camera to take pictures.',
+                            buttonNeutral: 'Ask Me Later',
+                            buttonNegative: 'Cancel',
+                            buttonPositive: 'OK',
+                        }
+                    );
+                    return granted === PermissionsAndroid.RESULTS.GRANTED;
+                } else {
+                    const granted = await PermissionsAndroid.request(
+                        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+                        {
+                            title: 'Storage Permission',
+                            message: 'App needs access to your photos.',
+                            buttonNeutral: 'Ask Me Later',
+                            buttonNegative: 'Cancel',
+                            buttonPositive: 'OK',
+                        }
+                    );
+                    return granted === PermissionsAndroid.RESULTS.GRANTED;
+                }
             }
-
-            return permission.granted === true;
+            // iOS auto handles permissions via Info.plist
+            return true;
         } catch (error) {
-            console.error("Permission error:", error);
+            console.error('Permission error:', error);
             return false;
         }
     };
 
+
+    // const openCamera = async () => {
+    //     const hasPermission = await requestPermission('camera');
+
+    //     if (!hasPermission) {
+    //         showAlertModal('Camera access is needed to take pictures.', true);
+    //         return;
+    //     }
+
+    //     const result = await ImagePicker.launchCameraAsync({
+    //         mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    //         allowsEditing: true,
+    //         quality: 1,  // Start with high quality to get the original image
+    //         base64: true,  // Required for base64 upload
+    //     });
+
+    //     if (!result.canceled && result.assets?.length > 0) {
+    //         const image = result.assets[0];
+
+    //         // Compress the image to under 50KB
+    //         const compressedImage = await compressImage(image.uri);
+
+    //         // Update state with the compressed image
+    //         setImages([compressedImage]);
+    //         console.log("Compressed image:", compressedImage);
+    //     }
+    // };
 
     const openCamera = async () => {
         const hasPermission = await requestPermission('camera');
@@ -180,22 +228,28 @@ function Progress({ navigation }) {
             return;
         }
 
-        const result = await ImagePicker.launchCameraAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            quality: 1,  // Start with high quality to get the original image
-            base64: true,  // Required for base64 upload
+        const options = {
+            mediaType: 'photo',
+            includeBase64: true,
+            quality: 1,
+            saveToPhotos: true,
+        };
+
+        launchCamera(options, async (response) => {
+            console.log('Camera response:', response);
+            if (response.didCancel) {
+                console.log('User cancelled camera');
+            } else if (response.errorCode) {
+                console.error('Camera error:', response.errorMessage);
+                showAlertModal('Camera error occurred.', true);
+            } else if (response.assets && response.assets.length > 0) {
+                const image = response.assets[0];
+
+                // Compress image if needed (below 50KB)
+                const compressedImage = await compressImage(image.uri); // Your own compression logic
+                setImages([compressedImage]); // Update state
+            }
         });
-
-        if (!result.canceled && result.assets?.length > 0) {
-            const image = result.assets[0];
-
-            // Compress the image to under 50KB
-            const compressedImage = await compressImage(image.uri);
-
-            // Update state with the compressed image
-            setImages([compressedImage]);
-        }
     };
 
     // const openGallery = async () => {
@@ -224,28 +278,40 @@ function Progress({ navigation }) {
     // };
 
     const compressImage = async (uri) => {
+        let currentUri = uri;
         let sizeInKB = Infinity;
         let compressedImage = { uri };
 
         while (sizeInKB > 50) {
-            const manipulated = await ImageManipulator.manipulateAsync(
-                uri,
-                [{ resize: { width: 500 } }],
-                {
-                    compress: 0.5,
-                    format: ImageManipulator.SaveFormat.JPEG,
-                    base64: true,
+            try {
+                const resizedImage = await ImageResizer.createResizedImage(
+                    currentUri,
+                    500,        // target width
+                    500,        // target height
+                    'JPEG',
+                    50          // quality (0–100)
+                );
+
+                // Convert to base64
+                const base64 = await readFile(resizedImage.uri, 'base64');
+                sizeInKB = base64.length * (3 / 4) / 1024;
+
+                if (sizeInKB <= 50) {
+                    compressedImage = {
+                        uri: resizedImage.uri,
+                        base64,
+                    };
+                    break;
                 }
-            );
 
-            sizeInKB = manipulated.base64.length * (3 / 4) / 1024;
-
-            if (sizeInKB <= 50) {
-                compressedImage = manipulated;
+                currentUri = resizedImage.uri;
+            } catch (error) {
+                console.error('Compression failed:', error);
                 break;
             }
-            uri = manipulated.uri;
         }
+        console.log('Final compressed image size:', sizeInKB, 'KB');
+        console.log('Final compressed compressedImage size:', compressedImage);
         return compressedImage;
     };
 
@@ -280,7 +346,7 @@ function Progress({ navigation }) {
                 remarks: collectCommentText,
                 itemIds: ''
             }
-
+            console.log('Request Body:', requestBody);
             const response = await TaskService.collectMyTask(requestBody);
 
             if (response.status == 1) {
@@ -317,16 +383,27 @@ function Progress({ navigation }) {
         }
     }
 
-    const navigateToUserLocation = async (task) => {
-        const [lat, long] = task?.pickUpLocation?.coordinates.split(',').map(Number);
-        const latitude = await lat;
-        const longitude = await long;
-        if (latitude && longitude) {
-            const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${long}&travelmode=driving`;
-            Linking.openURL(url).catch(err => console.error('Could not open Google Maps', err));
-        } else {
+    const navigateToUserLocation = (task) => {
+        const locationString = task?.pickUpLocation?.coordinates;
+
+        if (!locationString) {
             showAlertModal('Location not available', true);
+            return;
         }
+
+        const [lat, long] = locationString.split(',').map(coord => parseFloat(coord.trim()));
+
+        if (isNaN(lat) || isNaN(long)) {
+            showAlertModal('Invalid location coordinates', true);
+            return;
+        }
+
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${long}&travelmode=driving`;
+
+        Linking.openURL(url).catch(err => {
+            console.error('Could not open Google Maps', err);
+            showAlertModal('Failed to open Google Maps.', true);
+        });
     };
 
 
@@ -417,7 +494,6 @@ function Progress({ navigation }) {
         };
 
         try {
-            setShowAlert(false);
             const response = await TaskService.collectMyTask(request);
             if (response.status == 1) {
                 addTaskAttachment(selectedTaskId);
@@ -661,9 +737,9 @@ function Progress({ navigation }) {
                                 No Data Found
                             </Text> */}
                             <Image style={{ width: 200, height: 200, marginTop: -50 }}
-                                    source={require('../../../assets/empty.png')} 
-                                    resizeMode="contain"
-                                  />
+                                source={require('../../../assets/empty.png')}
+                                resizeMode="contain"
+                            />
                         </View>
                     )}
                 </View>
@@ -1187,7 +1263,7 @@ function Progress({ navigation }) {
                                                     paddingLeft: 10,
                                                 }}
                                             >
-                                                {info.item?.itemName ?? 'Unknown Item'}
+                                                {info.item?.itemName ?? 'Unknown Item'} - {info.quantity}
                                             </Text>
                                         </View>
                                         <Checkbox

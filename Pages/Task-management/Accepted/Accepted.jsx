@@ -113,16 +113,27 @@ function Accepted({ navigation }) {
         setSelectedTaskDesc(task);
     };
 
-    const navigateToUserLocation = async (task) => {
-        const [lat, long] = task?.pickUpLocation?.coordinates.split(',').map(Number);
-        const latitude = await lat;
-        const longitude = await long;
-        if (latitude && longitude) {
-            const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${long}&travelmode=driving`;
-            Linking.openURL(url).catch(err => console.error('Could not open Google Maps', err));
-        } else {
+    const navigateToUserLocation = (task) => {
+        const locationString = task?.pickUpLocation?.coordinates;
+
+        if (!locationString) {
             showAlertModal('Location not available', true);
+            return;
         }
+
+        const [lat, long] = locationString.split(',').map(coord => parseFloat(coord.trim()));
+
+        if (isNaN(lat) || isNaN(long)) {
+            showAlertModal('Invalid location coordinates', true);
+            return;
+        }
+
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${long}&travelmode=driving`;
+
+        Linking.openURL(url).catch(err => {
+            console.error('Could not open Google Maps', err);
+            showAlertModal('Failed to open Google Maps.', true);
+        });
     };
 
     // Call Button
@@ -288,9 +299,9 @@ function Accepted({ navigation }) {
                                 No Data Found
                             </Text> */}
                             <Image style={{ width: 200, height: 200, marginTop: -50 }}
-                                    source={require('../../../assets/empty.png')} 
-                                    resizeMode="contain"
-                                  />
+                                source={require('../../../assets/empty.png')}
+                                resizeMode="contain"
+                            />
                         </View>
                     )}
 

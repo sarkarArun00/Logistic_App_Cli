@@ -105,7 +105,7 @@ function LoginScreen() {
       }
     } catch (error) {
       console.error("Login Error:", error);
-      Alert.alert("Login Failed", "Invalid email or password. Please check your credentials and try again.");
+      showAlertModal("Login Failed" + "Invalid email or password. Please check your credentials and try again.", true);
     } finally {
       setLoginLoading(false); // End login loading
     }
