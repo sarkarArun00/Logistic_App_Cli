@@ -3,14 +3,14 @@ import React, { useRef, useState, useEffect, useContext } from 'react';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import TaskService from '../Services/task_service';
 import { AuthContext } from "../../Context/AuthContext";
+import { BASE_API_URL } from '../Services/API';
 
-
-const header = ({ navigation }) => {
+const header = ({ navigation, profileImage }) => {
 
   const [userName, setUserName] = useState("");
   const [notificationCount, setNotificationCount] = useState(0);
 
-    const { setNotificationData } = useContext(AuthContext);
+  const { setNotificationData } = useContext(AuthContext);
 
   useEffect(() => {
     let isMounted = true;
@@ -28,7 +28,7 @@ const header = ({ navigation }) => {
 
     const init = () => {
       getUserData();
-      checkNewNotifications(); 
+      checkNewNotifications();
 
 
       const interval = setInterval(() => {
@@ -47,28 +47,32 @@ const header = ({ navigation }) => {
 
 
   const checkNewNotifications = async () => {
-    
+
     const response = await TaskService.getAllGeneralNotifications();
-    if(response.status==1) {
+    if (response.status == 1) {
       const notifications = response.data;
-      
+
       const stored = await AsyncStorage.getItem("seenNotificationIds");
       const seenIds = stored ? JSON.parse(stored) : [];
-      
+
       const unseenCount = notifications.filter(n => !seenIds.includes(n.id)).length;
       setNotificationCount(unseenCount);
       setNotificationData(unseenCount);
-    } 
+    }
   };
 
   return (
     <View>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', }}>
-          <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={{ width:45, height:45, overflow: 'hidden', borderRadius: '50%', }}>
-            <Image style={{ width: '100%', height: '100%', objectFit: 'cover', }} source={require('../../assets/user.jpg')} />
+          <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={{ width: 45, height: 45, overflow: 'hidden', borderRadius: '50%', }}>
+            <Image style={{ width: '100%', height: '100%', objectFit: 'cover', }} source={
+              profileImage
+                ? { uri: BASE_API_URL + profileImage }
+                : require('../../assets/user.jpg') // fallback image
+            } />
           </TouchableOpacity>
-          <Text numberOfLines={1} ellipsizeMode="tail" style={{ fontFamily: 'Montserrat_600SemiBold', fontSize:19, color: '#3085FE', paddingLeft: 8, width:180, }}>Hi {userName} !</Text>
+          <Text numberOfLines={1} ellipsizeMode="tail" style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 19, color: '#3085FE', paddingLeft: 8, width: 180, }}>Hi {userName} !</Text>
         </View>
         <View style={{
           position: 'relative',

@@ -11,6 +11,7 @@ import TaskService from '../../Services/task_service';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NotificationCount from '../../Notifications/NotificationCount';
 import { launchCamera } from 'react-native-image-picker';
+import {BASE_API_URL} from '../../Services/API';
 
 // import * as ImagePicker from 'expo-image-picker';
 // import * as ImageManipulator from 'expo-image-manipulator';
@@ -463,6 +464,11 @@ function Progress({ navigation }) {
             setpayMdlVisible(true);
             setItemCashData(task.items)
             getClientsAll();
+
+            setItemTaskId(task.id);
+
+            console.log('Item Task IDddddddddddddddddd:', task);
+            console.log('Item Taskffffffffffffffffffffffff:', taskId);
         }
         else {
             setCollectModalVisible(true);
@@ -837,14 +843,14 @@ function Progress({ navigation }) {
                                                             {item?.attachment?.path && item.attachment.path !== "" ? (
                                                                 <TouchableOpacity
                                                                     onPress={() => {
-                                                                        const imageUrl = `http://192.168.1.10:4501/${item.attachment.path.replace(/\\/g, "/")}`;
+                                                                        const imageUrl = `${BASE_API_URL}/${item.attachment.path.replace(/\\/g, "/")}`;
                                                                         setFullImageUri(imageUrl);
                                                                         setModalVisible2(true);
                                                                     }}
                                                                 >
                                                                     <Image
                                                                         style={{ width: 320, height: 200, marginVertical: 5 }}
-                                                                        source={{ uri: `http://192.168.1.10:4501/${item.attachment.path.replace(/\\/g, "/")}` }}
+                                                                        source={{ uri: `${BASE_API_URL}/${item.attachment.path.replace(/\\/g, "/")}` }}
                                                                     />
                                                                 </TouchableOpacity>
                                                             ) : null}

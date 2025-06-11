@@ -11,7 +11,7 @@ import RNSwipeVerify from 'react-native-swipe-verify';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from '../Header/header'
 import AuthService from '../Services/auth_service';
-// import TaskService from '../Services/task_service';
+import TaskService from '../Services/task_service';
 import { useGlobalAlert } from '../../Context/GlobalAlertContext';
 import { useFocusEffect } from '@react-navigation/native';
 import Geolocation from '@react-native-community/geolocation';
@@ -34,6 +34,7 @@ export default function Home({ navigation }) {
     const { showAlertModal, hideAlert } = useGlobalAlert();
     const [latitude, setLatitude] = useState(null);
     const [longitude, setLongitude] = useState(null);
+        const [userInfo, setUserInfo] = useState(null);
 
 
     useEffect(() => {
@@ -87,7 +88,7 @@ export default function Home({ navigation }) {
 
                     const parsedCheckIn = new Date(checkInStr);
                     startTimer(parsedCheckIn);               // Update UI timer
-                    startAutoCheckoutTimer(parsedCheckIn);   // Auto checkout logic
+                    // startAutoCheckoutTimer(parsedCheckIn);   // Auto checkout logic
                 } else {
                     setIsCheckedIn(false);
                 }
@@ -101,7 +102,24 @@ export default function Home({ navigation }) {
                 }
             };
 
+            const fetchProfilePicture = async () => {
+                try {
+                    // Fetch the profile picture from your API or local storage
+                    const response = await TaskService.getUserData();
+                    if (response.status === 1) {
+                        setUserInfo(response.data);
+                        console.log('User Info:', response.data);
+                    } else {
+                        console.error('Failed to fetch profile picture:', response.message);
+                    }
+                } catch (error) {
+                    console.error('Error fetching profile picture:', error);
+                }
+            };
+
             init();
+            fetchProfilePicture();
+            getCurrentLocation();
 
             return () => clearInterval(timerRef.current);
         }, [])
@@ -159,17 +177,16 @@ export default function Home({ navigation }) {
     };
 
     const getCurrentLocation = async () => {
-        const hasPermission = await requestLocationPermission();
+        // const hasPermission = await requestLocationPermission();
 
-        if (!hasPermission) {
-            showAlertModal('Location permission denied or unavailable.', true);
-            return;
-        }
+        // if (!hasPermission) {
+        //     showAlertModal('Location permission denied or unavailable.', true);
+        //     return;
+        // }
 
         Geolocation.getCurrentPosition(
             position => {
                 const { latitude, longitude } = position.coords;
-                console.log('Location fetched:', latitude, longitude);
                 setLatitude(latitude);
                 setLongitude(longitude);
             },
@@ -191,7 +208,6 @@ export default function Home({ navigation }) {
 
     const handleSwipe = async () => {
         try {
-            getCurrentLocation();
             //    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             if (latitude === null || longitude === null) {
                 showAlertModal('Unable to fetch location. Please try again.', true);
@@ -223,7 +239,7 @@ export default function Home({ navigation }) {
                     setCheckInTimeDisplay(formattedTime);
                     setIsCheckedIn(true);
                     startTimer(now);
-                    startAutoCheckoutTimer(now);
+                    // startAutoCheckoutTimer(now);
                     setLatitude(null);
                     setLongitude(null);
                 } else {
@@ -294,13 +310,13 @@ export default function Home({ navigation }) {
     //     }
     // };
 
-    const startAutoCheckoutTimer = (checkInDate) => {
-        const twelveHoursInMs = 12 * 60 * 60 * 1000;
+    // const startAutoCheckoutTimer = (checkInDate) => {
+    //     const twelveHoursInMs = 12 * 60 * 60 * 1000;
 
-        setTimeout(() => {
-            handleAutoCheckout();
-        }, twelveHoursInMs - (new Date() - new Date(checkInDate)));
-    };
+    //     setTimeout(() => {
+    //         handleAutoCheckout();
+    //     }, twelveHoursInMs - (new Date() - new Date(checkInDate)));
+    // };
 
 
 
@@ -321,7 +337,7 @@ export default function Home({ navigation }) {
                 showsHorizontalScrollIndicator={false}>
 
                 {/* App Header */}
-                <Header navigation={navigation} />
+                <Header navigation={navigation} profileImage={userInfo?.employeePhoto}/>
 
                 <View style={{ position: 'relative', marginTop: 30, }}>
                     <TextInput

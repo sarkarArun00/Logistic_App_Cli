@@ -2,10 +2,10 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Base URLs
-const BASE_API_URL = "http://192.168.1.12:4501";
-const GLOBAL_API_URL = "http://192.168.1.12:4001/global/";
-// const BASE_API_URL = "https://limstest.nirnayanhealthcare.com/";
-// const GLOBAL_API_URL = "https://limsapi-dev.nirnayanhealthcare.com/global/";
+// const BASE_API_URL = "http://192.168.1.12:4501";
+// const GLOBAL_API_URL = "http://192.168.1.12:4001/global/";
+const BASE_API_URL = "https://limstest.nirnayanhealthcare.com/";
+const GLOBAL_API_URL = "https://limsapi-dev.nirnayanhealthcare.com/global/";
 const GOOGLE_MAPS_APIKEY = "AIzaSyAeQzuOcT3aIg5Ql2__hJ2bDli20jCA-Bo";
 
 // Shared Auth Interceptor
@@ -39,17 +39,21 @@ const createApiClient = (baseURL) => {
   // Optional: Logging for development
   if (__DEV__) {
 
-     global.XMLHttpRequest = global.originalXMLHttpRequest
-    ? global.originalXMLHttpRequest
-    : global.XMLHttpRequest;
+    global.XMLHttpRequest = global.originalXMLHttpRequest
+      ? global.originalXMLHttpRequest
+      : global.XMLHttpRequest;
 
-  global.FormData = global.originalFormData
-    ? global.originalFormData
-    : global.FormData;
-    
+    global.FormData = global.originalFormData
+      ? global.originalFormData
+      : global.FormData;
+
     instance.interceptors.request.use((config) => {
       console.log("[Axios Request]", config.method?.toUpperCase(), config.url);
-      // console.log("Payload:", config.data);
+      console.log("Payload:", config.data);
+
+      if (config.headers) console.log("→ Headers:", config.headers);
+      if (config.params) console.log("→ Params:", config.params);
+      if (config.data) console.log("→ Data:", config.data);
       return config;
     });
 

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "164660555366",
+    "project_id": "logistic-fb25a",
+    "storage_bucket": "logistic-fb25a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:164660555366:android:6f064c9449dd8435fa47a7",
+        "android_client_info": {
+          "package_name": "com.logisticapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDCZqpXYR2K81M4ag2VTD2PFqPZExkK9_c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

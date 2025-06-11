@@ -49,7 +49,23 @@ function Attendance({ navigation }) {
 
     const [latitude, setLatitude] = useState(null);
     const [longitude, setLongitude] = useState(null);
+    const [userInfo, setUserInfo] = useState(null);
 
+
+    const fetchProfilePicture = async () => {
+        try {
+            // Fetch the profile picture from your API or local storage
+            const response = await TaskService.getUserData();
+            if (response.status === 1) {
+                setUserInfo(response.data);
+                console.log('User Info:', response.data);
+            } else {
+                console.error('Failed to fetch profile picture:', response.message);
+            }
+        } catch (error) {
+            console.error('Error fetching profile picture:', error);
+        }
+    };
 
 
     useEffect(() => {
@@ -65,6 +81,7 @@ function Attendance({ navigation }) {
         };
 
         getUserData();
+        fetchProfilePicture();
 
         const today = new Date();
         const currentMonthDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
@@ -243,34 +260,34 @@ function Attendance({ navigation }) {
     };
 
 
-    const requestLocationPermission = async () => {
-        if (Platform.OS === 'ios') {
-            const auth = Geolocation.requestAuthorization('whenInUse');
-            return auth === 'granted';
-        }
+    // const requestLocationPermission = async () => {
+    //     if (Platform.OS === 'ios') {
+    //         const auth = Geolocation.requestAuthorization('whenInUse');
+    //         return auth === 'granted';
+    //     }
 
-        if (Platform.OS === 'android') {
-            try {
-                const granted = await PermissionsAndroid.request(
-                    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-                    {
-                        title: 'Location Permission',
-                        message: 'We need to access your location to continue.',
-                        buttonNeutral: 'Ask Me Later',
-                        buttonNegative: 'Cancel',
-                        buttonPositive: 'OK',
-                    }
-                );
+    //     if (Platform.OS === 'android') {
+    //         try {
+    //             const granted = await PermissionsAndroid.request(
+    //                 PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+    //                 {
+    //                     title: 'Location Permission',
+    //                     message: 'We need to access your location to continue.',
+    //                     buttonNeutral: 'Ask Me Later',
+    //                     buttonNegative: 'Cancel',
+    //                     buttonPositive: 'OK',
+    //                 }
+    //             );
 
-                return granted === PermissionsAndroid.RESULTS.GRANTED;
-            } catch (err) {
-                console.warn('Permission error:', err);
-                return false;
-            }
-        }
+    //             return granted === PermissionsAndroid.RESULTS.GRANTED;
+    //         } catch (err) {
+    //             console.warn('Permission error:', err);
+    //             return false;
+    //         }
+    //     }
 
-        return false;
-    };
+    //     return false;
+    // };
 
     const getCurrentLocation = async () => {
         // const hasPermission = await requestLocationPermission();
@@ -460,7 +477,7 @@ function Attendance({ navigation }) {
                 }>
 
                 {/* App Header */}
-                <Header navigation={navigation} />
+                <Header navigation={navigation} profileImage={userInfo?.employeePhoto}/>
 
                 <View style={{ position: 'relative', marginTop: 30 }}>
                     <TextInput

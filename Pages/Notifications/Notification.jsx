@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useCallback } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // import { Ionicons } from '@expo/vector-icons';
@@ -6,77 +6,94 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import TaskService from '../Services/task_service';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import NotificationCount from '../Notifications/NotificationCount';
-
+import { useFocusEffect } from '@react-navigation/native';
 
 
 function Notification({ navigation }) {
     const [selectedTab, setSelectedTab] = useState('All');
     const [notifications, setNotifications] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [approvals, setApprovals] = useState([]);
 
 
+    useFocusEffect(
+        React.useCallback(() => {
+            const markAllAsSeen = async () => {
+                const response = await TaskService.getAllGeneralNotifications();
+                console.log('Response seenNotificationIds:', response);
+                if (response.status == 1) {
+                    const ids = response.data.map(n => n.id);
+                    await AsyncStorage.setItem("seenNotificationIds", JSON.stringify(ids));
+                }
+            };
 
-    useEffect(() => {
+            const fetchData = async () => {
+                try {
+                    const response = await TaskService.getAllGeneralNotifications();
+                    if (response.status == 1) {
+                        const allNotifications = response.data;
+                        setNotifications(allNotifications);
+                        const seenIds = allNotifications.map(n => n.id);
+                        await AsyncStorage.setItem("seenNotificationIds", JSON.stringify(seenIds));
+                    }
+                } catch (error) {
+                    console.error('Error fetching notifications:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
 
-        const markAllAsSeen = async () => {
-            const response = await TaskService.getAllGeneralNotifications();
-            if (response.status == 1) {
-                const ids = response.data.map(n => n.id);
-                await AsyncStorage.setItem("seenNotificationIds", JSON.stringify(ids));
-            }
-        };
+            const fetchEmployeeApprovals = async () => {
+                try {
+                    const response = await TaskService.getEmployeeApprovals();
+                    if (response.status == 1) {
+                        console.log('Response:', response);
+                        setApprovals(response.data);
+                    } else {
+                        console.log('Response: No data found');
+                    }
+                } catch (err) {
+                    console.log("Error in getEmployeeApprovals:", err);
+                }
+            };
 
-        markAllAsSeen();
-        fetchData();
-    }, []);
+            markAllAsSeen();
+            fetchData();
+            fetchEmployeeApprovals();
+        }, [])
+    );
 
-    // const fetchData = async () => {
-    //     try {
-    //         const userId = await AsyncStorage.getItem("user_id");
-    //         let request = {
-    //             "userId": userId,
-    //             "moduleName": "Logistic",
-    //         }
-    //         const response = await TaskService.getAllGeneralNotifications(request);
-    //         setNotifications(response.data);
-    //     } catch (error) {
-    //         console.error('Error fetching tasks:', error);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
 
-    const fetchData = async () => {
+    const handleApprove = async (id) => {
         try {
-            const response = await TaskService.getAllGeneralNotifications();
+            const response = await TaskService.approveApproval({notifId: id});
             if (response.status == 1) {
-
-                const allNotifications = response.data;
-
-                setNotifications(allNotifications);
-
-                // STEP 1: Mark these notifications as seen
-                const seenIds = allNotifications.map(n => n.id);
-                await AsyncStorage.setItem("seenNotificationIds", JSON.stringify(seenIds));
+                console.log('Approval successful:', response);
+                setApprovals(prev => prev.filter(item => item.id !== id));
+            } else {
+                console.log('Approval failed:', response);
             }
         } catch (error) {
-            console.error('Error fetching notifications:', error);
-        } finally {
-            setLoading(false);
+            console.error('Error approving employee:', error);
         }
-    };
+    }
 
-
-
+    const handleDecline = async (id) => {
+        try {
+            const response = await TaskService.declineApproval({notifId: id});
+            if (response.status == 1) {
+                console.log('Decline successful:', response);
+                setApprovals(prev => prev.filter(item => item.id !== id));
+            } else {
+                console.log('Decline failed:', response);
+            }
+        } catch (error) {
+            console.error('Error declining employee:', error);
+        }
+    }
 
     const filteredNotifications = () => {
-        if (selectedTab === 'Approval') {
-            return notifications.filter(n => n.status == '0');
-        }
-        // if (selectedTab === 'Read') {
-        //     return notifications.filter(n => n.status == '1');
-        // }
-        return notifications;
+        return notifications.filter(n => n.status == 0 || n.status == '0');
     };
 
     const NotificationItem = ({ item }) => (
@@ -90,15 +107,6 @@ function Notification({ navigation }) {
         </View>
     );
 
-
-    // const [fontsLoaded] = useFonts({
-    //     Montserrat_600SemiBold,
-    //     Montserrat_500Medium,
-    // });
-
-    // if (!fontsLoaded) {
-    //     return null;
-    // }
 
     return (
         <SafeAreaView style={styles.container}>
@@ -119,8 +127,7 @@ function Notification({ navigation }) {
 
             <View style={styles.tabs}>
                 <View style={styles.borderLine}></View>
-                {/* , 'Unread', 'Read' */}
-                {['All','Approval'].map((tab) => (
+                {['All', 'Approval'].map((tab) => (
                     <TouchableOpacity
                         key={tab}
                         style={[
@@ -136,11 +143,56 @@ function Notification({ navigation }) {
                 ))}
             </View>
 
-            <FlatList
-                data={filteredNotifications()}
-                renderItem={({ item }) => <NotificationItem item={item} />}
-                keyExtractor={item => item.id}
-            />
+            {/* Separate FlatLists based on tab */}
+            {selectedTab === 'All' ? (
+                <FlatList
+                    data={notifications}
+                    renderItem={({ item }) => <NotificationItem item={item} />}
+                    keyExtractor={item => item.id.toString()}
+                />
+            ) : (
+                <FlatList
+                    data={approvals}
+                    renderItem={({ item }) => (
+                        <View style={styles.notificationContainer}>
+                            {/* Notification Content */}
+                            <View style={styles.textContainer}>
+                                <Text style={styles.name}>
+                                    {item.name} <Text style={styles.message}>{item.message}</Text>
+                                </Text>
+                                <Text style={styles.time}>{item.time}</Text>
+                            </View>
+
+                            {/* Buttons */}
+                            <View style={styles.buttonRow}>
+                                <TouchableOpacity
+                                    style={[styles.button, { backgroundColor: '#10B981' }]} // Green
+                                    onPress={() => handleApprove(item.id)}
+                                >
+                                    <Text style={styles.buttonText}>Approve</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={[styles.button, { backgroundColor: '#EF4444' }]} // Red
+                                    onPress={() => handleDecline(item.id)}
+                                >
+                                    <Text style={styles.buttonText}>Decline</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
+                    keyExtractor={item => item.id.toString()}
+                    ListEmptyComponent={() => (
+                        <Text style={{ textAlign: 'center', marginTop: 350, color: '#999' }}>
+                            No approval notifications.
+                        </Text>
+                    )}
+                    contentContainerStyle={styles.flatListContent}
+                />
+
+
+            )}
+
 
         </SafeAreaView>
     )
@@ -204,6 +256,30 @@ const styles = StyleSheet.create({
         borderBottomColor: '#3082F8',
     },
 
+
+    itemContainer: {
+        padding: 12,
+        borderBottomWidth: 1,
+        borderColor: '#eee',
+    },
+    text: {
+        fontSize: 16,
+        marginBottom: 8,
+    },
+    buttonRow: {
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        gap: 10, // RN 0.71+
+    },
+    button: {
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        borderRadius: 6,
+    },
+    buttonText: {
+        color: '#fff',
+        fontWeight: '600',
+    },
 })
 
 export default Notification;

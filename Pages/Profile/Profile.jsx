@@ -1,7 +1,18 @@
-import { useState, useContext  } from 'react'
+import React, { useState, useEffect, useContext } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, Modal } from 'react-native'
-import { AuthContext  } from "../../Context/AuthContext";
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, Modal, Alert, PermissionsAndroid, Platform } from 'react-native'
+import { AuthContext } from "../../Context/AuthContext";
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+
+import ImageResizer from 'react-native-image-resizer';
+import { useGlobalAlert } from '../../Context/GlobalAlertContext';
+import { readFile } from 'react-native-fs'; // For base64
+import { useFocusEffect } from '@react-navigation/native';
+import { BASE_API_URL } from '../Services/API';
+import TaskService from '../Services/task_service';
+import { Vibration } from 'react-native';
+
+
 // import {
 //   useFonts,
 //   Montserrat_400Regular,
@@ -11,8 +22,11 @@ import { AuthContext  } from "../../Context/AuthContext";
 
 function Profile({ navigation }) {
     const [modalVisible, setModalVisible] = useState(false);
-    const { logout } = useContext(AuthContext );
+    const { logout } = useContext(AuthContext);
+    const [profilePic, setProfilePic] = useState(null);
+    const [userInfo, setUserInfo] = useState(null);
 
+    const { showAlertModal, hideAlert } = useGlobalAlert();
 
     // const [fontsLoaded] = useFonts({
     //     Montserrat_700Bold,
@@ -24,16 +38,208 @@ function Profile({ navigation }) {
     //     return null;
     // }
 
+    const fetchProfilePicture = async () => {
+        try {
+            // Fetch the profile picture from your API or local storage
+            const response = await TaskService.getUserData();
+            if (response.status === 1) {
+                setUserInfo(response.data);
+                console.log('User Info:', response.data);
+            } else {
+                console.error('Failed to fetch profile picture:', response.message);
+            }
+        } catch (error) {
+            console.error('Error fetching profile picture:', error);
+        }
+    };
+
+    useFocusEffect(
+        React.useCallback(() => {
+            fetchProfilePicture();
+        }, [])
+    );
 
 
     const handleLogout = async () => {
         try {
             await logout();
-            navigation.replace('Login'); 
+            navigation.replace('Login');
         } catch (error) {
             console.error('Error logging out:', error);
         }
     };
+
+
+    const requestCameraPermission = async () => {
+        if (Platform.OS === 'android') {
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.CAMERA,
+                {
+                    title: 'Camera Permission',
+                    message: 'App needs camera access to take a profile picture',
+                    buttonNeutral: 'Ask Me Later',
+                    buttonNegative: 'Cancel',
+                    buttonPositive: 'OK',
+                }
+            );
+            return granted === PermissionsAndroid.RESULTS.GRANTED;
+        }
+        return true;
+    };
+
+    const handleCamera = async () => {
+        const hasPermission = await requestCameraPermission();
+        if (!hasPermission) {
+            Alert.alert('Permission Denied', 'Camera permission is required');
+            return;
+        }
+
+        const options = {
+            mediaType: 'photo',
+            includeBase64: false,
+            quality: 1,
+            saveToPhotos: true,
+        };
+
+        launchCamera(options, async (response) => {
+            if (response.didCancel) {
+                console.log('User cancelled camera');
+            } else if (response.errorCode) {
+                console.error('Camera error:', response.errorMessage);
+                showAlertModal('Camera error occurred.', true);
+            } else if (response.assets && response.assets.length > 0) {
+                const image = response.assets[0];
+
+                try {
+                    const compressedImage = await compressImage(image.uri);
+
+
+                    setProfilePic(compressedImage);
+                    setModalVisible(false);
+
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    const timestamp = Date.now();
+                    const formData = new FormData();
+                    formData.append('image', {
+                        uri: 'data:image/jpeg;base64,' + compressedImage.base64,
+                        type: 'image/jpeg',
+                        name: `${timestamp}.jpg`,
+                    });
+
+                    const uploadResponse = await TaskService.changeProfilePicture(formData);
+                    console.log('Upload response:', uploadResponse);
+
+                    if (uploadResponse.status === 1) {
+                        Vibration.vibrate(100);
+                        showAlertModal('Image uploaded successfully!', false);
+                        fetchProfilePicture();
+                    } else {
+                        showAlertModal('Failed to upload image.', true);
+                    }
+
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showAlertModal('An error occurred while uploading.', true);
+                }
+            }
+        });
+    };
+
+
+
+    const handleGallery = async () => {
+        launchImageLibrary(
+            {
+                mediaType: 'photo',
+                quality: 0.7,
+                includeBase64: false, // Not needed since you'll compress and get base64
+            },
+            async (response) => {
+                if (response.didCancel) return;
+
+                if (response.errorCode) {
+                    console.error('Gallery error:', response.errorMessage);
+                    showAlertModal('Error selecting image from gallery.', true);
+                    return;
+                }
+
+                if (response.assets && response.assets.length > 0) {
+                    const image = response.assets[0];
+                    try {
+                        const compressedImage = await compressImage(image.uri);
+
+                        // Optional 2-second wait before upload
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+
+                        setProfilePic(compressedImage); // Optional
+                        setModalVisible(false);
+
+                        const formData = new FormData();
+                        const timestamp = Date.now();
+                        formData.append('image', {
+                            uri: 'data:image/jpeg;base64,' + compressedImage.base64,
+                            type: 'image/jpeg',
+                            name: `${timestamp}.jpg`,
+                        });
+
+                        const uploadResponse = await TaskService.changeProfilePicture(formData);
+                        console.log('Upload response:', uploadResponse);
+
+                        if (uploadResponse.status === 1) {
+                            Vibration.vibrate(100);
+                            showAlertModal('Image uploaded successfully!', false);
+                            fetchProfilePicture();
+                        } else {
+                            showAlertModal('Failed to upload image.', true);
+                        }
+                    } catch (err) {
+                        console.error('Error compressing gallery image:', err);
+                        showAlertModal('Error compressing image.', true);
+                    }
+                }
+            }
+        );
+    };
+
+
+    const compressImage = async (uri) => {
+        let currentUri = uri;
+        let sizeInKB = Infinity;
+        let compressedImage = { uri };
+
+        while (sizeInKB > 50) {
+            try {
+                const resizedImage = await ImageResizer.createResizedImage(
+                    currentUri,
+                    500,        // target width
+                    500,        // target height
+                    'JPEG',
+                    50          // quality (0–100)
+                );
+
+                // Convert to base64
+                const base64 = await readFile(resizedImage.uri, 'base64');
+                sizeInKB = base64.length * (3 / 4) / 1024;
+
+                if (sizeInKB <= 50) {
+                    compressedImage = {
+                        uri: resizedImage.uri,
+                        base64,
+                    };
+                    break;
+                }
+
+                currentUri = resizedImage.uri;
+            } catch (error) {
+                console.error('Compression failed:', error);
+                break;
+            }
+        }
+        console.log('Final compressed image size:', sizeInKB, 'KB');
+        // console.log('Final compressed compressedImage size:', compressedImage);
+        return compressedImage;
+    };
+
 
     return (
         <SafeAreaView style={styles.container}>
@@ -47,10 +253,14 @@ function Profile({ navigation }) {
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
                     <View style={{ width: 70, height: 70, borderRadius: '50%', overflow: 'hidden', }}>
-                        <Image style={{ width: '100%', height: '100%', objectFit: 'cover', }} source={require('../../assets/user.jpg')} />
+                        <Image style={{ width: '100%', height: '100%', objectFit: 'cover', }} source={
+                            userInfo?.employeePhoto
+                                ? { uri: BASE_API_URL + userInfo.employeePhoto }
+                                : require('../../assets/user.jpg') // fallback image
+                        } />
                     </View>
                     <View style={{ flex: 1, paddingLeft: 20, }}>
-                        <Text style={{ fontFamily: 'Montserrat_700Bold', fontSize: 16, color: '#0F0F0F', paddingBottom: 2, }}>Tarun Sana
+                        <Text style={{ fontFamily: 'Montserrat_700Bold', fontSize: 16, color: '#0F0F0F', paddingBottom: 2, }}>{userInfo?.employee_name}
                             <TouchableOpacity onPress={() => setModalVisible(true)} style={{ paddingLeft: 5, }}>
                                 <Image style={{ width: 20, height: 20, }} source={require('../../assets/edit.png')} />
                             </TouchableOpacity>
@@ -78,7 +288,7 @@ function Profile({ navigation }) {
                             <Image style={{ width: 8, height: 14, }} source={require('../../assets/rightarrow2.png')} />
                         </View>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('Receipt',{ page: 'profile' })} style={styles.tskmain}>
+                    <TouchableOpacity onPress={() => navigation.navigate('Receipt', { page: 'profile' })} style={styles.tskmain}>
                         <View style={styles.taskbox}>
                             <View style={styles.tskimg}><Image style={{ width: 58, height: 58, }} source={require('../../assets/pficon3.png')} /></View>
                             <Text style={styles.tsktext}>Receipts</Text>
@@ -142,11 +352,11 @@ function Profile({ navigation }) {
                                 </TouchableOpacity>
                             </View>
                             <View style={{ flexDirection: 'row', justifyContent: 'center', justifyContent: 'space-evenly', paddingVertical: 20, }}>
-                                <TouchableOpacity style={styles.pfBox}>
+                                <TouchableOpacity style={styles.pfBox} onPress={handleCamera}>
                                     <View style={styles.Icon}><Image style={{ width: 24, height: 24, }} source={require('../../assets/camera.png')} /></View>
                                     <Text style={styles.Text}>Camera</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={styles.pfBox}>
+                                <TouchableOpacity style={styles.pfBox} onPress={handleGallery}>
                                     <View style={styles.Icon}><Image style={{ width: 24, height: 24, }} source={require('../../assets/gallery.png')} /></View>
                                     <Text style={styles.Text}>Gallery</Text>
                                 </TouchableOpacity>

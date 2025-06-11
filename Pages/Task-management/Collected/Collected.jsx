@@ -15,6 +15,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import GlobalStyles from '../../GlobalStyles';
 import { Vibration } from 'react-native';
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
+import {BASE_API_URL} from '../../Services/API';
 
 
 function Collected({ navigation }) {
@@ -560,14 +561,14 @@ function Collected({ navigation }) {
                                                             {item?.attachment?.path && item.attachment.path !== "" ? (
                                                                 <TouchableOpacity
                                                                     onPress={() => {
-                                                                        const imageUrl = `http://192.168.1.10:4501/${item.attachment.path.replace(/\\/g, "/")}`;
+                                                                        const imageUrl = `${BASE_API_URL}/${item.attachment.path.replace(/\\/g, "/")}`;
                                                                         setFullImageUri(imageUrl);
                                                                         setModalVisible2(true);
                                                                     }}
                                                                 >
                                                                     <Image
                                                                         style={{ width: 320, height: 200, marginVertical: 5 }}
-                                                                        source={{ uri: `http://192.168.1.10:4501/${item.attachment.path.replace(/\\/g, "/")}` }}
+                                                                        source={{ uri: `${BASE_API_URL}/${item.attachment.path.replace(/\\/g, "/")}` }}
                                                                     />
                                                                 </TouchableOpacity>
                                                             ) : null}

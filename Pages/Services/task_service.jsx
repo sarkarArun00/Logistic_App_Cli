@@ -2,7 +2,7 @@
 import { globalApiClient, apiClient } from './API';
 // import * as FileSystem from 'expo-file-system';
 // import * as Sharing from 'expo-sharing';
-import { Linking } from 'react-native';
+import { Linking, Alert } from 'react-native';
 import { useGlobalAlert } from '../../Context/GlobalAlertContext';
 
 
@@ -135,7 +135,7 @@ const TaskService = {
       );
       return response.data;
     } catch (error) {
-      useGlobalAlert(error.response?.data || error.message, true);
+      Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
@@ -145,7 +145,7 @@ const TaskService = {
       const response = await apiClient.get('/operation/logistics/getAllOperationEmployees');
       return response.data;
     } catch (error) {
-      useGlobalAlert(error.response?.data || error.message, true);
+      Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
@@ -155,7 +155,7 @@ const TaskService = {
       const response = await apiClient.post('/operation/logistics/task/sampleHandover', data);
       return response.data;
     } catch (error) {
-      useGlobalAlert( error.response?.data || error.message, true);
+      Alert.alert( error.response?.data || error.message);
       throw error;
     }
   },
@@ -165,7 +165,7 @@ const TaskService = {
       const response = await apiClient.get('/operation/logistics/task/getMyCompletedTasks');
       return response.data;
     } catch (error) {
-      useGlobalAlert(error.response?.data || error.message, true);
+      Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
@@ -179,7 +179,7 @@ const TaskService = {
       });
       return response.data;
     } catch (error) {
-      useGlobalAlert(error.response?.data || error.message, true);
+      Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
@@ -189,7 +189,7 @@ const TaskService = {
       const response = await apiClient.post('/operation/task-receipt/generateNewReceipt', data);
       return response;
     } catch (error) {
-      useGlobalAlert(error.response?.data || error.message, true);
+      Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
@@ -199,7 +199,7 @@ const TaskService = {
       const response = await apiClient.post('/operation/logistics/generateReceipt', data);
       return response.data;
     } catch (error) {
-      useGlobalAlert(error.response?.data || error.message, true);
+      Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
@@ -209,7 +209,7 @@ const TaskService = {
       const response = await apiClient.post('/global/employee/emp-attendance/getEmpMonthlyShiftRoster', data);
       return response;
     } catch (error) {
-      useGlobalAlert( error.response?.data || error.message, true);
+      Alert.alert( error.response?.data || error.message);
       throw error;
     }
   },
@@ -219,7 +219,7 @@ const TaskService = {
       const response = await apiClient.post('/operation/tracker/updateEmpLocation', data);
       return response;
     } catch (error) {
-      useGlobalAlert(error.response?.data || error.message, true);
+      Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
@@ -229,7 +229,7 @@ const TaskService = {
       const response = await apiClient.post('/global/notifications/generateNotification', data);
       return response;
     } catch (error) {
-      useGlobalAlert(error.response?.data || error.message, true);
+      Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
@@ -239,7 +239,7 @@ const TaskService = {
       const response = await apiClient.get('/operation/logistics/getMyReceipts');
       return response.data;
     } catch (error) {
-      useGlobalAlert(error.response?.data || error.message, true);
+      Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
@@ -249,7 +249,7 @@ const TaskService = {
       const response = await apiClient.get('/operation/logistics/getMyWallet');
       return response.data;
     } catch (error) {
-      useGlobalAlert(error.response?.data || error.message, true);
+      Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
@@ -259,7 +259,7 @@ const TaskService = {
       const response = await apiClient.post('/operation/logistics/getMyTransactions', data);
       return response.data;
     } catch (error) {
-      useGlobalAlert(error.response?.data || error.message, true);
+      Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
@@ -269,7 +269,7 @@ const TaskService = {
       const response = await apiClient.post('/operation/logistics/downloadReceipt', data);
       return response.data;
     } catch (error) {
-      useGlobalAlert( error.response?.data || error.message, true);
+      Alert.alert( error.response?.data || error.message);
       throw error;
     }
   },
@@ -279,7 +279,7 @@ const TaskService = {
       const response = await apiClient.post('/operation/logistics/transferToOrg', data);
       return response.data;
     } catch (error) {
-      useGlobalAlert( error.response?.data || error.message, true);
+      Alert.alert( error.response?.data || error.message);
       throw error;
     }
   },
@@ -289,7 +289,7 @@ const TaskService = {
       const response = await apiClient.post('/operation/logistics/transferToEmp', data);
       return response.data;
     } catch (error) {
-      useGlobalAlert(error.response?.data || error.message, true);
+      Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
@@ -299,7 +299,7 @@ const TaskService = {
       const response = await apiClient.get('/global/employee/getAllLogistics');
       return response.data;
     } catch (error) {
-      useGlobalAlert(error.response?.data || error.message, true);
+      Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
@@ -309,7 +309,7 @@ const TaskService = {
       const response = await apiClient.get('/global/centre/getAllCentres');
       return response.data;
     } catch (error) {
-      useGlobalAlert(error.response?.data || error.message, true);
+      Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
@@ -319,7 +319,7 @@ const TaskService = {
       const response = await apiClient.post('/global/employee/emp-attendance/getLoginByDate',data);
       return response.data;
     } catch (error) {
-      useGlobalAlert(error.response?.data || error.message, true);
+      Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
@@ -329,7 +329,60 @@ const TaskService = {
       const response = await apiClient.post('/accounts/receipt/getReceiptById',data);
       return response.data;
     } catch (error) {
-      useGlobalAlert(error.response?.data || error.message, true);
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  getEmployeeApprovals: async () => {
+    try {
+      const response = await apiClient.get('/notification/getEmployeeApprovals');
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+  changeProfilePicture: async (data) => {
+    try {
+      const response = await apiClient.post('/operation/logistics/changeProfilePicture', data, {headers: {
+          'Content-Type': 'multipart/form-data',
+        }});
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  getUserData: async () => {
+    try {
+      const response = await apiClient.get('/operation/logistics/getUserData', {headers: {
+          'Content-Type': 'multipart/form-data',
+        }});
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  declineApproval: async (data) => {
+    try {
+      const response = await apiClient.post('/notification/declineApproval', data);
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  approveApproval: async (data) => {
+    try {
+      const response = await apiClient.post('/notification/approveApproval', data);
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },

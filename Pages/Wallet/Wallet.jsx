@@ -111,6 +111,7 @@ function Wallet({ navigation, progress = 0.5 }) {
         TaskService.getMyWallet().then((res) => {
             if (res.status == 1) {
                 setDetails(res.data);
+                console.log('Wallet Details:', res.data);
             } else {
                 setDetails([]);
                 console.log('Error fetching wallet details:', res.message);
@@ -193,7 +194,7 @@ function Wallet({ navigation, progress = 0.5 }) {
             else if (!amount || !remarks) {
                 showAlertModal('Amount and Remarks are required.', true)
                 return;
-            } else if (amount <= details.walletBalance) {
+            } else if (amount > details.walletBalance) {
                 showAlertModal("You don't have sufficient balance.", true)
                 return;
             }
