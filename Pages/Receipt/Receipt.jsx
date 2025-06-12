@@ -1,15 +1,21 @@
 import { useRoute } from '@react-navigation/native';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet, View, Text, TouchableOpacity, Image, Linking, ScrollView, TouchableWithoutFeedback, TextInput, Modal, Button } from 'react-native';
+import { StyleSheet, View, Alert, Text, TouchableOpacity, Pressable, Image, Linking, ScrollView, TouchableWithoutFeedback, TextInput, Modal, Button } from 'react-native';
 // import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium } from '@expo-google-fonts/montserrat';
 import { Picker } from '@react-native-picker/picker';
 import Menu from '../Menu-bar/Menu'
 import TaskService from '../Services/task_service';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useGlobalAlert } from '../../Context/GlobalAlertContext';
-import { globalApiClient, apiClient  } from '../../Pages/Services/API';
-import {BASE_API_URL} from '../Services/API'
+import { globalApiClient, apiClient } from '../../Pages/Services/API';
+import { BASE_API_URL } from '../Services/API'
+
+import RNHTMLtoPDF from 'react-native-html-to-pdf';
+import Share from 'react-native-share';
+
+
+
 
 function Receipt({ navigation }) {
     const [showMenu, setShowMenu] = useState(false);
@@ -52,7 +58,7 @@ function Receipt({ navigation }) {
 
         getAllReceipts();
         getClientsAll();
-    }, [ page]);
+    }, [page]);
 
     // if (!fontsLoaded) {
     //     return null; // 
@@ -65,6 +71,8 @@ function Receipt({ navigation }) {
             if (response.status == 1) {
                 setReceiptData(response.data);
             }
+
+            console.log('Receipt Data:', response.data);
             return response.data;
         } catch (error) {
             throw null;
@@ -127,19 +135,34 @@ function Receipt({ navigation }) {
     };
 
     const openPdfInBrowser = (url) => {
-  if (!url || !url.startsWith('http')) {
-    Alert.alert('Invalid URL', 'The URL is not valid or missing.');
-    return;
-  }
+        if (!url || !url.startsWith('http')) {
+            Alert.alert('Invalid URL', 'The URL is not valid or missing.');
+            return;
+        }
 
-  Linking.openURL(url)
-    .catch((err) => {
-      console.error('Failed to open URL:', err);
-      Alert.alert('Error', 'Unable to open PDF.');
-    });
-};
+        Linking.openURL(url)
+            .catch((err) => {
+                console.error('Failed to open URL:', err);
+                Alert.alert('Error', 'Unable to open PDF.');
+            });
+    };
 
 
+
+    const generateAndSharePDF = async () => {
+        const options = {
+            html: '<h1>Your Receipt</h1><p>This is your receipt content.</p>',
+            fileName: 'receipt',
+            directory: 'Documents',
+        };
+
+        try {
+            const file = await RNHTMLtoPDF.convert(options);
+            await Share.open({ url: `file://${file.filePath}` });
+        } catch (err) {
+            console.error('PDF Generation/Sharing Error:', err);
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -221,14 +244,14 @@ function Receipt({ navigation }) {
 
                                                 <TouchableWithoutFeedback onPress={() => setActiveMenuIndex(null)}>
                                                     <View>
-                                                        <TouchableOpacity
+                                                        <Pressable
                                                             style={[styles.touchBtn, { paddingHorizontal: 4 }]}
                                                             onPress={(e) => {
                                                                 e.stopPropagation();
                                                                 setActiveMenuIndex(activeMenuIndex === `${dateKey}_${index}` ? null : `${dateKey}_${index}`);
                                                             }}>
                                                             <Image style={{ width: 4, height: 23 }} source={require('../../assets/dotimg1.png')} />
-                                                        </TouchableOpacity>
+                                                        </Pressable>
 
                                                         {activeMenuIndex === `${dateKey}_${index}` && (
                                                             <View style={styles.viewBx}>
@@ -246,11 +269,11 @@ function Receipt({ navigation }) {
                                                                     onPress={() => {
                                                                         // Your Download logic
                                                                         setActiveMenuIndex(() => {
-                                                                            TaskService.downloadReceipt({receiptId: item.id}).then((res) => {
+                                                                            TaskService.downloadReceipt({ receiptId: item.id }).then((res) => {
                                                                                 if (res.status == 1) {
                                                                                     // showAlertModal('Receipt downloaded successfully.', false);
                                                                                     // TaskService.handleReceiptDownload(BASE_API_URL+res.data);
-                                                                                     openPdfInBrowser(BASE_API_URL+res.data);
+                                                                                    openPdfInBrowser(BASE_API_URL + res.data);
                                                                                 } else {
                                                                                     showAlertModal(res?.data || 'Something went wrong.', true);
                                                                                 }
@@ -263,7 +286,7 @@ function Receipt({ navigation }) {
                                                                 <TouchableOpacity
                                                                     style={styles.viewText}
                                                                     onPress={() => {
-                                                                        setActiveMenuIndex(null);
+                                                                        generateAndSharePDF();
                                                                     }}>
                                                                     <Text style={styles.downloadText}>Share</Text>
                                                                 </TouchableOpacity>

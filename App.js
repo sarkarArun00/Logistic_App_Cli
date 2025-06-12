@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { View, StyleSheet, StatusBar, Text } from "react-native";
+import { View, StyleSheet, StatusBar, Text, PermissionsAndroid, Platform } from "react-native";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { GlobalAlertProvider } from './Context/GlobalAlertContext';
 import { AuthProvider } from './Context/AuthContext';
@@ -153,6 +153,8 @@ function TabNavigator() {
 
 export default function App() {
 
+
+
   const requestUserPermission = async () => {
     const authStatus = await messaging().requestPermission();
     const enabled =
@@ -164,6 +166,16 @@ export default function App() {
       getFcmToken();
     } else {
       Alert.alert('Push Notification permission denied');
+    }
+
+
+    if (Platform.OS === 'android' && Platform.Version >= 33) {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+      );
+      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+        console.log('Notification permission denied');
+      }
     }
   };
 

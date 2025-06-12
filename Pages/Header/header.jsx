@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, Pressable, Image } from 'react-native'
 import React, { useRef, useState, useEffect, useContext } from 'react';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import TaskService from '../Services/task_service';
@@ -84,12 +84,12 @@ const header = ({ navigation, profileImage }) => {
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-          <TouchableOpacity onPress={() => navigation.navigate('Notification')}>
+          <Pressable onPress={() => navigation.navigate('Notification')}>
             <Image
               style={{ width: 18, height: 18 }}
               source={require('../../assets/noti.png')}
             />
-          </TouchableOpacity>
+          </Pressable>
 
           {notificationCount > 0 && (
             <Text style={{

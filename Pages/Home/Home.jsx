@@ -34,7 +34,7 @@ export default function Home({ navigation }) {
     const { showAlertModal, hideAlert } = useGlobalAlert();
     const [latitude, setLatitude] = useState(null);
     const [longitude, setLongitude] = useState(null);
-        const [userInfo, setUserInfo] = useState(null);
+    const [userInfo, setUserInfo] = useState(null);
 
 
     useEffect(() => {
@@ -49,6 +49,7 @@ export default function Home({ navigation }) {
             }
         };
         getUserData();
+        fetchProfilePicture();
     }, [navigation])
 
 
@@ -102,29 +103,30 @@ export default function Home({ navigation }) {
                 }
             };
 
-            const fetchProfilePicture = async () => {
-                try {
-                    // Fetch the profile picture from your API or local storage
-                    const response = await TaskService.getUserData();
-                    if (response.status === 1) {
-                        setUserInfo(response.data);
-                        console.log('User Info:', response.data);
-                    } else {
-                        console.error('Failed to fetch profile picture:', response.message);
-                    }
-                } catch (error) {
-                    console.error('Error fetching profile picture:', error);
-                }
-            };
+
 
             init();
-            fetchProfilePicture();
             getCurrentLocation();
 
             return () => clearInterval(timerRef.current);
         }, [])
     );
 
+
+    const fetchProfilePicture = async () => {
+        try {
+            // Fetch the profile picture from your API or local storage
+            const response = await TaskService.getUserData();
+            if (response.status === 1) {
+                setUserInfo(response.data);
+                console.log('User Info:', response.data);
+            } else {
+                console.error('Failed to fetch profile picture:', response.message);
+            }
+        } catch (error) {
+            console.error('Error fetching profile picture:', error);
+        }
+    };
 
     const getTimeAgo = (timestamp) => {
         if (!timestamp) return 'N/A';
@@ -177,12 +179,12 @@ export default function Home({ navigation }) {
     };
 
     const getCurrentLocation = async () => {
-        // const hasPermission = await requestLocationPermission();
+        const hasPermission = await requestLocationPermission();
 
-        // if (!hasPermission) {
-        //     showAlertModal('Location permission denied or unavailable.', true);
-        //     return;
-        // }
+        if (!hasPermission) {
+            showAlertModal('Location permission denied or unavailable.', true);
+            return;
+        }
 
         Geolocation.getCurrentPosition(
             position => {
@@ -197,7 +199,7 @@ export default function Home({ navigation }) {
                 setLongitude(null);
             },
             {
-                enableHighAccuracy: false,
+                enableHighAccuracy: true,
                 timeout: 30000,
                 maximumAge: 10000,
                 forceRequestLocation: true, // Optional but useful on Android
@@ -337,7 +339,7 @@ export default function Home({ navigation }) {
                 showsHorizontalScrollIndicator={false}>
 
                 {/* App Header */}
-                <Header navigation={navigation} profileImage={userInfo?.employeePhoto}/>
+                <Header navigation={navigation} profileImage={userInfo?.employeePhoto} />
 
                 <View style={{ position: 'relative', marginTop: 30, }}>
                     <TextInput
