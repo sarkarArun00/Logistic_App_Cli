@@ -386,6 +386,87 @@ function Receipt({ navigation }) {
 
   const receiptName = `Receipt_${item?.receiptId || 'Unknown'}`.replace(/[^a-zA-Z0-9_-]/g, '');
   const filePath = `${RNFS.DownloadDirectoryPath}/${receiptName}.pdf`;
+ 
+  const htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <style>
+                body {
+                font-family: 'Arial', sans-serif;
+                padding:20px;
+                background-color: #fff;
+                color: #000;
+                }
+                .paymentBox{ text-align:center; background-color:#fff; border-radius:24px; box-shadow:0px 8px 24px 0px #AAAAAA4F; padding:20px; margin-bottom:30px; }
+                .paymentBox img{ margin-bottom:15px; }
+                .paymentBox .payText{ font-size:16px; line-height:1.2; font-weight:400; color:#474747; margin-bottom:8px; }
+                .paymentBox .inrText{ font-size:24px; line-height:1.2; font-weight:600; color:#0C0D36; margin-bottom:0; }
+
+                .receBox{ background-color:#fff; border-radius:24px; box-shadow: 0px 8px 24px 0px #AAAAAA4F; padding:10px 25px 25px; margin-bottom:30px; }
+                .receSubBox{ text-align:center; background-color:#F5F6F7; border-radius:12px;  margin-bottom:18px; padding:12px; }
+                .receSubBox .receTitle{ font-size:16px; line-height:1.2; font-weight:500; color:#0C0D36; margin-bottom:10px; }
+                .receSubBox .receSubTitle{ font-size:14px; line-height:1.2; font-weight:500; color:#707070; }
+
+                .flexDv{ display:flex; justify-content:space-between; margin-bottom:14px; }
+                .flexDv .sndTitle{ font-size:13px; line-height:1.2; font-weight:400; color:#707070; }
+                .flexDv .sndTitle{ font-size:13px; line-height:1.2; font-weight:500; color:#0C0D36; }
+
+                .border-line{ width:90%; border-top:1px dashed #EDEDED; height:1px; display:block; margin:0 auto 14px; }
+                .remarks{ display:flex; align-items:center; background-color:#fff; border-radius:24px; box-shadow: 0px 8px 24px 0px #AAAAAA4F; padding:16px 30px; }
+                .remarks .remTitle{ width:88px; font-size:16px; line-height:1.2; font-weight:500; color:#0C0D36; margin:0; }
+                .remarks .remSubTitle{ font-size:13px; line-height:1.2; font-weight:400; color:#707070; flex:1; margin:0; padding-top:4px; }
+
+            </style>
+            </head>
+            <body>
+            <div class="paymentBox">
+                <img src="${imageBase64}" style="width: 56px; height: 56px;" />
+                <div class="payText">Payment Success!</div>
+                <div class="inrText">INR ${item?.amount || 0}</div>
+            </div>
+
+            <div class="receBox">
+                <div class="receSubBox">
+                <div class="receTitle">Payment Receipt</div>
+                <div class="receSubTitle">Receipt Number: ${item?.receiptId || ''}</div>
+                </div>
+
+                <div class="flexDv">
+                <div class="sndTitle">Sender Name</div>
+                <div class="sndSubTitle">${item?.generatedBy || ''}</div>
+                </div>
+                <div class="flexDv">
+                <div class="sndTitle">Receiver Name</div>
+                <div class="sndSubTitle">${item?.receiverName || ''}</div>
+                </div>
+                <div class="flexDv">
+                <div class="sndTitle">Payment Date</div>
+                <div class="sndSubTitle">${item?.createdAt || ''}</div>
+                </div>
+                <div class="flexDv">
+                <div class="sndTitle">Payment Method</div>
+                <div class="sndSubTitle">${item?.paymentMode || ''}</div>
+                </div>
+                <div class="border-line">&nbsp;</div>
+                <div class="flexDv">
+                <div class="sndTitle">Amount</div>
+                <div class="sndSubTitle">${item?.amount ? `INR ${item.amount}` : '0'} only</div>
+                </div>
+                <div class="flexDv">
+                <div class="sndTitle">Amount In Words</div>
+                <div class="sndSubTitle">${toWords(item?.amount || 0).toLowerCase().replace(/\b\w/g, char => char.toUpperCase())} only</div>
+                </div>
+            </div>
+
+            <div class="remarks">
+                <div class="remTitle">Remarks:</div>
+                <div class="remSubTitle">${item?.remarks || ''}</div>
+            </div>
+            </body>
+            </html>
+            `;
+
 
   try {
     const pdf = await RNHTMLtoPDF.convert({

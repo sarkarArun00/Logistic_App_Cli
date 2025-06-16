@@ -3,6 +3,7 @@
 <!-- App Main Theme (can remain DayNight) -->
 <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
     <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
+    <item name="android:forceDarkAllowed">false</item>
 </style>
 
 <!-- Light Theme for Splash Screen -->
