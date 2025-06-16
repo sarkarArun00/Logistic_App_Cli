@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { View, StyleSheet, StatusBar, Text, PermissionsAndroid, Platform } from "react-native";
+import { View, StyleSheet, StatusBar, Text, PermissionsAndroid, Platform,Alert } from "react-native";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { GlobalAlertProvider } from './Context/GlobalAlertContext';
 import { AuthProvider } from './Context/AuthContext';
@@ -47,105 +47,127 @@ function TabNavigator() {
         translucent={false} // Set to true only if you want content behind status bar
       />
       <Tab.Navigator
-        screenOptions={{
-          headerShown: false,
-          tabBarShowLabel: false,
-          tabBarStyle: {
-            position: 'absolute',
-            bottom: -8,
-            height: 70 + insets.bottom, // Add space for bottom inset
-            paddingBottom: insets.bottom, // Prevent content from getting cut
-            backgroundColor: '#fff',
-            borderTopWidth: 1,
-            borderTopColor: '#F0F0F0',
-            elevation: 2,
-            padding: 0,
-          },
-        }}
-      >
-        <Tab.Screen
-          name="Assigned"
-          component={Assigned}
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <View style={styles.tabItem}>
-                <Ionicons
-                  name={focused ? "list" : "list-outline"}
-                  size={25}
-                  color={focused ? "#3085FE" : "#8F9BB3"}
-                />
-                <Text style={styles.tbstitle}>Task</Text>
-              </View>
-            ),
-          }}
-        />
-        <Tab.Screen
-          name="Attendance"
-          component={Attendance}
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <View style={styles.tabItem}>
-                <Ionicons
-                  name={focused ? "calendar" : "calendar-outline"}
-                  size={25}
-                  color={focused ? "#3085FE" : "#8F9BB3"}
-                />
-                <Text style={styles.tbstitle}>Attendance</Text>
-              </View>
-            ),
-          }}
-        />
-        <Tab.Screen
-          name="Home"
-          component={Home}
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <View style={styles.centerTabItem}>
-                <View style={styles.centerTabCircle}>
-                  <Ionicons
-                    name={focused ? "home" : "home-outline"}
-                    size={30}
-                    color="#FFFFFF"
-                  />
-                </View>
+  screenOptions={{
+    headerShown: false,
+    tabBarShowLabel: false,
+    tabBarStyle: {
+      position: 'absolute',
+      bottom: 0,
+      height: 80 + insets.bottom,
+      paddingBottom: insets.bottom,
+      backgroundColor: '#1B3252',
+      borderTopWidth: 0,
+      elevation: 2,
+      paddingTop: 15,
+      margin: 0,
+      borderRadius: 20,
+      overflow: 'hidden',
+    },
+  }}
+>
+  <Tab.Screen
+    name="Home"
+    component={Home}
+    options={{
+      tabBarIcon: ({ focused }) => (
+        <View style={styles.tabItem}>
+          {focused && <View style={styles.afterline} />}
+          <Ionicons
+            name={focused ? 'home' : 'home-outline'}
+            size={22}
+            color={focused ? '#FFFFFF' : '#8F9BB3'}
+          />
+          <Text style={[styles.tbstitle, { color: focused ? '#FFFFFF' : '#8F9BB3' }]}>
+            Home
+          </Text>
+        </View>
+      ),
+    }}
+  />
 
-              </View>
-            ),
-          }}
-        />
-        <Tab.Screen
-          name="Pending"
-          component={Pending}
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <View style={styles.tabItem}>
-                <Ionicons
-                  name={focused ? "receipt" : "receipt-outline"}
-                  size={25}
-                  color={focused ? "#3085FE" : "#8F9BB3"}
-                />
-                <Text style={styles.tbstitle}>Request</Text>
-              </View>
-            ),
-          }}
-        />
-        <Tab.Screen
-          name="Wallet"
-          component={Wallet}
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <View style={styles.tabItem}>
-                <Ionicons
-                  name={focused ? "wallet" : "wallet-outline"}
-                  size={25}
-                  color={focused ? "#3085FE" : "#8F9BB3"}
-                />
-                <Text style={styles.tbstitle}>Wallet</Text>
-              </View>
-            ),
-          }}
-        />
-      </Tab.Navigator>
+  <Tab.Screen
+    name="Assigned"
+    component={Assigned}
+    options={{
+      tabBarIcon: ({ focused }) => (
+        <View style={styles.tabItem}>
+          {focused && <View style={styles.afterline} />}
+          <Ionicons
+            name={focused ? 'list' : 'list-outline'}
+            size={22}
+            color={focused ? '#FFFFFF' : '#8F9BB3'}
+          />
+          <Text style={[styles.tbstitle, { color: focused ? '#FFFFFF' : '#8F9BB3' }]}>
+            Task
+          </Text>
+        </View>
+      ),
+    }}
+  />
+
+  <Tab.Screen
+    name="Attendance"
+    component={Attendance}
+    options={{
+      tabBarIcon: ({ focused }) => (
+        <View style={styles.tabItem}>
+          {focused && <View style={styles.afterline} />}
+          <Ionicons
+            name={focused ? 'calendar' : 'calendar-outline'}
+            size={22}
+            color={focused ? '#FFFFFF' : '#8F9BB3'}
+          />
+          <Text style={[styles.tbstitle, { color: focused ? '#FFFFFF' : '#8F9BB3' }]}>
+            Attendance
+          </Text>
+        </View>
+      ),
+    }}
+  />
+
+  <Tab.Screen
+    name="Pending"
+    component={Pending}
+    options={{
+      tabBarIcon: ({ focused }) => (
+        <View style={styles.tabItem}>
+          {focused && <View style={styles.afterline} />}
+          <Ionicons
+            name={focused ? 'receipt' : 'receipt-outline'}
+            size={22}
+            color={focused ? '#FFFFFF' : '#8F9BB3'}
+          />
+          <Text style={[styles.tbstitle, { color: focused ? '#FFFFFF' : '#8F9BB3' }]}>
+            Request
+          </Text>
+        </View>
+      ),
+    }}
+  />
+
+  <Tab.Screen
+    name="Wallet"
+    component={Wallet}
+    options={{
+      tabBarIcon: ({ focused }) => (
+        <View style={styles.tabItem}>
+          {focused && <View style={styles.afterline} />}
+          <Ionicons
+            name={focused ? 'wallet' : 'wallet-outline'}
+            size={22}
+            color={focused ? '#FFFFFF' : '#8F9BB3'}
+          />
+          <Text style={[styles.tbstitle, { color: focused ? '#FFFFFF' : '#8F9BB3' }]}>
+            Wallet
+          </Text>
+        </View>
+      ),
+    }}
+  />
+</Tab.Navigator>
+
+
+
 
     </>
   );
@@ -210,7 +232,7 @@ export default function App() {
 
     return unsubscribe;
 
-  }, []);
+  },);
 
 
   return (
@@ -250,30 +272,49 @@ export default function App() {
 
 const styles = StyleSheet.create({
   tabItem: {
+    flexDirection:'column',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 12,
-    width: 100,
-  },
-  centerTabItem: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    top: -20, // Adjust to raise the middle tab above the bar
-  },
-  centerTabCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#3085FE',
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingTop:0,
+    marginTop:0,
+    width:90,
+    position:'relative',
   },
   tbstitle: {
     fontFamily: 'Montserrat_600SemiBold',
     fontSize: 14,
     color: '#8F9BB3',
-    paddingTop: 5,
+    paddingTop:5,
   },
+  afterline: {
+    position: 'absolute',
+    top:-15,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: '#3082F8',
+    borderTopLeftRadius: 2,
+    borderTopRightRadius: 2,
+    zIndex: 2,
+  },
+  
+  // iconUnfocused: {
+  //   width:50,
+  //   height:50,
+  //   backgroundColor: 'transparent',
+  //   borderRadius:50,
+  //   textAlign:'center',
+  //   lineHeight:50,
+  // },
+  // iconFocused: {
+  //   width:50,
+  //   height:50,
+  //   borderRadius:50,
+  //   backgroundColor: '#3085FE',
+  //   textAlign:'center',
+  //   lineHeight:50,
+  // },
+  
 });
 
 
