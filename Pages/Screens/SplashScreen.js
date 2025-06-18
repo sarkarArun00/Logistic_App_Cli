@@ -12,9 +12,11 @@ const SplashScreen = ({ navigation }) => {
         if (token) {
           console.log('Token found:', token);
           navigation.replace('MainApp', { screen: 'Home' });
+          
         } else {
           console.log('No token found');
-          navigation.replace('Login');
+          navigation.replace('Welcome');
+          // navigation.replace('Login');
         }
       } catch (error) {
         console.error('Error checking token:', error);
@@ -27,7 +29,7 @@ const SplashScreen = ({ navigation }) => {
       checkAuth();
     }, 3000);
      return () => clearTimeout(timer);
-  }, []);
+  });
 
   return (
     <View style={styles.container}>

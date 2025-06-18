@@ -32,7 +32,7 @@ import Notification from './Pages/Notifications/Notification';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SplashScreen from './Pages/Screens/SplashScreen';
 import messaging from '@react-native-firebase/messaging';
-
+import Welcome from './Pages/Welcome-pages/Welcome';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -55,7 +55,7 @@ function TabNavigator() {
       bottom: 0,
       height: 80 + insets.bottom,
       paddingBottom: insets.bottom,
-      backgroundColor: '#1B3252',
+      backgroundColor: '#2F81F5',
       borderTopWidth: 0,
       elevation: 2,
       paddingTop: 15,
@@ -75,9 +75,9 @@ function TabNavigator() {
           <Ionicons
             name={focused ? 'home' : 'home-outline'}
             size={22}
-            color={focused ? '#FFFFFF' : '#8F9BB3'}
+            color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
           />
-          <Text style={[styles.tbstitle, { color: focused ? '#FFFFFF' : '#8F9BB3' }]}>
+          <Text style={[styles.tbstitle, { color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF' }]}>
             Home
           </Text>
         </View>
@@ -95,9 +95,9 @@ function TabNavigator() {
           <Ionicons
             name={focused ? 'list' : 'list-outline'}
             size={22}
-            color={focused ? '#FFFFFF' : '#8F9BB3'}
+            color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
           />
-          <Text style={[styles.tbstitle, { color: focused ? '#FFFFFF' : '#8F9BB3' }]}>
+          <Text style={[styles.tbstitle, { color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF' }]}>
             Task
           </Text>
         </View>
@@ -115,9 +115,9 @@ function TabNavigator() {
           <Ionicons
             name={focused ? 'calendar' : 'calendar-outline'}
             size={22}
-            color={focused ? '#FFFFFF' : '#8F9BB3'}
+            color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
           />
-          <Text style={[styles.tbstitle, { color: focused ? '#FFFFFF' : '#8F9BB3' }]}>
+          <Text style={[styles.tbstitle, { color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF' }]}>
             Attendance
           </Text>
         </View>
@@ -135,9 +135,9 @@ function TabNavigator() {
           <Ionicons
             name={focused ? 'receipt' : 'receipt-outline'}
             size={22}
-            color={focused ? '#FFFFFF' : '#8F9BB3'}
+            color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
           />
-          <Text style={[styles.tbstitle, { color: focused ? '#FFFFFF' : '#8F9BB3' }]}>
+          <Text style={[styles.tbstitle, { color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF' }]}>
             Request
           </Text>
         </View>
@@ -155,9 +155,9 @@ function TabNavigator() {
           <Ionicons
             name={focused ? 'wallet' : 'wallet-outline'}
             size={22}
-            color={focused ? '#FFFFFF' : '#8F9BB3'}
+            color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
           />
-          <Text style={[styles.tbstitle, { color: focused ? '#FFFFFF' : '#8F9BB3' }]}>
+          <Text style={[styles.tbstitle, { color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF' }]}>
             Wallet
           </Text>
         </View>
@@ -244,6 +244,7 @@ export default function App() {
             initialRouteName="Splash"
           >
             <Stack.Screen name="Splash" component={SplashScreen} />
+           <Stack.Screen name="Welcome" component={Welcome} />
             <Stack.Screen name="Login" component={Login} />
             {/* <Stack.Screen name="Password" component={Password} /> */}
             <Stack.Screen name="MainApp" component={TabNavigator} />
@@ -292,7 +293,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 3,
-    backgroundColor: '#3082F8',
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 2,
     borderTopRightRadius: 2,
     zIndex: 2,
