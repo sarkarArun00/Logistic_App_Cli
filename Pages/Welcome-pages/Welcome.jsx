@@ -302,6 +302,7 @@ const Welcome = ({ navigation }) => {
             <Image source={require('../../assets/screen1.jpg')} style={styles.image} />
             <View style={styles.textBlock}>
               <Text style={styles.weltitle}>Welcome to</Text>
+              {/* <Text style={styles.nirnayanText}>Nirnayan</Text> */}
               <Image source={require('../../assets/nirnayantext.png')} style={styles.nirnayanText} />
               <Text style={styles.desc}>
                 An advanced healthcare logistics solution—offering real-time tracking,  scheduling, and secure sample delivery
@@ -413,6 +414,7 @@ const styles = StyleSheet.create({
     marginBottom:13,
   },
   nirnayanText:{
+    // fontFamily: 'ArimaMadurai-Bold',
     margin:'auto',
     marginBottom:30,
   },
