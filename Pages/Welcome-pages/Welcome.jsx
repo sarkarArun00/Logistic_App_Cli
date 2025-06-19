@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 90,
     height: 90,
-    top:95,
+    top:100,
     left: '50%',
     transform: [{ translateX: -100 }],
     zIndex: 1,
