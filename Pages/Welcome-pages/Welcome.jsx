@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
   curvbg:{
     position:'absolute',
     bottom:0,
-    height:'78%',
+    height:'77%',
   },
   roundlogo: {
     position: 'absolute',
