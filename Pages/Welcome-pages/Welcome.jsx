@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
   },
   btnText:{
     fontFamily: 'Montserrat-Bold',
-    fontSize:20,
+    fontSize:15,
     color:'#FFFFFF',
     textAlign:'center',
     backgroundColor:'#2F81F5',
