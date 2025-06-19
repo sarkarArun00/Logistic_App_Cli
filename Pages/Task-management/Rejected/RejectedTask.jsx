@@ -10,8 +10,13 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import TaskStatusTabs from '../TaskStatusTabs'
 import TaskService from '../../Services/task_service';
 import NotificationCount from '../../Notifications/NotificationCount';
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import GlobalStyles from '../../GlobalStyles';
+import { Vibration } from 'react-native';
+
+
+
+
 
 
 function RejectedTask({ navigation }) {
@@ -27,6 +32,9 @@ function RejectedTask({ navigation }) {
     const [loading, setLoading] = useState(true);
     const [selectedTask, setSelectedTask] = useState([]);
     const [selectedItem, setSelectedTaskDesc] = useState('');
+    const [commentText, setCommentText] = useState('');
+    const [collectCommentText, setCollectCommentText] = useState('');
+    const [selectedTaskId, setTaskId] = useState('');
 
 
     const formatDateTime = (isoString) => {
@@ -129,34 +137,63 @@ function RejectedTask({ navigation }) {
         const updatedImages = images.filter((_, i) => i !== index);
         setImages(updatedImages);
     };
+
     // Camera End
 
     const handleOpenModal = async (task) => {
+        const response = await TaskService.getTaskComments({ taskId: task.id });
+        setSelectedTask(response.data);
+
         setModalVisible(true);
         setSelectedTaskDesc(task);
-        try {
-            const response = await TaskService.viewAssignedTask({ taskId: task.id });
-            setSelectedTask(response.data);
-        }
-        catch (error) {
-            // console.error('Error fetching task comments:', error);
-        }
     };
-
-    // Fonts  
-    // const [fontsLoaded] = useFonts({
-    //     Montserrat_600SemiBold,
-    //     Montserrat_500Medium,
-    //     Montserrat_400Regular
-    // });
-
-    // if (!fontsLoaded) {
-    //     return null;
-    // }
 
     // Call Button
     const makeCall = () => {
         Linking.openURL("tel:7001140151");
+    };
+
+
+
+
+    const sendComment = async () => {
+        if (!commentText.trim()) return;
+
+        try {
+            const user_id = await AsyncStorage.getItem("user_id");
+            const formData = new FormData();
+
+            formData.append('taskId', selectedItem.id);
+            formData.append('comment', commentText);
+            formData.append('commentorId', user_id);
+
+            // Append attachment only if there's an image
+            if (images.length > 0 && images[0].base64) {
+                formData.append('attachment', {
+                    uri: 'data:image/jpeg;base64,' + images[0].base64,
+                    type: 'image/jpeg',
+                    name: 'attachment.jpg',
+                });
+            }
+
+            // Send the formData via TaskService
+            const response = await TaskService.addNewComment(formData); // Send as FormData
+
+            if (response.status == 1) {
+                Vibration.vibrate(100);
+            }
+
+
+            setSelectedTask(prev => [...prev, response.data]);
+            setCommentText('');
+            setImages([]);
+
+            const res = await TaskService.getTaskComments({ taskId: selectedItem.id });
+            setSelectedTask(res.data);
+
+        } catch (error) {
+            console.error('Error sending comment:', error);
+        }
     };
 
     return (
@@ -233,12 +270,41 @@ function RejectedTask({ navigation }) {
                                                 {task?.preferredTime?.start_time?.slice(0, 5)} - {task?.preferredTime?.end_time?.slice(0, 5)}
                                             </Text>
                                         </View>
-                                        <View style={{ position: 'relative' }}>
+                                        {/* <View style={{ position: 'relative' }}>
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 16, height: 16 }} source={require('../../../assets/asicon4.png')} />
                                             <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
                                                 {task?.employee?.employee_name ?? 'No Name'}
                                             </Text>
-                                        </View>
+                                        </View> */}
+
+                                        {(task?.pickUpLocation?.client_name || task?.pickUpLocation?.centreName) && (
+                                            <View style={{ position: 'relative' }}>
+                                                <Image
+                                                    style={{
+                                                        position: 'absolute',
+                                                        left: 0,
+                                                        top: 0,
+                                                        width: 16,
+                                                        height: 16,
+                                                    }}
+                                                    source={
+                                                        task.pickUpLocation.client_name
+                                                            ? require('../../../assets/asicon4.png') // client icon
+                                                            : require('../../../assets/asicon05.png') // center icon
+                                                    }
+                                                />
+                                                <Text
+                                                    style={{
+                                                        fontFamily: 'Montserrat_500Medium',
+                                                        fontSize: 13,
+                                                        color: '#0C0D36',
+                                                        paddingLeft: 20,
+                                                    }}
+                                                >
+                                                    {task.pickUpLocation.client_name || task.pickUpLocation.centreName}
+                                                </Text>
+                                            </View>
+                                        )}
                                     </View>
 
                                     {task?.isUrgent && (
@@ -294,104 +360,12 @@ function RejectedTask({ navigation }) {
                                 No Data Found
                             </Text> */}
                             <Image style={{ width: 200, height: 200, marginTop: -50 }}
-                                    source={require('../../../assets/empty.png')} 
-                                    resizeMode="contain"
-                                  />
+                                source={require('../../../assets/empty.png')}
+                                resizeMode="contain"
+                            />
                         </View>
                     )}
                 </View>
-
-                {/* Modal Start Here */}
-                <Modal
-                    visible={modalVisible}
-                    transparent={true}
-                    animationType="slide"
-                    onRequestClose={() => setModalVisible(false)}>
-                    <View style={styles.modalBackground}>
-                        <View style={[styles.modalContainer, styles.mdlNewContainer]}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
-                                <Text style={styles.modalText}>More Information</Text>
-                                <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-                                    <Image style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
-                                </TouchableOpacity>
-                            </View>
-                            <ScrollView>
-                                <View style={{ padding: 15, }}>
-                                    <View>
-                                        <Text style={styles.label}>Description</Text>
-                                        <TextInput
-                                            style={styles.textarea}
-                                            placeholder="Placeholder"
-                                            multiline={true}
-                                        />
-                                    </View>
-
-                                    <View>
-                                        <Text style={styles.label}>Comments</Text>
-                                        <View>
-                                            <View style={styles.phleBox}>
-                                                <View style={styles.phleImg}>
-                                                    <Image style={{ width: 25, height: 25, }} source={require('../../../assets/userImg.png')} />
-                                                </View>
-                                                <View style={styles.phleText}>
-                                                    <View style={styles.phleFlexBox}>
-                                                        <Text style={styles.phleTitle} numberOfLines={isExpanded ? undefined : 1}>Tarun Sana</Text>
-                                                        <Text style={styles.phleTime}>2:00 PM</Text>
-                                                    </View>
-                                                    <Text style={styles.phleDesc}>killed, gentle, and precise—excellent phlebotomist with reassuring bedside manner.</Text>
-                                                </View>
-                                            </View>
-                                            <View style={styles.phleBox}>
-                                                <View style={styles.phleImg}>
-                                                    <Image style={{ width: 25, height: 25, }} source={require('../../../assets/userImg.png')} />
-                                                </View>
-                                                <View style={styles.phleText}>
-                                                    <View style={styles.phleFlexBox}>
-                                                        <Text style={styles.phleTitle} numberOfLines={isExpanded ? undefined : 1}>Tarun Sana</Text>
-                                                        <Text style={styles.phleTime}>2:00 PM</Text>
-                                                    </View>
-                                                    <Text style={styles.phleDesc}>killed, gentle, and precise—excellent phlebotomist with reassuring bedside manner.</Text>
-                                                </View>
-                                            </View>
-                                            <View style={styles.phleBox}>
-                                                <View style={styles.phleImg}>
-                                                    <Image style={{ width: 25, height: 25, }} source={require('../../../assets/userImg.png')} />
-                                                </View>
-                                                <View style={styles.phleText}>
-                                                    <View style={styles.phleFlexBox}>
-                                                        <Text style={styles.phleTitle} numberOfLines={isExpanded ? undefined : 1}>Tarun Sana</Text>
-                                                        <Text style={styles.phleTime}>2:00 PM</Text>
-                                                    </View>
-                                                    <Text style={styles.phleDesc}>killed, gentle, and precise—excellent phlebotomist with reassuring bedside manner.</Text>
-                                                </View>
-                                            </View>
-
-                                            {/* Comments Send */}
-                                            <View style={{ flexDirection: 'row', gap: 8, }}>
-                                                <View style={{ flex: 1, }}>
-                                                    <TextInput
-                                                        style={styles.input}
-                                                        placeholder="Your Comments"
-                                                        multiline={true}
-                                                        placeholderTextColor={"#0C0D36"}
-                                                    />
-                                                </View>
-                                                <TouchableOpacity style={styles.sendBtn}>
-                                                    <FontAwesome name="paper-plane-o" size={24} color="#fff" />
-                                                </TouchableOpacity>
-                                            </View>
-                                        </View>
-                                    </View>
-
-                                    <TouchableOpacity onPress={() => { setpayMdlVisible(true); setModalVisible(false); }} style={{ backgroundColor: '#2F81F5', borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10, }}>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 16, color: 'white', textAlign: 'center', }}>Receive Payment</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </ScrollView>
-
-                        </View>
-                    </View>
-                </Modal>
 
                 {/* Payment Modal */}
                 <Modal
@@ -555,6 +529,157 @@ function RejectedTask({ navigation }) {
                                     </TouchableOpacity>
                                 </View>
                             </View>
+                        </View>
+                    </View>
+                </Modal>
+
+                {/* Comment Modal Start Here */}
+                <Modal
+                    visible={modalVisible}
+                    transparent={true}
+                    animationType="slide"
+                    onRequestClose={() => setModalVisible(false)}>
+                    <View style={styles.modalBackground}>
+                        <View style={[styles.modalContainer, styles.mdlNewContainer]}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
+                                <Text style={styles.modalText}>More Information</Text>
+                                <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+                                    <Image style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
+                                </TouchableOpacity>
+                            </View>
+                            <ScrollView>
+                                <View style={{ padding: 15, }}>
+                                    <View>
+                                        <Text style={styles.label}>Description</Text>
+                                        <TextInput
+                                            style={styles.textarea}
+                                            placeholder="Placeholder"
+                                            multiline={true}
+                                            value={selectedItem?.description}
+                                        />
+                                    </View>
+
+                                    <View>
+                                        <View>
+                                            {/* <Text style={styles.label}>Attachment</Text>
+                                            <TouchableOpacity style={styles.uploadContainer} onPress={selectImages}>
+                                                <Image style={{ width: 30, height: 28, marginHorizontal: 'auto', }} source={require('../../../assets/upload-icon.png')} />
+                                                <Text style={styles.uploadTitle}>Upload</Text>
+                                                <Text style={styles.uploadSubTitle}>Supports JPG, JPEG, and PNG</Text>
+                                            </TouchableOpacity> */}
+
+                                            {images.length > 0 ? (
+                                                <FlatList
+                                                    style={styles.flatList}
+                                                    data={images}
+                                                    keyExtractor={(item, index) => index.toString()}
+                                                    renderItem={({ item, index }) => (
+                                                        <View>
+                                                            <Image source={{ uri: item.uri }} style={{ width: 60, height: 60, borderRadius: 5, marginRight: 10, }} />
+                                                            <TouchableOpacity
+                                                                onPress={() => handleDeleteImage(index)}
+                                                                style={{
+                                                                    position: 'absolute',
+                                                                    top: -5,
+                                                                    right: 5,
+                                                                    backgroundColor: 'red',
+                                                                    borderRadius: 12,
+                                                                    width: 22,
+                                                                    height: 22,
+                                                                    justifyContent: 'center',
+                                                                    alignItems: 'center'
+                                                                }}
+                                                            >
+                                                                <Text style={{ color: 'white', fontSize: 12, lineHeight: 14, }}>✕</Text>
+                                                            </TouchableOpacity>
+                                                        </View>
+                                                    )}
+                                                    horizontal
+                                                />
+                                            ) : (
+                                                <Text ></Text>
+                                            )}
+                                        </View>
+
+                                        <View>
+                                            <Text style={styles.label}>Comments</Text>
+                                            <View>
+
+                                                {selectedTask?.map((item, index) => (
+                                                    <View key={item.id || index} style={styles.phleBox}>
+                                                        <View style={styles.phleImg}>
+                                                            <Image
+                                                                style={{ width: 25, height: 25 }}
+                                                                source={require('../../../assets/userImg.png')}
+                                                            />
+                                                        </View>
+                                                        <View style={styles.phleText}>
+                                                            <View style={styles.phleFlexBox}>
+                                                                <Text style={styles.phleTitle}>{item.commentor?.employee_name}</Text>
+                                                                <Text style={styles.phleTime}>
+                                                                    {new Date(item.createdAt).toLocaleTimeString([], {
+                                                                        hour: '2-digit',
+                                                                        minute: '2-digit'
+                                                                    })}
+                                                                </Text>
+                                                            </View>
+                                                            {item?.attachment?.path && item.attachment.path !== "" ? (
+                                                                <TouchableOpacity
+                                                                    onPress={() => {
+                                                                        const imageUrl = `${BASE_API_URL}/${item.attachment.path.replace(/\\/g, "/")}`;
+                                                                        setFullImageUri(imageUrl);
+                                                                        setModalVisible2(true);
+                                                                    }}
+                                                                >
+                                                                    <Image
+                                                                        style={{ width: 320, height: 200, marginVertical: 5 }}
+                                                                        source={{ uri: `${BASE_API_URL}/${item.attachment.path.replace(/\\/g, "/")}` }}
+                                                                    />
+                                                                </TouchableOpacity>
+                                                            ) : null}
+
+                                                            <Text style={styles.phleDesc}>{item.comment}</Text>
+                                                        </View>
+                                                    </View>
+                                                ))}
+
+
+                                                {/* Comments Send */}
+                                                <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
+                                                    {/* Comment Input */}
+                                                    <View style={{ flex: 1 }}>
+                                                        <TextInput
+                                                            style={styles.input}
+                                                            placeholder="Your Comments"
+                                                            multiline={true}
+                                                            placeholderTextColor="#0C0D36"
+                                                            value={commentText}
+                                                            onChangeText={setCommentText}
+                                                        />
+                                                    </View>
+
+                                                    {/* Attachment Icon */}
+                                                    <TouchableOpacity style={styles.attachmentBtn} onPress={selectImages}>
+                                                        <FontAwesome name="paperclip" size={24} color="#333" />
+                                                    </TouchableOpacity>
+
+                                                    {/* Send Button */}
+                                                    <TouchableOpacity style={styles.sendBtn} onPress={sendComment}>
+                                                        <FontAwesome name="paper-plane-o" size={24} color="#fff" />
+                                                    </TouchableOpacity>
+                                                </View>
+
+
+                                            </View>
+                                        </View>
+                                    </View>
+
+                                    <TouchableOpacity onPress={() => setModalVisible(false)} style={{ backgroundColor: '#7a7a79', borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10, marginTop: 12 }}>
+                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 16, color: 'white', textAlign: 'center', }}>Close</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </ScrollView>
+
                         </View>
                     </View>
                 </Modal>
@@ -762,6 +887,23 @@ const styles = StyleSheet.create({
         padding: 12,
     },
 
+        attachmentBtn: {
+        backgroundColor: '#eee',
+        padding: 10,
+        borderRadius: 6,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+
+    sendBtn: {
+        backgroundColor: '#007BFF',
+        padding: 10,
+        borderRadius: 6,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
 })
 
 export default RejectedTask;

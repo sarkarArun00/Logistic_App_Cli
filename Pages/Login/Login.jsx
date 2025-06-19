@@ -8,6 +8,7 @@ import AuthService from '../Services/auth_service';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native"; // Import useNavigation
 import { useGlobalAlert } from "../../Context/GlobalAlertContext"; // Import GlobalAlertContext
+import { lightTheme } from '../GlobalStyles'; // Import light theme styles
 
 
 
@@ -34,7 +35,7 @@ function LoginScreen() {
     const checkAuth = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
-
+        await AsyncStorage.setItem('hasSeenWelcome', 'false');
         if (token) {
           setUserToken(token);
           navigation.replace('MainApp', { screen: 'Home' });
@@ -163,11 +164,16 @@ function LoginScreen() {
               {/* Password Input */}
               <View style={styles.inputDv}>
                 <TextInput
-                  style={[styles.inputContainer, { borderBottomColor: passwordFocused ? '#0D0E37' : 'transparent' }]}
+                  style={[styles.inputContainer, { borderBottomColor: passwordFocused ? '#0D0E37' : 'transparent' }, {
+                    backgroundColor: lightTheme.inputBackground,
+                    color: lightTheme.inputText,
+                    borderColor: lightTheme.border,
+                  },]}
                   placeholder="Password"
                   placeholderTextColor="#0C0D36"
                   secureTextEntry={!isPasswordVisible}
                   value={password}
+
                   onChangeText={setPassword}
                   onFocus={() => setPasswordFocused(true)}
                   onBlur={() => setPasswordFocused(false)}

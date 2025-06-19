@@ -145,10 +145,38 @@ function Completed({ navigation }) {
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 13, height: 13, }} source={require('../../../assets/asicon3.png')} />
                                             <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20, }}>{task?.preferredTime?.start_time?.slice(0, 5)} - {task?.preferredTime?.end_time?.slice(0, 5)}</Text>
                                         </View>
-                                        <View style={{ position: 'relative', }}>
+                                        {/* <View style={{ position: 'relative', }}>
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 16, height: 16, }} source={require('../../../assets/asicon4.png')} />
                                             <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20, }}>{task?.pickUpLocation?.client_name ?? task?.pickUpLocation?.centreName ?? '...'}</Text>
-                                        </View>
+                                        </View> */}
+                                        {(task?.pickUpLocation?.client_name || task?.pickUpLocation?.centreName) && (
+                                            <View style={{ position: 'relative' }}>
+                                                <Image
+                                                    style={{
+                                                        position: 'absolute',
+                                                        left: 0,
+                                                        top: 0,
+                                                        width: 16,
+                                                        height: 16,
+                                                    }}
+                                                    source={
+                                                        task.pickUpLocation.client_name
+                                                            ? require('../../../assets/asicon4.png') // client icon
+                                                            : require('../../../assets/asicon05.png') // center icon
+                                                    }
+                                                />
+                                                <Text
+                                                    style={{
+                                                        fontFamily: 'Montserrat_500Medium',
+                                                        fontSize: 13,
+                                                        color: '#0C0D36',
+                                                        paddingLeft: 20,
+                                                    }}
+                                                >
+                                                    {task.pickUpLocation.client_name || task.pickUpLocation.centreName}
+                                                </Text>
+                                            </View>
+                                        )}
                                     </View>
                                     {task?.isUrgent && (
                                         <View key={task.id || index}>

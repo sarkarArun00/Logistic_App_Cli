@@ -9,32 +9,38 @@ const SplashScreen = ({ navigation }) => {
     const checkAuth = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
+        const hasSeenWelcome = await AsyncStorage.getItem('hasSeenWelcome');
+
+        if (!hasSeenWelcome) {
+          // First time after install — show Welcome screen
+          await AsyncStorage.setItem('hasSeenWelcome', 'true');
+          navigation.replace('Welcome');
+          return;
+        }
+
         if (token) {
           console.log('Token found:', token);
           navigation.replace('MainApp', { screen: 'Home' });
-          
         } else {
           console.log('No token found');
-          navigation.replace('Welcome');
-          // navigation.replace('Login');
+          navigation.replace('Login');
         }
       } catch (error) {
-        console.error('Error checking token:', error);
+        console.error('Error checking auth:', error);
         navigation.replace('Login');
       }
     };
 
-    
-     const timer = setTimeout(() => {
+    const timer = setTimeout(() => {
       checkAuth();
     }, 3000);
-     return () => clearTimeout(timer);
+    return () => clearTimeout(timer);
   });
 
   return (
     <View style={styles.container}>
       <Image style={styles.logo}
-        source={require('../../assets/splash-img.png')} 
+        source={require('../../assets/splash-img.png')}
         resizeMode="contain"
       />
 
@@ -49,15 +55,15 @@ const SplashScreen = ({ navigation }) => {
 export default SplashScreen;
 
 const styles = StyleSheet.create({
- container: {
+  container: {
     flex: 1,
-    backgroundColor: '#F0F8FF', 
+    backgroundColor: '#F0F8FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
- logo: {
-    width: '100%',     
-    height: '100%',    
+  logo: {
+    width: '100%',
+    height: '100%',
     marginBottom: 20,
   },
   title: {

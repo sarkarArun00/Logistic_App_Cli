@@ -16,7 +16,7 @@ import NotificationCount from '../../Notifications/NotificationCount';
 import GlobalStyles from '../../GlobalStyles';
 import { Vibration } from 'react-native';
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
-import {BASE_API_URL} from '../../Services/API';
+import { BASE_API_URL } from '../../Services/API';
 
 
 const wait = (timeout) => {
@@ -41,8 +41,7 @@ function Assigned({ navigation }) {
     const [fullImageUri, setFullImageUri] = useState(null);
     const [note, setNote] = useState('');
     const [taskId, setTaskId] = useState(null);
-
-        const { showAlertModal, hideAlert } = useGlobalAlert();
+    const { showAlertModal, hideAlert } = useGlobalAlert();
 
     // const [fontsLoaded] = useFonts({
     //     Montserrat_600SemiBold,
@@ -80,6 +79,7 @@ function Assigned({ navigation }) {
 
     const taskAccept = async (task_Id) => {
         try {
+            setLoading(true);
             const response = await TaskService.acceptTask({ taskId: task_Id });
             if (response.status == 1) {
                 showAlertModal("Task Accepted Successfully!", false);
@@ -88,11 +88,15 @@ function Assigned({ navigation }) {
                 }, 3000)
 
                 sentNotification(task_Id);
+                navigation.navigate('Accepted')
+                setLoading(false);
             } else {
-                showAlertModal("Error Failed to accept task. Please try again.",  true);
+                showAlertModal("Error Failed to accept task. Please try again.", true);
+                setLoading(false);
             }
         } catch (error) {
             console.error('Error accepting task:', error);
+            setLoading(false);
         }
     }
 
@@ -174,7 +178,7 @@ function Assigned({ navigation }) {
             const response = await TaskService.addNewComment(formData); // Send as FormData
 
             if (response.status == 1) {
-                 Vibration.vibrate(100);
+                Vibration.vibrate(100);
             }
 
             // Update the state with the new comment data
@@ -330,17 +334,6 @@ function Assigned({ navigation }) {
         Linking.openURL(`tel:${call}`);
     };
 
-
-    if (loading) {
-        return (
-            <>
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <ActivityIndicator size="large" color="#2F81F5" />
-                    <Text>Loading Tasks...</Text>
-                </View>
-            </>
-        );
-    }
     return (
         <SafeAreaView style={[styles.container, GlobalStyles.SafeAreaView]}>
             <ScrollView
@@ -422,7 +415,7 @@ function Assigned({ navigation }) {
                                                 {task?.preferredTime?.start_time?.slice(0, 5)} - {task?.preferredTime?.end_time?.slice(0, 5)}
                                             </Text>
                                         </View>
-                                        {
+                                        {/* {
                                             task?.pickUpLocation?.client_name && (
                                                 <View style={{ position: 'relative' }}>
                                                     <Image style={{ position: 'absolute', left: 0, top: 0, width: 16, height: 16 }} source={require('../../../assets/asicon4.png')} />
@@ -432,7 +425,36 @@ function Assigned({ navigation }) {
                                                 </View>
                                             )
 
-                                        }
+                                        } */}
+
+                                        {(task?.pickUpLocation?.client_name || task?.pickUpLocation?.centreName) && (
+                                            <View style={{ position: 'relative' }}>
+                                                <Image
+                                                    style={{
+                                                        position: 'absolute',
+                                                        left: 0,
+                                                        top: 0,
+                                                        width: 16,
+                                                        height: 16,
+                                                    }}
+                                                    source={
+                                                        task.pickUpLocation.client_name
+                                                            ? require('../../../assets/asicon4.png') // client icon
+                                                            : require('../../../assets/asicon05.png') // center icon
+                                                    }
+                                                />
+                                                <Text
+                                                    style={{
+                                                        fontFamily: 'Montserrat_500Medium',
+                                                        fontSize: 13,
+                                                        color: '#0C0D36',
+                                                        paddingLeft: 20,
+                                                    }}
+                                                >
+                                                    {task.pickUpLocation.client_name || task.pickUpLocation.centreName}
+                                                </Text>
+                                            </View>
+                                        )}
 
                                     </View>
 
@@ -493,9 +515,9 @@ function Assigned({ navigation }) {
                                 No Data Found
                             </Text> */}
                             <Image style={{ width: 200, height: 200, marginTop: -50 }}
-                                    source={require('../../../assets/empty.png')} 
-                                    resizeMode="contain"
-                                  />
+                                source={require('../../../assets/empty.png')}
+                                resizeMode="contain"
+                            />
                         </View>
                     )}
 
@@ -740,6 +762,25 @@ function Assigned({ navigation }) {
                 </Modal>
 
             </ScrollView>
+
+            {loading && (
+                <View
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 9999,
+                    }}
+                >
+                    <ActivityIndicator size="large" color="#FFFFFF" />
+                    <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
+                </View>
+            )}
         </SafeAreaView>
     )
 }

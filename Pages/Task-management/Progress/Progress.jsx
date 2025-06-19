@@ -11,7 +11,7 @@ import TaskService from '../../Services/task_service';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NotificationCount from '../../Notifications/NotificationCount';
 import { launchCamera } from 'react-native-image-picker';
-import {BASE_API_URL} from '../../Services/API';
+import { BASE_API_URL } from '../../Services/API';
 
 // import * as ImagePicker from 'expo-image-picker';
 // import * as ImageManipulator from 'expo-image-manipulator';
@@ -22,6 +22,7 @@ import ImageResizer from 'react-native-image-resizer';
 import { readFile } from 'react-native-fs'; // For base64
 
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
+import { lightTheme } from '../../GlobalStyles';
 
 
 function Progress({ navigation }) {
@@ -65,14 +66,35 @@ function Progress({ navigation }) {
 
     useEffect(() => {
         fetchData();
-         console.log('Fetched tasks:', itemInfo);
-    }, []);
+
+        if (collectModalVisible2) {
+            // Clear images on every open
+            setImages([]);
+            setDeliveryRemarks('');
+        }
+    }, [collectModalVisible2]);
+
+    useEffect(() => {
+        if (collectModalVisible) {
+            setImages([]);
+            setCollectCommentText('');
+        }
+    }, [collectModalVisible]);
+
+    useEffect(() => {
+        if (collectModalVisible3) {
+            setImages([]);
+            setDeliveryRemarks('');
+        }
+    }, [collectModalVisible3]);
 
     const fetchData = async () => {
         try {
             const response = await TaskService.getMyInProgressTasks();
             setAllTasksData(response.data || []);
             setVisibleTasks(response.data?.slice(0, 5) || []);
+
+            console.log('aaaaaaaaaaaaaaaaaaaaaaaaaa', response.data)
 
         } catch (error) {
             console.error('Error fetching tasks:', error);
@@ -345,9 +367,9 @@ function Progress({ navigation }) {
             let requestBody = {
                 taskId: selectedTaskId,
                 remarks: collectCommentText,
-                itemIds: ''
+                itemIds: []
             }
-            console.log('Request Body:', requestBody);
+
             const response = await TaskService.collectMyTask(requestBody);
 
             if (response.status == 1) {
@@ -459,16 +481,16 @@ function Progress({ navigation }) {
         else if (task.taskType.taskType == 'Consignment Pick Up') {
             setCollectModalVisible3(true);
             setItemConsignemtData(task.items)
+
+            console.log('cccccccccccccccccccccccccc', task)
         }
         else if (task.taskType.taskType == 'Cash Collection') {
-            setpayMdlVisible(true);
             setItemCashData(task.items)
+
+            setSelectedClientId(task.clientId || null)
             getClientsAll();
-
             setItemTaskId(task.id);
-
-            console.log('Item Task IDddddddddddddddddd:', task);
-            console.log('Item Taskffffffffffffffffffffffff:', taskId);
+            setpayMdlVisible(true);
         }
         else {
             setCollectModalVisible(true);
@@ -494,11 +516,13 @@ function Progress({ navigation }) {
         }
         setLoading(true);
         let request = {
-            taskId: selectedTaskId,
+            taskId: selectedTaskId || [],
             remarks: deliverRemarks,
             itemIds: itemIds,
         };
 
+        console.log('dddddddddddddd', request)
+        return
         try {
             const response = await TaskService.collectMyTask(request);
             if (response.status == 1) {
@@ -658,12 +682,35 @@ function Progress({ navigation }) {
                                                 {task?.preferredTime?.start_time?.slice(0, 5)} - {task?.preferredTime?.end_time?.slice(0, 5)}
                                             </Text>
                                         </View>
-                                        <View style={{ position: 'relative' }}>
-                                            <Image style={{ position: 'absolute', left: 0, top: 0, width: 16, height: 16 }} source={require('../../../assets/asicon4.png')} />
-                                            <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
-                                                {task?.pickUpLocation?.client_name ?? task?.pickUpLocation?.centreName ?? '...'}
-                                            </Text>
-                                        </View>
+                                        {(task?.pickUpLocation?.client_name || task?.pickUpLocation?.centreName) && (
+                                            <View style={{ position: 'relative' }}>
+                                                <Image
+                                                    style={{
+                                                        position: 'absolute',
+                                                        left: 0,
+                                                        top: 0,
+                                                        width: 16,
+                                                        height: 16,
+                                                    }}
+                                                    source={
+                                                        task.pickUpLocation.client_name
+                                                            ? require('../../../assets/asicon4.png') // client icon
+                                                            : require('../../../assets/asicon05.png') // center icon
+                                                    }
+                                                />
+                                                <Text
+                                                    style={{
+                                                        fontFamily: 'Montserrat_500Medium',
+                                                        fontSize: 13,
+                                                        color: '#0C0D36',
+                                                        paddingLeft: 20,
+                                                    }}
+                                                >
+                                                    {task.pickUpLocation.client_name || task.pickUpLocation.centreName}
+                                                </Text>
+                                            </View>
+                                        )}
+
                                     </View>
 
                                     {task?.isUrgent && (
@@ -922,6 +969,9 @@ function Progress({ navigation }) {
                                         <Picker
                                             selectedValue={selectedClientId}
                                             onValueChange={(itemValue) => setSelectedClientId(itemValue)}
+                                            style={styles.picker}
+                                            dropdownIconColor={lightTheme.inputText}
+                                            enabled={!selectedClientId} // ❗️Read-only when ID exists
                                         >
                                             <Picker.Item label="Select Client" value="" />
                                             {allClients.map((client) => (
@@ -937,6 +987,8 @@ function Progress({ navigation }) {
                                         <Picker
                                             selectedValue={paymentMode}
                                             onValueChange={(itemValue) => setPaymentMode(itemValue)}
+                                            style={styles.picker} // Apply text color here
+                                            dropdownIconColor={lightTheme.inputText} // Android only
                                         >
                                             <Picker.Item label="Select Mode" value="" />
                                             <Picker.Item label="Cash" value="Cash" />
@@ -1250,7 +1302,7 @@ function Progress({ navigation }) {
                                                     borderRadius: 12,
                                                     borderWidth: 1,
                                                     borderColor: '#8FEE95',
-                                                    backgroundColor: '#F0FFF1',
+                                                    backgroundColor: info.item?.color,
                                                     flexDirection: 'row',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
@@ -1318,7 +1370,7 @@ function Progress({ navigation }) {
                     <View style={styles.modalBackground}>
                         <View style={styles.modalContainer}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
-                                <Text style={styles.modalText}>Delivery Modal</Text>
+                                <Text style={styles.modalText}>Consignment Details</Text>
                                 <TouchableOpacity style={styles.closeButton} onPress={() => setCollectModalVisible3(false)}>
                                     <Image style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
                                 </TouchableOpacity>
@@ -1411,7 +1463,7 @@ function Progress({ navigation }) {
                                                     paddingLeft: 10,
                                                 }}
                                             >
-                                                {info.item?.itemName ?? 'Unknown Item'}
+                                                {info.item?.itemName ?? 'Unknown Item'} - {info?.quantity}
                                             </Text>
                                         </View>
                                         <Checkbox
@@ -1486,6 +1538,26 @@ function Progress({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+
+    label: {
+        fontSize: 16,
+        marginBottom: 8,
+        color: lightTheme.text,
+    },
+    pickerContainer: {
+        backgroundColor: lightTheme.inputBackground,
+        borderWidth: 1,
+        borderColor: lightTheme.border,
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginBottom: 16,
+    },
+    picker: {
+        height: 50,
+        color: lightTheme.inputText, // Works on iOS and sometimes Android
+    },
+
+
     container: {
         flex: 1,
         padding: 15,

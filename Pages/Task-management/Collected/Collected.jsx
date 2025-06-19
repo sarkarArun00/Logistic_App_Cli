@@ -12,10 +12,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // import * as ImagePicker from 'expo-image-picker';
 // import * as ImageManipulator from 'expo-image-manipulator';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import GlobalStyles from '../../GlobalStyles';
+import GlobalStyles  from '../../GlobalStyles';
 import { Vibration } from 'react-native';
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
 import {BASE_API_URL} from '../../Services/API';
+import { lightTheme } from '../../GlobalStyles';
+
 
 
 function Collected({ navigation }) {
@@ -137,6 +139,8 @@ function Collected({ navigation }) {
     const navigateToUserLocation = (task) => {
         const locationString = task?.pickUpLocation?.coordinates;
 
+        console.log('droppppppppppppppppppppppppp', task)
+        return
         if (!locationString) {
             showAlertModal('Location not available', true);
             return;
@@ -352,12 +356,41 @@ function Collected({ navigation }) {
                                                 {task?.preferredTime?.start_time?.slice(0, 5)} - {task?.preferredTime?.end_time?.slice(0, 5)}
                                             </Text>
                                         </View>
-                                        <View style={{ position: 'relative' }}>
+                                        {/* <View style={{ position: 'relative' }}>
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 16, height: 16 }} source={require('../../../assets/asicon4.png')} />
                                             <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
                                                 {task?.pickUpLocation?.client_name ?? task?.pickUpLocation?.centreName ?? '...'}
                                             </Text>
-                                        </View>
+                                        </View> */}
+
+                                        {(task?.pickUpLocation?.client_name || task?.pickUpLocation?.centreName) && (
+                                            <View style={{ position: 'relative' }}>
+                                                <Image
+                                                    style={{
+                                                        position: 'absolute',
+                                                        left: 0,
+                                                        top: 0,
+                                                        width: 16,
+                                                        height: 16,
+                                                    }}
+                                                    source={
+                                                        task.pickUpLocation.client_name
+                                                            ? require('../../../assets/asicon4.png') // client icon
+                                                            : require('../../../assets/asicon05.png') // center icon
+                                                    }
+                                                />
+                                                <Text
+                                                    style={{
+                                                        fontFamily: 'Montserrat_500Medium',
+                                                        fontSize: 13,
+                                                        color: '#0C0D36',
+                                                        paddingLeft: 20,
+                                                    }}
+                                                >
+                                                    {task.pickUpLocation.client_name || task.pickUpLocation.centreName}
+                                                </Text>
+                                            </View>
+                                        )}
                                     </View>
 
                                     {task?.isUrgent && (
@@ -446,6 +479,8 @@ function Collected({ navigation }) {
                                         <Picker
                                             selectedValue={selectedValue}
                                             onValueChange={(itemValue, itemIndex) => setSelectedValue(itemValue)}
+                                            style={styles.picker} // Apply text color here
+                                dropdownIconColor={lightTheme.inputText} // Android only
                                         >
                                             <Picker.Item label="-select-" value="" />
                                             {operations.map((operation) => (
@@ -654,6 +689,27 @@ function Collected({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+
+    
+     label: {
+    fontSize: 16,
+    marginBottom: 8,
+    color: lightTheme.text,
+  },
+  pickerContainer: {
+    backgroundColor: lightTheme.inputBackground,
+    borderWidth: 1,
+    borderColor: lightTheme.border,
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  picker: {
+    height: 50,
+    color: lightTheme.inputText, // Works on iOS and sometimes Android
+  },
+
+
     container: {
         flex: 1,
         padding: 15,

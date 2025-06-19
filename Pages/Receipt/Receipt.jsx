@@ -14,6 +14,7 @@ import { toWords } from 'number-to-words';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
+import { lightTheme } from '../GlobalStyles';
 
 
 
@@ -378,16 +379,16 @@ function Receipt({ navigation }) {
 
 
     const generateAndDownloadPDF1 = async (item) => {
-  const hasPermission = await requestStoragePermission();
-  if (!hasPermission) {
-    Alert.alert('Permission Denied', 'Cannot save PDF without permission.');
-    return;
-  }
+        const hasPermission = await requestStoragePermission();
+        if (!hasPermission) {
+            Alert.alert('Permission Denied', 'Cannot save PDF without permission.');
+            return;
+        }
 
-  const receiptName = `Receipt_${item?.receiptId || 'Unknown'}`.replace(/[^a-zA-Z0-9_-]/g, '');
-  const filePath = `${RNFS.DownloadDirectoryPath}/${receiptName}.pdf`;
- 
-  const htmlContent = `
+        const receiptName = `Receipt_${item?.receiptId || 'Unknown'}`.replace(/[^a-zA-Z0-9_-]/g, '');
+        const filePath = `${RNFS.DownloadDirectoryPath}/${receiptName}.pdf`;
+
+        const htmlContent = `
             <!DOCTYPE html>
             <html>
             <head>
@@ -468,22 +469,22 @@ function Receipt({ navigation }) {
             `;
 
 
-  try {
-    const pdf = await RNHTMLtoPDF.convert({
-      html: htmlContent, // your full HTML string
-      fileName: receiptName,
-      base64: true,
-    });
+        try {
+            const pdf = await RNHTMLtoPDF.convert({
+                html: htmlContent, // your full HTML string
+                fileName: receiptName,
+                base64: true,
+            });
 
-    await RNFS.writeFile(filePath, pdf.base64, 'base64');
+            await RNFS.writeFile(filePath, pdf.base64, 'base64');
 
-    Alert.alert('Success', `PDF saved to:\n${filePath}`);
-    console.log('PDF saved at:', filePath);
-  } catch (err) {
-    console.error('PDF Save Error:', err);
-    Alert.alert('Error', 'Failed to save PDF');
-  }
-};
+            Alert.alert('Success', `PDF saved to:\n${filePath}`);
+            console.log('PDF saved at:', filePath);
+        } catch (err) {
+            console.error('PDF Save Error:', err);
+            Alert.alert('Error', 'Failed to save PDF');
+        }
+    };
 
     if (loading) {
         return (
@@ -620,7 +621,7 @@ function Receipt({ navigation }) {
                                                                 <TouchableOpacity
                                                                     style={styles.viewText}
                                                                     onPress={() => {
-                                                                      
+
 
                                                                         generateAndDownloadPDF1(item);
                                                                     }}>
@@ -720,27 +721,43 @@ function Receipt({ navigation }) {
                                 <Image style={{ width: 18, height: 18 }} source={require('../../assets/mdlclose.png')} />
                             </TouchableOpacity>
                         </View>
-                        <Text style={styles.label}>Client Name</Text>
+                        {/* <Text style={styles.label}>Client Name</Text>
                         <View style={styles.pickerContainer}>
-                            {/* <Picker selectedValue={selectClient} onValueChange={setselectClient}>
-                                <Picker.Item label="Select Client" value="" />
-                                <Picker.Item label="Arun Sarkar" value="Arun Sarkar" />
-                                <Picker.Item label="Arijit G." value="Arijit G." />
-                                <Picker.Item label="Akash K." value="Akash K." />
-                            </Picker> */}
                             <Picker
                                 selectedValue={selectClient} onValueChange={setselectClient}
                             >
+                                <Picker.Item label="Select Client" value=""  />
+                                {allClients.map((client) => (
+                                    <Picker.Item key={client.id} label={client.client_name} value={client.id} dropdownIconColor={lightTheme.inputText}/>
+                                ))}
+                            </Picker>
+                        </View> */}
+
+                        <Text style={styles.label}>Client Name</Text>
+                        <View style={styles.pickerContainer}>
+                            <Picker
+                                selectedValue={selectClient}
+                                onValueChange={setselectClient}
+                                style={styles.picker} // Apply text color here
+                                dropdownIconColor={lightTheme.inputText} // Android only
+                            >
                                 <Picker.Item label="Select Client" value="" />
                                 {allClients.map((client) => (
-                                    <Picker.Item key={client.id} label={client.client_name} value={client.id} />
+                                    <Picker.Item
+                                        key={client.id}
+                                        label={client.client_name}
+                                        value={client.id}
+                                    />
                                 ))}
                             </Picker>
                         </View>
 
                         <Text style={styles.label}>Payment Mode</Text>
                         <View style={styles.pickerContainer}>
-                            <Picker selectedValue={selectPaymode} onValueChange={setselectPaymode}>
+                            <Picker selectedValue={selectPaymode} onValueChange={setselectPaymode}
+                                 style={styles.picker} // Apply text color here
+                                dropdownIconColor={lightTheme.inputText} // Android only
+                            >
                                 <Picker.Item label="Select Payment Mode" value="" />
                                 <Picker.Item label="Cash" value="Cash" />
                                 <Picker.Item label="UPI" value="UPI" />
@@ -792,6 +809,24 @@ function Receipt({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+
+     label: {
+    fontSize: 16,
+    marginBottom: 8,
+    color: lightTheme.text,
+  },
+  pickerContainer: {
+    backgroundColor: lightTheme.inputBackground,
+    borderWidth: 1,
+    borderColor: lightTheme.border,
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  picker: {
+    height: 50,
+    color: lightTheme.inputText, // Works on iOS and sometimes Android
+  },
     errorText: {
         color: 'red',
         fontSize: 12,

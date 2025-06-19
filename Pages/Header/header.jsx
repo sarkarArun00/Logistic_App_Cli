@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import TaskService from '../Services/task_service';
 import { AuthContext } from "../../Context/AuthContext";
 import { BASE_API_URL } from '../Services/API';
+import { useFocusEffect } from '@react-navigation/native';
 
 const header = ({ navigation, profileImage }) => {
 
@@ -28,12 +29,10 @@ const header = ({ navigation, profileImage }) => {
 
     const init = () => {
       getUserData();
-      checkNewNotifications();
 
-
-      const interval = setInterval(() => {
-        checkNewNotifications();
-      }, 100000);
+      // const interval = setInterval(() => {
+      //   checkNewNotifications();
+      // }, 100000);
 
       return () => clearInterval(interval);
     };
@@ -45,6 +44,12 @@ const header = ({ navigation, profileImage }) => {
     };
   }, []);
 
+
+  useFocusEffect(
+  React.useCallback(() => {
+    checkNewNotifications();
+  }, [])
+);
 
   const checkNewNotifications = async () => {
 

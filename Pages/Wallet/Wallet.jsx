@@ -13,6 +13,7 @@ import RazorpayWebView from './RazorpayWebView'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import dayjs from 'dayjs';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { lightTheme } from '../GlobalStyles'
 
 const wait = (timeout) => {
     return new Promise(resolve => setTimeout(resolve, timeout));
@@ -141,15 +142,20 @@ function Wallet({ navigation, progress = 0.5 }) {
     const getTransactionHistory = async () => {
         try {
             const today = new Date();
+            const tenDaysAgo = new Date(today);
+            tenDaysAgo.setDate(today.getDate() - 10);
+
+            const formattedFrom = tenDaysAgo.toISOString().split('T')[0];
             const formattedToday = today.toISOString().split('T')[0];
             let requestData = {
-                "fromDate": formattedToday,
-                "toDate": formattedToday,
+                "fromDate": "",
+                "toDate": "",
                 "transactionType": "",
-                "client": ""
+                "client": "",
+                "limit": 10
             }
             TaskService.getMyTransactions(requestData).then((res) => {
-                console.log('Transaction History', res.data)
+                console.log('11111111111111111111', res)
                 if (res.status == 1) {
                     setTransactions(res.data)
                     return
@@ -358,14 +364,19 @@ function Wallet({ navigation, progress = 0.5 }) {
     };
 
     const submitFilter = async () => {
-        const formattedFrom = fromDate.toISOString().split('T')[0];
+        const today = new Date();
+        const tenDaysAgo = new Date(today);
+        tenDaysAgo.setDate(today.getDate() - 10);
+
+        const formattedFrom = tenDaysAgo.toISOString().split('T')[0];
         const formattedTo = toDate.toISOString().split('T')[0];
         try {
             let requestData = {
                 "fromDate": formattedFrom,
                 "toDate": formattedTo,
                 "transactionType": selectTransactiontype,
-                "client": selectClient
+                "client": selectClient,
+                "limit": 0
             }
 
             TaskService.getMyTransactions(requestData).then((res) => {
@@ -510,18 +521,16 @@ function Wallet({ navigation, progress = 0.5 }) {
                                                 {item.transactionType === 'debit' ? 'Transfer Amount' : 'Received Amount'}
                                             </Text>
 
-                                            <Text style={styles.clientName}>
-                                                {item.transferTo === 'employee'
-                                                    ? item?.transferEmployee?.employee_name
-                                                    : item.transferTo === 'organization'
-                                                        ? 'Nirnayan Healthcare'
-                                                        : item?.transferTo?.client?.client_name}
+                                            {/* <Text style={styles.clientName}>
+                                                {item.transferTo === 'employee'? item?.transferEmp?.employee_name: item.transferTo === 'organization' 
+                                                ? 'Nirnayan Healthcare': item?.transferTo?.client?.client_name}
 
-                                            </Text>
+                                            </Text> */}
+                                            <Text style={styles.clientName}>{item.remarks}</Text>
                                         </View>
                                     </View>
                                     <View style={styles.rightBlock}>
-                                        <Text style={styles.creditAmnt}>₹{item.amount}</Text>
+                                        <Text style={styles.creditAmnt}>₹{item.billAmount}</Text>
                                         <Text style={styles.dates}>{dayjs(item.createdAt).format('MMM-DD-YYYY [at] HH:mm')}</Text>
                                     </View>
                                 </View>
@@ -553,7 +562,10 @@ function Wallet({ navigation, progress = 0.5 }) {
                                             selectedValue={selectType}
                                             onValueChange={(itemValue, itemIndex) =>
                                                 setselectType(itemValue)
-                                            }>
+                                            }
+                                            style={styles.picker} // Apply text color here
+                                            dropdownIconColor={lightTheme.inputText} // Android only 
+                                        >
                                             <Picker.Item label="-Select-" value="" />
                                             <Picker.Item label="Employee" value="Employee" />
                                             <Picker.Item label="Organization" value="Organization" />
@@ -568,6 +580,8 @@ function Wallet({ navigation, progress = 0.5 }) {
                                             <Picker
                                                 selectedValue={selectEmployee}
                                                 onValueChange={(value) => setSelectEmployee(value)}
+                                                style={styles.picker} // Apply text color here
+                                                dropdownIconColor={lightTheme.inputText} // Android only 
                                             >
                                                 <Picker.Item label="-Select-" value="" />
                                                 {
@@ -586,6 +600,8 @@ function Wallet({ navigation, progress = 0.5 }) {
                                         selectedValue={selectPaymode}
                                         enabled={selectType !== 'Employee'}
                                         onValueChange={(value) => setSelectPaymode(value)}
+                                        style={styles.picker} // Apply text color here
+                                        dropdownIconColor={lightTheme.inputText} // Android only 
                                     >
                                         <Picker.Item label="-select-" value="" />
                                         <Picker.Item label="Cash" value="cash" />
@@ -600,6 +616,8 @@ function Wallet({ navigation, progress = 0.5 }) {
                                             <Picker
                                                 selectedValue={selectCenter}
                                                 onValueChange={(value) => setSelectCenter(value)}
+                                                style={styles.picker} // Apply text color here
+                                                dropdownIconColor={lightTheme.inputText} // Android only 
                                             >
                                                 <Picker.Item label="-Select-" value="" />
                                                 {
@@ -654,14 +672,13 @@ function Wallet({ navigation, progress = 0.5 }) {
                                                 handleEmployeeTransfer();
                                                 console.log('handleEmployeeTransfer called')
                                             }
-                                            else if (selectPaymode === 'online' && selectType === 'Organization') { 
+                                            else if (selectPaymode === 'online' && selectType === 'Organization') {
                                                 handleOrgaizationPayment();
                                                 console.log('setShowPayment called')
                                             }
                                             else if (selectPaymode === 'cash' && selectType === 'Organization') {
                                                 handleOrganizationCashTransfer();
                                                 console.log('handleOrganizationCashTransfer called')
-
                                             }
                                         }}
                                         style={{
@@ -758,6 +775,8 @@ function Wallet({ navigation, progress = 0.5 }) {
                                     <Text style={styles.label}>Transaction Type</Text>
                                     <View style={styles.pickerContainer}>
                                         <Picker
+                                            style={styles.picker} // Apply text color here
+                                            dropdownIconColor={lightTheme.inputText} // Android only
                                             selectedValue={selectTransactiontype}
                                             onValueChange={(itemValue, itemIndex) =>
                                                 setTransactiontype(itemValue)
@@ -772,6 +791,8 @@ function Wallet({ navigation, progress = 0.5 }) {
                                     <Text style={styles.label}>Client</Text>
                                     <View style={styles.pickerContainer}>
                                         <Picker
+                                            style={styles.picker} // Apply text color here
+                                            dropdownIconColor={lightTheme.inputText} // Android only
                                             selectedValue={selectClient}
                                             onValueChange={(itemValue, itemIndex) =>
                                                 setselectClient(itemValue)
@@ -805,6 +826,27 @@ function Wallet({ navigation, progress = 0.5 }) {
 }
 
 const styles = StyleSheet.create({
+
+    label: {
+        fontSize: 16,
+        marginBottom: 8,
+        color: lightTheme.text,
+    },
+    pickerContainer: {
+        backgroundColor: lightTheme.inputBackground,
+        borderWidth: 1,
+        borderColor: lightTheme.border,
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginBottom: 16,
+    },
+    picker: {
+        height: 50,
+        color: lightTheme.inputText, // Works on iOS and sometimes Android
+    },
+
+
+
     container: {
         flex: 1,
         padding: 15,

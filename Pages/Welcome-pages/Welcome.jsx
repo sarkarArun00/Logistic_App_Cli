@@ -346,7 +346,7 @@ const Welcome = ({ navigation }) => {
                 Maecenas scelerisque convallis rutrum Maecenas scelerisque Maecenas scelerisque convallis rutrum
               </Text>
               <TouchableOpacity style={styles.btn} onPress={handleNext}>
-                <Text style={styles.btnText}>Get Started Now</Text>
+                <Text style={styles.btnText}>Get Started</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.curvbg}>
