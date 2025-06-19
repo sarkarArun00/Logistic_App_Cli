@@ -1022,13 +1022,14 @@ function Progress({ navigation }) {
                                 </View>
 
                                 <View>
-                                    <TouchableOpacity
+                                    <TouchableOpacity disabled={!itemCashData?.generateReceipt}
                                         onPress={handleSubmit}
                                         style={{
-                                            backgroundColor: '#2F81F5',
+                                            backgroundColor: itemCashData?.generateReceipt ? '#2F81F5' : '#B0C4DE',
                                             borderRadius: 28,
                                             paddingVertical: 16,
                                             paddingHorizontal: 10,
+                                            opacity: itemCashData?.generateReceipt ? 1 : 0.6,
                                         }}
                                     >
                                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 16, color: 'white', textAlign: 'center' }}>
