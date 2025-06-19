@@ -521,10 +521,10 @@ function Progress({ navigation }) {
             itemIds: itemIds,
         };
 
-        console.log('dddddddddddddd', request)
-        return
+        // return
         try {
             const response = await TaskService.collectMyTask(request);
+            console.log('dddddddddddddd', response)
             if (response.status == 1) {
                 addTaskAttachment(selectedTaskId);
                 fetchData();
