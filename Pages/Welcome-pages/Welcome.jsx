@@ -399,9 +399,9 @@ const styles = StyleSheet.create({
   textBlock:{
     position:"absolute",
     zIndex:2,
-    bottom:60,
+    bottom:50,
     textAlign:'center',
-    paddingHorizontal:50,
+    paddingHorizontal:30,
     paddingBottom:50,
   },
   weltitle:{
@@ -414,14 +414,14 @@ const styles = StyleSheet.create({
   },
   nirnayanText:{
     margin:'auto',
-    marginBottom:60,
+    marginBottom:30,
   },
   desc:{
     fontFamily: 'Montserrat-Medium',
     fontSize:16,
     color:"#A4A4A4",
     textAlign:'center',
-    marginBottom:50,
+    marginBottom:30,
   },
   btnText:{
     fontFamily: 'Montserrat-Bold',
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
     fontSize:30,
     color:'#2F81F5',
     textAlign:'center',
-    marginBottom:0,
+    marginBottom:20,
   },
   highlight:{
     fontFamily: 'Montserrat-Light',
@@ -452,16 +452,18 @@ const styles = StyleSheet.create({
   curvbg:{
     position:'absolute',
     bottom:0,
+    height:'78%',
   },
-  roundlogo:{
-    position:'absolute',
-    zIndex:1,
-    top:77,
-    alignSelf: 'center',
+  roundlogo: {
+    position: 'absolute',
+    width: 90,
+    height: 90,
+    top:95,
+    left: '50%',
+    transform: [{ translateX: -100 }],
+    zIndex: 1,
   },
-
-
-
+  
 
 
 
