@@ -267,6 +267,8 @@ import {
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
+const { height: screenHeight } = Dimensions.get('window');
+// const { width, height } = Dimensions.get('window');
 
 const Welcome = ({ navigation }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -454,7 +456,8 @@ const styles = StyleSheet.create({
   curvbg:{
     position:'absolute',
     bottom:0,
-    height:'77%',
+    // height:'77%',
+    height: screenHeight === 380 ? 'auto' : '77%',
   },
   roundlogo: {
     position: 'absolute',
