@@ -304,7 +304,7 @@ const Welcome = ({ navigation }) => {
               <Text style={styles.weltitle}>Welcome to</Text>
               <Image source={require('../../assets/nirnayantext.png')} style={styles.nirnayanText} />
               <Text style={styles.desc}>
-                Streamline your logistics with real-time tracking, route optimization, and end-to-end delivery management
+                An advanced healthcare logistics solution—offering real-time tracking,  scheduling, and secure sample delivery
               </Text>
               <TouchableOpacity style={styles.btn} onPress={handleNext}>
                 <Text style={styles.btnText}>Next</Text>
@@ -320,10 +320,10 @@ const Welcome = ({ navigation }) => {
           <View style={styles.slide}>
             <Image source={require('../../assets/screen2.jpg')} style={styles.image} />
             <View style={styles.textBlock}>
-              <Text style={styles.maintitle}>Trained Phlebotomist</Text>
-              <Text style={styles.subtitle}>Technician performs collection</Text>
+              <Text style={styles.maintitle}>Real-time Secure Delivery</Text>
+              {/* <Text style={styles.subtitle}>Technician performs collection</Text> */}
               <Text style={styles.desc}>
-                Maecenas scelerisque convallis rutrum Maecenas scelerisque Maecenas scelerisque convallis rutrum
+               Experience hassle-free, on-time sample delivery while maintaining all healthcare quality protocols.
               </Text>
               <TouchableOpacity style={styles.btn} onPress={handleNext}>
                 <Text style={styles.btnText}>Next</Text>
@@ -339,11 +339,12 @@ const Welcome = ({ navigation }) => {
             <Image source={require('../../assets/screen3.jpg')} style={styles.image} />
             <View style={styles.textBlock}>
               <Text style={styles.maintitle}>
-                Smart Logistics for a <Text style={styles.highlight}>Moving World</Text>
+                Redefined by Trust & Accuracy
+                {/* Smart Logistics for a <Text style={styles.highlight}>Moving World</Text> */}
               </Text>
-              <Text style={styles.subtitle}>Technician performs collection</Text>
+              {/* <Text style={styles.subtitle}>Technician performs collection</Text> */}
               <Text style={styles.desc}>
-                Maecenas scelerisque convallis rutrum Maecenas scelerisque Maecenas scelerisque convallis rutrum
+                Step into a new era of healthcare logistics with uncompromising accuracy and reliable testing, with the fastest report delivery
               </Text>
               <TouchableOpacity style={styles.btn} onPress={handleNext}>
                 <Text style={styles.btnText}>Get Started</Text>
@@ -434,7 +435,7 @@ const styles = StyleSheet.create({
   maintitle:{
     fontFamily: 'Montserrat-Bold',
     fontSize:30,
-    color:'#05A854',
+    color:'#2F81F5',
     textAlign:'center',
     marginBottom:0,
   },

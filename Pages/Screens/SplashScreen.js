@@ -12,7 +12,6 @@ const SplashScreen = ({ navigation }) => {
         const hasSeenWelcome = await AsyncStorage.getItem('hasSeenWelcome');
 
         if (!hasSeenWelcome) {
-          // First time after install — show Welcome screen
           await AsyncStorage.setItem('hasSeenWelcome', 'true');
           navigation.replace('Welcome');
           return;
@@ -23,7 +22,9 @@ const SplashScreen = ({ navigation }) => {
           navigation.replace('MainApp', { screen: 'Home' });
         } else {
           console.log('No token found');
-          navigation.replace('Login');
+          // navigation.replace('Login');
+          navigation.replace('Welcome');
+
         }
       } catch (error) {
         console.error('Error checking auth:', error);
