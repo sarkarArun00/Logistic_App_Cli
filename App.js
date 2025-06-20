@@ -244,7 +244,7 @@ export default function App() {
             initialRouteName="Splash"
           >
             <Stack.Screen name="Splash" component={SplashScreen} />
-           <Stack.Screen name="Welcome" component={Welcome} />
+           <Stack.Screen name="Welcome" component={Welcome} options={{ tabBarStyle: { display: 'none' } }}/>
             <Stack.Screen name="Login" component={Login} />
             {/* <Stack.Screen name="Password" component={Password} /> */}
             <Stack.Screen name="MainApp" component={TabNavigator} />
