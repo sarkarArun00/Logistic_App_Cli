@@ -55,6 +55,7 @@ function Wallet({ navigation, progress = 0.5 }) {
     const [showFromPicker, setShowFromPicker] = useState(false);
     const [showToPicker, setShowToPicker] = useState(false);
     const [selectTransactiontype, setTransactiontype] = useState(false);
+    const [isTransActive, setActiveTransaction] = useState(false)
 
     const user = {
         name: AsyncStorage.getItem('user_name'),
@@ -405,6 +406,10 @@ function Wallet({ navigation, progress = 0.5 }) {
 
     }
 
+
+    const isActiveTrans = () => {
+        setActiveTransaction(prev => !prev);
+      };
     // let [fontsLoaded] = useFonts({
     //     Montserrat_600SemiBold,
     //     Montserrat_500Medium,
@@ -500,7 +505,7 @@ function Wallet({ navigation, progress = 0.5 }) {
                         {
                             transactions.map((item) => (
 
-                                <View style={styles.amtBox} key={item.id}>
+                                <View style={styles.amtBox} key={item.id} onPress={isActiveTrans()}>
                                     <View style={styles.flexBox}>
                                         <View style={styles.arrowBtn}>
                                             {
@@ -532,7 +537,15 @@ function Wallet({ navigation, progress = 0.5 }) {
                                     <View style={styles.rightBlock}>
                                         <Text style={styles.creditAmnt}>₹{item.billAmount}</Text>
                                         <Text style={styles.dates}>{dayjs(item.createdAt).format('MMM-DD-YYYY [at] HH:mm')}</Text>
+                                        {/* {isTransActive && (
+                                        <Text style={{ marginTop: 10 }}>
+                                            sdjhfghsjdgfsdgfhjsdhfgs
+                                        </Text>
+                                        )} */}
+
                                     </View>
+                                    
+
                                 </View>
                             ))
                         }

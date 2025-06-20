@@ -254,7 +254,7 @@
 //   },
 // });
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -265,6 +265,7 @@ import {
   StyleSheet,
   SafeAreaView
 } from 'react-native';
+import ImmersiveMode from 'react-native-immersive';
 
 const { width } = Dimensions.get('window');
 const { height: screenHeight } = Dimensions.get('window');
@@ -286,6 +287,15 @@ const Welcome = ({ navigation }) => {
       navigation.replace('Login');
     }
   };
+
+  useEffect(() => {
+    ImmersiveMode.setImmersive(true); // Hide status & nav bar
+  
+    return () => {
+      ImmersiveMode.setImmersive(false); // Show again when leaving screen
+    };
+  }, []);
+  
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -323,8 +333,8 @@ const Welcome = ({ navigation }) => {
           <View style={styles.slide}>
             <Image source={require('../../assets/screen2.jpg')} style={styles.image} />
             <View style={styles.textBlock}>
-              <Text style={styles.maintitle}>Real-time Secure Delivery</Text>
-              {/* <Text style={styles.subtitle}>Technician performs collection</Text> */}
+              <Text style={styles.weltitle}>Real-time</Text>
+              <Text style={styles.subtitle}>Secure Delivery</Text>
               <Text style={styles.desc}>
                Experience hassle-free, on-time sample delivery while maintaining all healthcare quality protocols.
               </Text>
@@ -341,13 +351,12 @@ const Welcome = ({ navigation }) => {
           <View style={styles.slide}>
             <Image source={require('../../assets/screen3.jpg')} style={styles.image} />
             <View style={styles.textBlock}>
-              <Text style={styles.maintitle}>
-                Redefined by Trust & Accuracy
-                {/* Smart Logistics for a <Text style={styles.highlight}>Moving World</Text> */}
+              <Text style={styles.weltitle}>
+              Redefined by
               </Text>
-              {/* <Text style={styles.subtitle}>Technician performs collection</Text> */}
+              <Text style={styles.subtitle}>Trust & Accuracy</Text>
               <Text style={styles.desc}>
-                Step into a new era of healthcare logistics with uncompromising accuracy and reliable testing, with the fastest report delivery
+              Step into a new era of healthcare logistics with uncompromising accuracy and reliable testing, with the fastest report delivery
               </Text>
               <TouchableOpacity style={styles.btn} onPress={handleNext}>
                 <Text style={styles.btnText}>Get Started</Text>
@@ -402,18 +411,18 @@ const styles = StyleSheet.create({
   textBlock:{
     position:"absolute",
     zIndex:2,
-    bottom:50,
+    bottom:0,
     textAlign:'center',
-    paddingHorizontal:30,
-    paddingBottom:50,
+    paddingHorizontal:25,
+    paddingBottom:65,
   },
   weltitle:{
     fontFamily: 'Montserrat-Regular',
     fontSize:24,
-    color:"#0D0D0D",
+    color:"#787978",
     letterSpacing:2,
     textAlign:'center',
-    marginBottom:13,
+    marginBottom:0,
   },
   nirnayanText:{
     // fontFamily: 'ArimaMadurai-Bold',
@@ -423,7 +432,7 @@ const styles = StyleSheet.create({
   desc:{
     fontFamily: 'Montserrat-Medium',
     fontSize:16,
-    color:"#A4A4A4",
+    color:"#656565",
     textAlign:'center',
     marginBottom:30,
   },
@@ -436,46 +445,29 @@ const styles = StyleSheet.create({
     borderRadius:12,
     paddingVertical:16,
   },
-  maintitle:{
-    fontFamily: 'Montserrat-Bold',
-    fontSize:30,
-    color:'#2F81F5',
-    textAlign:'center',
-    marginBottom:20,
-  },
-  highlight:{
-    fontFamily: 'Montserrat-Light',
-  },
   subtitle:{
-    fontFamily: 'Montserrat-Regular',
-    fontSize:20,
-    color:'#636E68',
+    fontFamily: 'Montserrat-Bold',
+    fontSize:32,
+    color:'#2F81F5',
     textAlign:'center',
     marginBottom:25,
   },
   curvbg:{
     position:'absolute',
     bottom:0,
+    width:'100%',
     // height:'77%',
-    height: screenHeight === 380 ? 'auto' : '77%',
+    // height: screenHeight === 380 ? 'auto' : 650,
   },
   roundlogo: {
     position: 'absolute',
-    width: 90,
-    height: 90,
-    top:100,
-    left: '50%',
-    transform: [{ translateX: -100 }],
+    top:50,
     zIndex: 1,
+    alignSelf:'center',
   },
-  
-
-
-
-
   pagination: {
     position:'absolute',
-    bottom:50,
+    bottom:25,
     left:0,
     right:0,
     flexDirection: 'row',
@@ -486,10 +478,10 @@ const styles = StyleSheet.create({
   dot: {
     width:'33.3%',
     height: 4,
-    backgroundColor: '#34A89B',
+    backgroundColor: '#C8DFFF',
   },
   activeDot: {
-    backgroundColor: '#E2D117',
+    backgroundColor: '#2F81F5',
   },
 });
 
