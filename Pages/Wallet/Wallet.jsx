@@ -58,6 +58,7 @@ function Wallet({ navigation, progress = 0.5 }) {
     const [isTransActive, setActiveTransaction] = useState(false)
 
     const [activeTransactionId, setActiveTransactionId] = useState(null);
+    const [userId, setUserId] = useState(null)
 
     const user = {
         name: AsyncStorage.getItem('user_name'),
@@ -77,6 +78,7 @@ function Wallet({ navigation, progress = 0.5 }) {
         getTransactionHistory();
         getAllCenters();
         getAllClients();
+        getUserId();
 
         const max = details.walletMaxLimit;
         const balance = details.walletBalance;
@@ -192,6 +194,10 @@ function Wallet({ navigation, progress = 0.5 }) {
             }
         })
     }
+    const getUserId = async () => {
+        const userId = await AsyncStorage.getItem('user_id');
+        setUserId(userId)
+      };
 
     const handleEmployeeTransfer = async () => {
         try {
@@ -209,6 +215,14 @@ function Wallet({ navigation, progress = 0.5 }) {
                 return;
             } else if (amount > details.walletBalance) {
                 showAlertModal("You don't have sufficient balance.", true)
+                return;
+            } 
+            else if(selectEmployee == userId) {
+                showAlertModal("You cannot send money to your own account.", true)
+                return;
+            }
+            else if (amount == 0) {
+                showAlertModal("You can't transfer less then Rs 1", true)
                 return;
             }
 
@@ -344,7 +358,6 @@ function Wallet({ navigation, progress = 0.5 }) {
         if (event?.type === 'set' || Platform.OS === 'ios') {
             if (selectedDate) {
                 setFromDate(selectedDate);
-                console.log('From Date:', selectedDate);
 
                 if (selectedDate > toDate) {
                     setToDate(selectedDate);
@@ -417,30 +430,13 @@ function Wallet({ navigation, progress = 0.5 }) {
         setActiveTransactionId(prevId => (prevId === id ? null : id)); // toggle
       };
       
-    // let [fontsLoaded] = useFonts({
-    //     Montserrat_600SemiBold,
-    //     Montserrat_500Medium,
-    //     Montserrat_400Regular
-    // });
-
-    // if (!fontsLoaded) {
-    //     return null;
-    // }
-
-
-    if (loading) {
-        return (
-            <>
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <ActivityIndicator size="large" color="#2F81F5" />
-                    <Text>Loading Wallet...</Text>
-                </View>
-            </>
-        );
-    }
 
     return (
-        <SafeAreaView style={[styles.container, GlobalStyles.SafeAreaView]}>
+        <SafeAreaView style={[
+            styles.container,
+            GlobalStyles.SafeAreaView,
+            { paddingBottom: lightTheme.paddingBottomNew }
+          ]}>
             <ScrollView showsVerticalScrollIndicator={false}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.scrollView}
@@ -498,7 +494,7 @@ function Wallet({ navigation, progress = 0.5 }) {
 
 
                 {/* Transfer History */}
-                <View style={{ marginBottom: 0, }}>
+                <View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20, }}>
                         <View style={{ flex: 1, position: 'relative', }}>
                             <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, color: '#3085FE', }}>Transaction History</Text>
@@ -862,12 +858,34 @@ function Wallet({ navigation, progress = 0.5 }) {
                 </Modal>
 
             </ScrollView>
+
+
+            {loading && (
+                <View
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 9999,
+                    }}
+                >
+                    <ActivityIndicator size="large" color="#FFFFFF" />
+                    <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
+                </View>
+            )}
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-
+    ScrollView:{
+        paddingBottom:185,
+    },
     label: {
         fontSize: 16,
         marginBottom: 8,

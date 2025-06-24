@@ -4,6 +4,14 @@ import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TouchableW
 // import { useFonts, Montserrat_600SemiBold, Montserrat_400Regular, Montserrat_500Medium } from '@expo-google-fonts/montserrat'
 import { Picker } from '@react-native-picker/picker';
 // import * as ImagePicker from 'expo-image-picker';
+import { GlobalStyles, lightTheme } from '../../GlobalStyles';
+
+
+
+
+
+
+
 
 function Approved({ navigation }) {
     const [filter, setFilter] = useState(false);
@@ -117,7 +125,11 @@ function Approved({ navigation }) {
     }
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[
+            styles.container,
+            GlobalStyles.SafeAreaView,
+            { paddingBottom: lightTheme.paddingBottomNew }
+          ]}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 showsHorizontalScrollIndicator={false}>

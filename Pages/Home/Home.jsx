@@ -16,7 +16,7 @@ import { useGlobalAlert } from '../../Context/GlobalAlertContext';
 import { useFocusEffect } from '@react-navigation/native';
 import Geolocation from '@react-native-community/geolocation';
 import { Vibration } from 'react-native';
-
+import { lightTheme } from '../GlobalStyles';
 
 
 export default function Home({ navigation }) {

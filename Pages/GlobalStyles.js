@@ -8,12 +8,13 @@ export const lightTheme = {
   inputText: '#000000',
   placeholder: '#666666',
   border: '#CCCCCC',
+  paddingBottomNew:100,
 };
 
 
 const GlobalStyles = StyleSheet.create({
   SafeAreaView: {
-    paddingBottom:95,
+    paddingBottom:155,
     text: {
       fontSize: 16,
       color: 'red',

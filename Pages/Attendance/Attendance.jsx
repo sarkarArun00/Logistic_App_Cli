@@ -18,6 +18,7 @@ import TaskService from '../Services/task_service';
 import { Calendar } from 'react-native-calendars';
 import { useGlobalAlert } from '../../Context/GlobalAlertContext'
 import Geolocation from '@react-native-community/geolocation';
+import { lightTheme } from '../GlobalStyles';
 
 
 const wait = (timeout) => {
@@ -467,7 +468,11 @@ function Attendance({ navigation }) {
     }
 
     return (
-        <SafeAreaView style={[styles.container, GlobalStyles.SafeAreaView]}>
+        <SafeAreaView style={[
+            styles.container,
+            GlobalStyles.SafeAreaView,
+            { paddingBottom: lightTheme.paddingBottomNew }
+          ]}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 showsHorizontalScrollIndicator={false}

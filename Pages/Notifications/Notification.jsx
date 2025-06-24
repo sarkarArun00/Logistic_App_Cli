@@ -7,6 +7,9 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import TaskService from '../Services/task_service';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from '@react-navigation/native';
+import dayjs from 'dayjs';
+
+
 
 
 function Notification({ navigation }) {
@@ -102,7 +105,7 @@ function Notification({ navigation }) {
                 color={item.status == '1' ? "#64748B" : "#1E40AF"} style={styles.icon} />
             <View style={styles.textContainer}>
                 <Text style={styles.name}>{item.name} <Text style={styles.message}>{item.message}</Text></Text>
-                <Text style={styles.time}>{item.time}</Text>
+                <Text style={styles.time}>{dayjs(item.createdAt).format('DD-MM-YY HH:mm')}</Text>
             </View>
         </View>
     );
@@ -114,7 +117,7 @@ function Notification({ navigation }) {
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={{ flexDirection: 'row', alignItems: 'center', }}>
                     <Image style={{ width: 14, height: 14, }} source={require('../../assets/leftarrow.png')} />
-                    <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Notifications</Text>
+                    <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Notifications</Text>
                 </TouchableOpacity>
                 {/* <View style={{ position: 'relative', width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
                     <TouchableOpacity onPress={() => navigation.navigate('Notification')}>
@@ -160,24 +163,28 @@ function Notification({ navigation }) {
                                 <Text style={styles.name}>
                                     {item.name} <Text style={styles.message}>{item.message}</Text>
                                 </Text>
-                                <Text style={styles.time}>{item.time}</Text>
                             </View>
 
                             {/* Buttons */}
                             <View style={styles.buttonRow}>
-                                <TouchableOpacity
-                                    style={[styles.button, { backgroundColor: '#10B981' }]} // Green
-                                    onPress={() => handleApprove(item.id)}
-                                >
-                                    <Text style={styles.buttonText}>Approve</Text>
-                                </TouchableOpacity>
+                                <View>
+                                    <Text style={styles.time}>{item.time} {dayjs(item.createdAt).format('DD-MM-YY HH:mm')}</Text>
+                                </View>
+                                <View style={{flexDirection:'row', alignItems:'center', gap:5, }}>
+                                    <TouchableOpacity
+                                        style={[styles.button, { backgroundColor: '#10B981' }]} // Green
+                                        onPress={() => handleApprove(item.id)}
+                                    >
+                                        <Text style={styles.buttonText}>Approve</Text>
+                                    </TouchableOpacity>
 
-                                <TouchableOpacity
-                                    style={[styles.button, { backgroundColor: '#EF4444' }]} // Red
-                                    onPress={() => handleDecline(item.id)}
-                                >
-                                    <Text style={styles.buttonText}>Decline</Text>
-                                </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[styles.button, { backgroundColor: '#EF4444' }]} // Red
+                                        onPress={() => handleDecline(item.id)}
+                                    >
+                                        <Text style={styles.buttonText}>Decline</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </View>
                     )}
@@ -205,7 +212,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     notificationContainer: {
-        flexDirection: 'row',
+        // flexDirection: 'row',
         paddingVertical: 20,
         borderBottomWidth: 1,
         borderBottomColor: '#E0E0E0'
@@ -217,16 +224,16 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     name: {
-        fontFamily: 'Montserrat_600SemiBold',
+        fontFamily: 'Montserrat-SemiBold',
         fontSize: 16,
         color: '#0C0D36'
     },
     message: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         color: '#4B5563',
     },
     time: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 15,
         color: '#A5ACB8',
         marginTop: 8,
@@ -246,7 +253,7 @@ const styles = StyleSheet.create({
         borderBottomColor: '#E4E8EE',
     },
     tabText: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 16,
         paddingBottom: 15,
     },
@@ -268,13 +275,18 @@ const styles = StyleSheet.create({
     },
     buttonRow: {
         flexDirection: 'row',
-        justifyContent: 'flex-start',
-        gap: 10, // RN 0.71+
+        justifyContent: 'space-between',
+        gap: 10,
+        marginTop:5,
     },
     button: {
+        height:40,
         paddingHorizontal: 14,
-        paddingVertical: 6,
+        paddingVertical: 0,
         borderRadius: 6,
+        flexDirection:'row',
+        alignItems:'center',
+        justifyContent:'center',
     },
     buttonText: {
         color: '#fff',

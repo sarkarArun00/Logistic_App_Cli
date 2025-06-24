@@ -17,7 +17,7 @@ import GlobalStyles from '../../GlobalStyles';
 import { Vibration } from 'react-native';
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
 import { BASE_API_URL } from '../../Services/API';
-
+import { lightTheme } from '../../GlobalStyles';
 
 const wait = (timeout) => {
     return new Promise(resolve => setTimeout(resolve, timeout));
@@ -62,6 +62,7 @@ function Assigned({ navigation }) {
     const fetchData = async () => {
         try {
             const response = await TaskService.getAssignedTask();
+            console.log('sdkjhfjskdfhsdfs', response)
             if (response.status == 1) {
                 setAllTasksData(response.data || []);
                 setVisibleTasks(response.data?.slice(0, 5) || []);
@@ -336,7 +337,11 @@ function Assigned({ navigation }) {
     };
 
     return (
-        <SafeAreaView style={[styles.container, GlobalStyles.SafeAreaView]}>
+        <SafeAreaView style={[
+            styles.container,
+            GlobalStyles.SafeAreaView,
+            { paddingBottom: lightTheme.paddingBottomNew }
+          ]}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 showsHorizontalScrollIndicator={false}
