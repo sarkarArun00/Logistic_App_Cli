@@ -22,8 +22,8 @@ const SplashScreen = ({ navigation }) => {
           navigation.replace('MainApp', { screen: 'Home' });
         } else {
           console.log('No token found');
-          // navigation.replace('Login');
-          navigation.replace('Welcome');
+          navigation.replace('Login');
+          // navigation.replace('Welcome');
 
         }
       } catch (error) {

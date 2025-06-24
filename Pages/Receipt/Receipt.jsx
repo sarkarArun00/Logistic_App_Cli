@@ -486,16 +486,16 @@ function Receipt({ navigation }) {
         }
     };
 
-    if (loading) {
-        return (
-            <>
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <ActivityIndicator size="large" color="#2F81F5" />
-                    <Text>Loading Tasks...</Text>
-                </View>
-            </>
-        );
-    }
+    // if (loading) {
+    //     return (
+    //         <>
+    //             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    //                 <ActivityIndicator size="large" color="#2F81F5" />
+    //                 <Text>Loading Tasks...</Text>
+    //             </View>
+    //         </>
+    //     );
+    // }
 
 
     return (
@@ -804,6 +804,25 @@ function Receipt({ navigation }) {
                 </View>
             </Modal>
 
+                        
+            {loading && (
+                <View
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 9999,
+                    }}
+                >
+                    <ActivityIndicator size="large" color="#FFFFFF" />
+                    <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
+                </View>
+            )}
         </SafeAreaView>
     )
 }

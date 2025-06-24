@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, Animated, Easing, Platform, Modal, TextInput, Button, ActivityIndicator, RefreshControl } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, Animated, Easing, Platform, Modal, TextInput, Button, ActivityIndicator, RefreshControl, TouchableWithoutFeedback } from 'react-native';
 // import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium, Montserrat_400Regular } from '@expo-google-fonts/montserrat';
 import { Picker } from '@react-native-picker/picker';
 import DatePicker from 'react-native-date-picker'
@@ -57,6 +57,8 @@ function Wallet({ navigation, progress = 0.5 }) {
     const [selectTransactiontype, setTransactiontype] = useState(false);
     const [isTransActive, setActiveTransaction] = useState(false)
 
+    const [activeTransactionId, setActiveTransactionId] = useState(null);
+
     const user = {
         name: AsyncStorage.getItem('user_name'),
         email: AsyncStorage.getItem('user_email'),
@@ -106,6 +108,8 @@ function Wallet({ navigation, progress = 0.5 }) {
         getAllCenters();
         resetFilter();
         wait(2000).then(() => setRefreshing(false));
+
+        console.log('trannnnnnnnnn', transactions)
     }, []);
 
 
@@ -140,6 +144,7 @@ function Wallet({ navigation, progress = 0.5 }) {
             }
         })
     }
+
     const getTransactionHistory = async () => {
         try {
             const today = new Date();
@@ -156,14 +161,15 @@ function Wallet({ navigation, progress = 0.5 }) {
                 "limit": 10
             }
             TaskService.getMyTransactions(requestData).then((res) => {
-                console.log('11111111111111111111', res)
                 if (res.status == 1) {
                     setTransactions(res.data)
                     return
                 } else {
                     setTransactions([])
                 }
+                
             });
+
         } catch (error) {
             console.error('Error fetching transaction history:', error);
         }
@@ -407,9 +413,10 @@ function Wallet({ navigation, progress = 0.5 }) {
     }
 
 
-    const isActiveTrans = () => {
-        setActiveTransaction(prev => !prev);
+    const isActiveTrans = (id) => {
+        setActiveTransactionId(prevId => (prevId === id ? null : id)); // toggle
       };
+      
     // let [fontsLoaded] = useFonts({
     //     Montserrat_600SemiBold,
     //     Montserrat_500Medium,
@@ -501,57 +508,78 @@ function Wallet({ navigation, progress = 0.5 }) {
                             <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>2</Text>
                         </TouchableOpacity>
                     </View>
-                    <View style={{ backgroundColor: '#F6FAFF', borderRadius: 20, padding: 15, marginTop: 10, }}>
+                    <View style={{ backgroundColor: '#F6FAFF', borderRadius: 20, padding: 15, marginTop: 10 }}>
                         {
                             transactions.map((item) => (
-
-                                <View style={styles.amtBox} key={item.id} onPress={isActiveTrans()}>
-                                    <View style={styles.flexBox}>
-                                        <View style={styles.arrowBtn}>
+                            <TouchableWithoutFeedback key={item.id} onPress={() => isActiveTrans(item.id)}>
+                                <View style={styles.amtBox}>
+                                    <View style={styles.amtInnbox}>
+                                        <View style={styles.flexBox}>
+                                            <View style={styles.arrowBtn}>
                                             {
                                                 item.transactionType === 'debit' ? (
-                                                    <Image style={{ width: 18, height: 18, }} source={require('../../assets/dibitedarrow.png')} />
+                                                <Image style={{ width: 18, height: 18 }} source={require('../../assets/dibitedarrow.png')} />
                                                 ) : (
-                                                    <Image style={{ width: 18, height: 18, }} source={require('../../assets/creditarrow.png')} />
+                                                <Image style={{ width: 18, height: 18 }} source={require('../../assets/creditarrow.png')} />
                                                 )
                                             }
-                                        </View>
-                                        <View style={styles.flexText}>
+                                            </View>
+                                            <View style={styles.flexText}>
                                             <Text
                                                 style={[
-                                                    styles.recAmnt,
-                                                    { color: item.transactionType === 'debit' ? 'red' : '#3085FE' }
+                                                styles.recAmnt,
+                                                { color: item.transactionType === 'debit' ? 'red' : '#3085FE' }
                                                 ]}
                                             >
                                                 {item.transactionType === 'debit' ? 'Transfer Amount' : 'Received Amount'}
                                             </Text>
-
-                                            {/* <Text style={styles.clientName}>
-                                                {item.transferTo === 'employee'? item?.transferEmp?.employee_name: item.transferTo === 'organization' 
-                                                ? 'Nirnayan Healthcare': item?.transferTo?.client?.client_name}
-
-                                            </Text> */}
                                             <Text style={styles.clientName}>{item.remarks}</Text>
+                                            </View>
+                                        </View>
+                                        <View style={styles.rightBlock}>
+                                            <Text style={styles.creditAmnt}>₹{item.billAmount}</Text>
+                                            <Text style={styles.dates}>{dayjs(item.createdAt).format('MMM-DD-YYYY [at] HH:mm')}</Text>
+                                            {/* {activeTransactionId === item.id && (
+                                            <Text style={{ marginTop: 10, fontSize: 8 }}>
+                                                Receipt ID: {item.receiptId}
+                                                Payment Mode: .....
+                                                Transaction ID: {item.transactionId}
+                                            </Text>
+                                            )} */}
                                         </View>
                                     </View>
-                                    <View style={styles.rightBlock}>
-                                        <Text style={styles.creditAmnt}>₹{item.billAmount}</Text>
-                                        <Text style={styles.dates}>{dayjs(item.createdAt).format('MMM-DD-YYYY [at] HH:mm')}</Text>
-                                        {/* {isTransActive && (
-                                        <Text style={{ marginTop: 10 }}>
-                                            sdjhfghsjdgfsdgfhjsdhfgs
-                                        </Text>
-                                        )} */}
+                                    <View>
+                                    {activeTransactionId === item.id && (
+                                    <View style={{ marginTop:10, fontSize:8, borderTopWidth:1, borderTopColor:'#d8dbe0', paddingTop:10, }}>
+                                        <View style={styles.transactionDtl}>
+                                            <Text style={styles.tranIdd}>Receipt ID:</Text>
+                                            <Text style={styles.tranRec}>{item.receiptId}</Text>
+                                        </View>
+                                        {item.paymentMode && (
+                                        <View style={styles.transactionDtl}>
+                                            <Text style={styles.tranIdd}>Payment Mode:</Text>
+                                            <Text style={styles.tranRec}>{item.paymentMode}</Text>
+                                        </View>
+                                        )}
 
+                                        {item.transactionId && (
+                                        <View style={styles.transactionDtl}>
+                                            <Text style={styles.tranIdd}>Transaction ID:</Text>
+                                            <Text style={styles.tranRec}>{item.transactionId}</Text>
+                                        </View>
+                                        )}
                                     </View>
-                                    
-
+                                    )}
+                                    </View>
                                 </View>
+                            </TouchableWithoutFeedback>
                             ))
                         }
+                        </View>
 
-                    </View>
                 </View>
+
+                
 
                 {/* Wallet Modal */}
                 <Modal
@@ -963,9 +991,9 @@ const styles = StyleSheet.create({
     },
     //
     amtBox: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        // flexDirection: 'row',
+        // justifyContent: 'space-between',
+        // alignItems: 'center',
         backgroundColor: '#fff',
         borderRadius: 15,
         // iOS Shadow
@@ -977,6 +1005,31 @@ const styles = StyleSheet.create({
         elevation: 2,
         padding: 15,
         marginBottom: 12,
+    },
+    amtInnbox:{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    transactionDtl:{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom:5,
+    },
+    tranIdd:{
+        fontFamily: 'Montserrat-Medium',
+        fontSize:12,
+        color:"#000000",
+        width:115,
+    },
+    tranRec:{
+        flex:1,
+        fontFamily: 'Montserrat-Medium',
+        fontSize:12,
+        color: '#3085FE',
+        flexWrap: 'wrap',
+        overflow: 'hidden',
+       includeFontPadding: false,
     },
     flexBox: {
         flexDirection: 'row',

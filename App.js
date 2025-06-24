@@ -34,6 +34,7 @@ import SplashScreen from './Pages/Screens/SplashScreen';
 import messaging from '@react-native-firebase/messaging';
 import Welcome from './Pages/Welcome-pages/Welcome';
 
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 // Create a component for the main tab navigation with Menu bar
@@ -243,6 +244,7 @@ export default function App() {
             screenOptions={{ headerShown: false }}
             initialRouteName="Splash"
           >
+
             <Stack.Screen name="Splash" component={SplashScreen} />
            <Stack.Screen name="Welcome" component={Welcome} options={{ tabBarStyle: { display: 'none' } }}/>
             <Stack.Screen name="Login" component={Login} />
@@ -263,6 +265,7 @@ export default function App() {
             <Stack.Screen name="Rejected Task" component={RejectedTask} />
             <Stack.Screen name="Receiptview" component={Receiptview} />
             <Stack.Screen name="Notification" component={Notification} />
+            <Stack.Screen name="Attendance" component={Attendance} />
           </Stack.Navigator>
           <StatusBar style="auto" backgroundColor="#ddd" />
         </NavigationContainer>

@@ -94,7 +94,6 @@ export default function Home({ navigation }) {
                     setIsCheckedIn(false);
                 }
 
-                console.log('Home Page Focused', isChecked);
                 if (isChecked == null) {
                     setIsCheckedIn(false);
                     setCheckInTime(null);
@@ -151,62 +150,63 @@ export default function Home({ navigation }) {
 
     const requestLocationPermission = async () => {
         if (Platform.OS === 'ios') {
-            const auth = Geolocation.requestAuthorization('whenInUse');
-            return auth === 'granted';
+          const auth =  Geolocation.requestAuthorization('whenInUse');
+          return auth === 'granted';
         }
-
+      
         if (Platform.OS === 'android') {
-            try {
-                const granted = await PermissionsAndroid.request(
-                    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-                    {
-                        title: 'Location Permission',
-                        message: 'We need to access your location to continue.',
-                        buttonNeutral: 'Ask Me Later',
-                        buttonNegative: 'Cancel',
-                        buttonPositive: 'OK',
-                    }
-                );
-
-                return granted === PermissionsAndroid.RESULTS.GRANTED;
-            } catch (err) {
-                console.warn('Permission error:', err);
-                return false;
-            }
+          try {
+            const granted = await PermissionsAndroid.request(
+              PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+              {
+                title: 'Location Permission',
+                message: 'We need to access your location to continue.',
+                buttonNeutral: 'Ask Me Later',
+                buttonNegative: 'Cancel',
+                buttonPositive: 'OK',
+              }
+            );
+      
+            return granted === PermissionsAndroid.RESULTS.GRANTED;
+          } catch (err) {
+            console.warn('Permission error:', err);
+            return false;
+          }
         }
-
+      
         return false;
-    };
-
-    const getCurrentLocation = async () => {
+      };
+      
+      const getCurrentLocation = async () => {
         const hasPermission = await requestLocationPermission();
-
+      
         if (!hasPermission) {
-            showAlertModal('Location permission denied or unavailable.', true);
-            return;
+          showAlertModal('Location permission denied or unavailable.', true);
+          return;
         }
-
+      
         Geolocation.getCurrentPosition(
-            position => {
-                const { latitude, longitude } = position.coords;
-                setLatitude(latitude);
-                setLongitude(longitude);
-            },
-            error => {
-                // console.error('Location Error:', error.code, error.message);
-                // showAlertModal('Unable to fetch location. Please try again.', true);
-                setLatitude(null);
-                setLongitude(null);
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 30000,
-                maximumAge: 10000,
-                forceRequestLocation: true, // Optional but useful on Android
-                showLocationDialog: true,   // Optional, opens system dialog if GPS is off
-            }
+          position => {
+            const { latitude, longitude } = position.coords;
+            setLatitude(latitude);
+            setLongitude(longitude);
+            console.log('Latitude:', latitude);
+            console.log('Longitude:', longitude);
+          },
+          error => {
+            console.warn('Location Error:', error.code, error.message);
+            setLatitude(null);
+            setLongitude(null);
+          },
+          {
+            enableHighAccuracy: false,
+            timeout: 60000,
+            maximumAge: 10000,
+            forceRequestLocation: true,
+            showLocationDialog: true,
+          }
         );
-    };
+      };
 
     const handleSwipe = async () => {
         try {

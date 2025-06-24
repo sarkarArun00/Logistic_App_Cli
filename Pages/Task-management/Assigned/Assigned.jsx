@@ -77,6 +77,7 @@ function Assigned({ navigation }) {
         }
     };
 
+    
     const taskAccept = async (task_Id) => {
         try {
             setLoading(true);

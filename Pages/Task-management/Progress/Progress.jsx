@@ -34,7 +34,6 @@ function Progress({ navigation }) {
     const [collectModalVisible2, setCollectModalVisible2] = useState(false);
     const [collectModalVisible3, setCollectModalVisible3] = useState(false);
     const [itemCashData, setItemCashData] = useState(false);
-    const [checked, setChecked] = useState(false);
     // const [isExpanded, setIsExpanded] = useState(false);
     const [allTasksData, setAllTasksData] = useState([]);
     const [visibleTasks, setVisibleTasks] = useState([]);
@@ -56,10 +55,14 @@ function Progress({ navigation }) {
     const [amount, setAmount] = useState('');
     const [remarks, setRemarks] = useState('');
     const [taskId, setItemTaskId] = useState(null);
-    const [itemInfo, setItemDeliveryData] = useState(null);
+    const [itemInfo, setItemDeliveryData] = useState([]);
     const [itemDetails, setItemConsignemtData] = useState(null);
-    const [itemIds, setItemIds] = useState([]);
+    // const [itemIds, setItemIds] = useState([]);
     const [deliverRemarks, setDeliveryRemarks] = useState('');
+
+    const [checked, setChecked] = useState(false); // For "Select All"
+    const [itemIds, setItemIds] = useState([]); // Selected item IDs
+
 
 
     const { showAlertModal, hideAlert } = useGlobalAlert();
@@ -67,12 +70,16 @@ function Progress({ navigation }) {
     useEffect(() => {
         fetchData();
 
+        if (itemInfo.length > 0) {
+            setChecked(itemIds.length === itemInfo.length);
+          }
+
         if (collectModalVisible2) {
             // Clear images on every open
             setImages([]);
             setDeliveryRemarks('');
         }
-    }, [collectModalVisible2]);
+    }, [collectModalVisible2, itemIds, itemInfo]);
 
     useEffect(() => {
         if (collectModalVisible) {
@@ -85,6 +92,7 @@ function Progress({ navigation }) {
         if (collectModalVisible3) {
             setImages([]);
             setDeliveryRemarks('');
+            setItemIds([])
         }
     }, [collectModalVisible3]);
 
@@ -93,8 +101,6 @@ function Progress({ navigation }) {
             const response = await TaskService.getMyInProgressTasks();
             setAllTasksData(response.data || []);
             setVisibleTasks(response.data?.slice(0, 5) || []);
-
-            console.log('aaaaaaaaaaaaaaaaaaaaaaaaaa', response.data)
 
         } catch (error) {
             console.error('Error fetching tasks:', error);
@@ -481,8 +487,6 @@ function Progress({ navigation }) {
         else if (task.taskType.taskType == 'Consignment Pick Up') {
             setCollectModalVisible3(true);
             setItemConsignemtData(task.items)
-
-            console.log('cccccccccccccccccccccccccc', task)
         }
         else if (task.taskType.taskType == 'Cash Collection') {
             setItemCashData(task.items)
@@ -497,17 +501,17 @@ function Progress({ navigation }) {
         }
     };
 
-    const toggleItemChecked = (itemId) => {
-        setItemIds((prevItemIds) => {
-            const exists = prevItemIds.some((item) => item.id === itemId);
+    // const toggleItemChecked = (itemId) => {
+    //     setItemIds((prevItemIds) => {
+    //         const exists = prevItemIds.some((item) => item.id === itemId);
 
-            if (exists) {
-                return prevItemIds.filter((item) => item.id !== itemId);
-            } else {
-                return [...prevItemIds, { id: itemId }];
-            }
-        });
-    };
+    //         if (exists) {
+    //             return prevItemIds.filter((item) => item.id !== itemId);
+    //         } else {
+    //             return [...prevItemIds, { id: itemId }];
+    //         }
+    //     });
+    // };
 
     const deliverItem = async () => {
         if (itemIds.length === 0) {
@@ -521,10 +525,8 @@ function Progress({ navigation }) {
             itemIds: itemIds,
         };
 
-        // return
         try {
             const response = await TaskService.collectMyTask(request);
-            console.log('dddddddddddddd', response)
             if (response.status == 1) {
                 addTaskAttachment(selectedTaskId);
                 fetchData();
@@ -603,6 +605,26 @@ function Progress({ navigation }) {
     //     return null;
     // }
 
+
+    const toggleItemChecked = (id) => {
+        if (itemIds.some(item => item.id === id)) {
+          setItemIds(itemIds.filter(item => item.id !== id));
+        } else {
+          setItemIds([...itemIds, { id }]);
+        }
+      };
+
+      const handleSelectAll = () => {
+        if (checked) {
+          setItemIds([]); // Unselect all
+        } else {
+          const allIds = itemInfo.map((info) => ({ id: info.item.id }));
+          setItemIds(allIds); // Select all
+        }
+        setChecked(!checked);
+      };
+      
+      
     // Call Button
     const makeCall = (call) => {
         Linking.openURL(`tel:${call}`);
@@ -1278,13 +1300,13 @@ function Progress({ navigation }) {
                                     )}
                                 </View>
 
-                                {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, }}>
-                                    <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, color: '#0C0D36', }}>Select All</Text>
-                                    <Checkbox status={checked ? "checked" : "unchecked"} onPress={() => setChecked(!checked)} />
+
+                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, color: '#0C0D36', paddingBottom: 18, marginTop:5 }}>Item Details</Text>
+
+                                {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, color: '#0C0D36' }}>Select All</Text>
+                                <Checkbox status={checked ? "checked" : "unchecked"} onPress={handleSelectAll} />
                                 </View> */}
-
-                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, color: '#0C0D36', paddingBottom: 18, }}>Item Details</Text>
-
                                 {itemInfo?.map((info, index) => (
                                     <View
                                         key={info.id}
@@ -1420,13 +1442,13 @@ function Progress({ navigation }) {
                                     )}
                                 </View>
 
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, }}>
-                                    <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, color: '#0C0D36', }}>Select All</Text>
-                                    <Checkbox status={checked ? "checked" : "unchecked"} onPress={() => setChecked(!checked)} />
-                                </View>
 
                                 <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, color: '#0C0D36', paddingBottom: 18, }}>Item Details:</Text>
 
+                                {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, }}>
+                                    <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, color: '#0C0D36', }}>Select All</Text>
+                                    <Checkbox status={checked ? "checked" : "unchecked"} onPress={handleSelectAll} />
+                                </View> */}
                                 {itemDetails?.map((info, index) => (
                                     <View
                                         key={info.id}
