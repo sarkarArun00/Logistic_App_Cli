@@ -43,8 +43,38 @@ function Receiptview({ navigation, route }) {
   }, [receiptId]);
 
 
+  const requestStoragePermission = async () => {
+    if (Platform.OS === 'android') {
+      if (Platform.Version >= 33) {
+        const granted = await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+          PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
+        ]);
+  
+        return (
+          granted['android.permission.READ_MEDIA_IMAGES'] === PermissionsAndroid.RESULTS.GRANTED ||
+          granted['android.permission.READ_MEDIA_VIDEO'] === PermissionsAndroid.RESULTS.GRANTED
+        );
+      } else {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+          {
+            title: 'Storage Permission',
+            message: 'App needs access to download PDF.',
+            buttonPositive: 'Allow',
+          }
+        );
+  
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      }
+    }
+  
+    return true;
+  };
+
 
   const generateAndSharePDF = async () => {
+    const receiptName = `Receipt_${receiptData?.receiptId || 'Unknown'}`.replace(/[^a-zA-Z0-9_-]/g, '');
     const htmlContent = `
 <!DOCTYPE html>
 <html>
@@ -113,7 +143,7 @@ function Receiptview({ navigation, route }) {
     <div class="border-line">&nbsp;</div>
     <div class="flexDv">
       <div class="sndTitle">Amount</div>
-      <div class="sndSubTitle">${receiptData?.amount ? `INR ${receiptData.amount}` : '0'} only</div>
+      <div class="sndSubTitle">${receiptData?.amount ? `INR ${receiptData.amount}` : '0'}</div>
     </div>
     <div class="flexDv">
       <div class="sndTitle">Amount In Words</div>
@@ -131,19 +161,39 @@ function Receiptview({ navigation, route }) {
 
     const options = {
       html: htmlContent,
-      fileName: 'receipt',
+      fileName: receiptName,
       directory: 'Documents',
       height: 841.89, // A4
       width: 595.28,
     };
 
-
     try {
-      const file = await RNHTMLtoPDF.convert(options);
-      await Share.open({ url: `file://${file.filePath}` });
-    } catch (err) {
-      console.log('PDF Generation/Sharing Error:', err);
+    const hasPermission = await requestStoragePermission();
+    if (!hasPermission) {
+      Alert.alert('Permission Denied', 'Cannot save the PDF without storage permission.');
+      return;
     }
+
+    const file = await RNHTMLtoPDF.convert(options);
+
+    // Share the file using react-native-share
+    const shareOptions = {
+      title: 'Save Receipt PDF',
+      url: `file://${file.filePath}`,
+      type: 'application/pdf',
+      failOnCancel: false,
+    };
+
+    const result = await Share.open(shareOptions);
+
+    if (!result.dismissedAction) {
+      Alert.alert('Success', 'Receipt shared successfully.');
+    }
+
+    console.log('PDF saved at:', file.filePath);
+  } catch (err) {
+    console.log('PDF Generation/Sharing Error:', err);
+  }
   };
 
 

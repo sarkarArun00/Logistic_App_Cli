@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-    StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Platform, PermissionsAndroid,
+    StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Platform, PermissionsAndroid,FlatList
 } from 'react-native';
 // import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 // import { useFonts, Montserrat_600SemiBold, Montserrat_400Regular, Montserrat_500Medium } from '@expo-google-fonts/montserrat';
@@ -35,6 +35,19 @@ export default function Home({ navigation }) {
     const [latitude, setLatitude] = useState(null);
     const [longitude, setLongitude] = useState(null);
     const [userInfo, setUserInfo] = useState(null);
+
+
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filteredPages, setFilteredPages] = useState([]);
+  
+    const pages = [
+      { id: '1', name: 'Profile', link: 'Profile' },
+      { id: '2', name: 'Task', link: 'Assigned'},
+      { id: '3', name: 'Notifications', link: 'Notification' },
+      { id: '4', name: 'Attendance', link: 'Attendance' },
+      { id: '5', name: 'Receipt', link: 'Receipt' },
+      // Add more pages as needed
+    ];
 
 
     useEffect(() => {
@@ -291,6 +304,52 @@ export default function Home({ navigation }) {
         }, 1000);
     }
 
+    const handleSearch = (text) => {
+        setSearchQuery(text);
+        const results = pages.filter((page) =>
+          page.name.toLowerCase().includes(text.toLowerCase())
+        );
+        setFilteredPages(results);
+      };
+    
+      const renderItem = ({ item, index }) => {
+        console.log('jhfsdhfjhjshjfshjfsjfjh', item.name)
+        return (
+        <TouchableOpacity
+          onPress={() => navigation.navigate(item.name)}
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingVertical: 12,
+            paddingHorizontal: 20,
+            borderBottomWidth: index === filteredPages.length - 1 ? 0 : 1,
+            borderColor: '#f0f0f0',
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 15,
+              fontFamily: 'Montserrat_500Medium',
+              color: '#0C0D36',
+            }}
+          >
+            {item.name}
+          </Text>
+    
+          {/* Navigation Arrow Icon */}
+          <Image
+            source={require('../../assets/arrow.png')}
+            style={{
+              width: 16,
+              height: 16,
+              tintColor: 'green',
+            }}
+          />
+        </TouchableOpacity>
+        )
+    };
+
     // const handleAutoCheckout = async () => {
     //     const userId = await AsyncStorage.getItem('user_id');
 
@@ -344,11 +403,49 @@ export default function Home({ navigation }) {
                 <View style={{ position: 'relative', marginTop: 30, }}>
                     <TextInput
                         style={{ fontSize: 14, fontFamily: 'Montserrat_500Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
-                        placeholder="Search"
+                        placeholder="Search pages..."
                         placeholderTextColor="#0C0D36"
+                        value={searchQuery}
+                        onChangeText={handleSearch}
                     />
                     <Image style={{ position: 'absolute', top: 16, right: 20, width: 20, height: 20, }} source={require('../../assets/search.png')} />
                 </View>
+
+                {searchQuery.length > 0 && (
+        <View
+          style={{
+            marginTop: 12,
+            backgroundColor: '#fff',
+            borderRadius: 16,
+            paddingVertical: 8,
+            elevation: 3,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+          }}
+        >
+          {filteredPages.length > 0 ? (
+            <FlatList
+            data={filteredPages}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderItem}
+            />
+          ) : (
+            <Text
+              style={{
+                textAlign: 'center',
+                fontSize: 14,
+                fontFamily: 'Montserrat_500Medium',
+                color: '#999',
+                padding: 10,
+              }}
+            >
+              No results found
+            </Text>
+          )}
+        </View>
+      )}
 
                 <View style={{ marginTop: 20, backgroundColor: '#ecf2fc', borderWidth: 1, borderColor: '#bdd7fc', borderRadius: 40, paddingHorizontal: 15, paddingTop: 35, paddingBottom: 24, }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25, }}>
@@ -433,12 +530,46 @@ export default function Home({ navigation }) {
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.box, { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', borderRadius: 15, paddingHorizontal: 15, paddingVertical: 15, marginBottom: 12, }]}>
-                            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', }}>
-                                <View style={{ width: 34, }}>
-                                    <Image style={{ width: 34, height: 34, }} source={require('../../assets/task2.png')} />
-                                </View>
-                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 14, lineHeight: 18, color: '#0C0D36', flex: 1, paddingLeft: 9, }}>Estimated Route</Text>
-                            </View>
+                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ width: 34 }}>
+                            <Image
+                            style={{ width: 34, height: 34 }}
+                            source={require('../../assets/task2.png')}
+                            />
+                        </View>
+                        <Text
+                            style={{
+                            fontFamily: 'Montserrat_500Medium',
+                            fontSize: 14,
+                            lineHeight: 18,
+                            color: '#0C0D36',
+                            paddingLeft: 9,
+                            }}
+                        >
+                            Estimated Route
+                        </Text>
+
+                        <View
+                            style={{
+                            backgroundColor: '#FFE4B5', // light orange/yellow for highlight
+                            paddingHorizontal: 8,
+                            paddingVertical: 2,
+                            borderRadius: 10,
+                            marginLeft: 8,
+                            }}
+                        >
+                            <Text
+                            style={{
+                                fontSize: 12,
+                                color: '#D2691E', // darker orange
+                                fontWeight: 'bold',
+                            }}
+                            >
+                            Coming Soon
+                            </Text>
+                        </View>
+                        </View>
+
                             <View style={{ width: 22, }}>
                                 <Image style={{ width: 22, height: 16, }} source={require('../../assets/rightarrow.png')} />
                             </View>

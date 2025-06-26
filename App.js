@@ -1,10 +1,10 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef} from 'react';
 
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { View, StyleSheet, StatusBar, Text, PermissionsAndroid, Platform,Alert } from "react-native";
+import { View, StyleSheet, StatusBar, Text, PermissionsAndroid, Platform,Alert, Animated } from "react-native";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { GlobalAlertProvider } from './Context/GlobalAlertContext';
 import { AuthProvider } from './Context/AuthContext';
@@ -33,6 +33,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SplashScreen from './Pages/Screens/SplashScreen';
 import messaging from '@react-native-firebase/messaging';
 import Welcome from './Pages/Welcome-pages/Welcome';
+import NetInfo from '@react-native-community/netinfo';
 
 
 const Stack = createNativeStackNavigator();
@@ -176,7 +177,25 @@ function TabNavigator() {
 
 export default function App() {
 
+  const [isConnected, setIsConnected] = useState(true);
 
+  const slideAnim = useRef(new Animated.Value(-60)).current;
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnected(state.isConnected);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    Animated.timing(slideAnim, {
+      toValue: isConnected ? -60 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [isConnected]);
 
   const requestUserPermission = async () => {
     const authStatus = await messaging().requestPermission();
@@ -239,6 +258,9 @@ export default function App() {
   return (
     <GlobalAlertProvider>
       <AuthProvider>
+      <Animated.View style={[styles.container, { transform: [{ translateY: slideAnim }] }]}>
+      <Text style={styles.text}>No Internet Connection</Text>
+    </Animated.View>
         <NavigationContainer>
           <Stack.Navigator
             screenOptions={{ headerShown: false }}
@@ -275,6 +297,20 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    top: 0,
+    width: '100%',
+    backgroundColor: '#FF3B30',
+    paddingVertical: 12,
+    alignItems: 'center',
+    zIndex: 9999,
+    elevation: 5,
+  },
+  text: {
+    color: '#fff',
+    fontWeight: '600',
+  },
   tabItem: {
     flexDirection:'column',
     alignItems: 'center',

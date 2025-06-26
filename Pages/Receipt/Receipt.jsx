@@ -14,7 +14,7 @@ import { toWords } from 'number-to-words';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
-import { lightTheme } from '../GlobalStyles';
+import { GlobalStyle, lightTheme } from '../GlobalStyles';
 
 
 
@@ -247,20 +247,37 @@ function Receipt({ navigation }) {
 
     };
 
+
     const requestStoragePermission = async () => {
-        if (Platform.OS === 'android' && Platform.Version < 33) {
-            const granted = await PermissionsAndroid.request(
-                PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-                {
-                    title: 'Storage Permission Required',
-                    message: 'App needs access to your storage to download the receipt',
-                    buttonPositive: 'Allow',
-                },
-            );
-            return granted === PermissionsAndroid.RESULTS.GRANTED;
+      if (Platform.OS === 'android') {
+        if (Platform.Version >= 33) {
+          const granted = await PermissionsAndroid.requestMultiple([
+            PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+            PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
+          ]);
+    
+          return (
+            granted['android.permission.READ_MEDIA_IMAGES'] === PermissionsAndroid.RESULTS.GRANTED ||
+            granted['android.permission.READ_MEDIA_VIDEO'] === PermissionsAndroid.RESULTS.GRANTED
+          );
+        } else {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+            {
+              title: 'Storage Permission',
+              message: 'App needs access to download PDF.',
+              buttonPositive: 'Allow',
+            }
+          );
+    
+          return granted === PermissionsAndroid.RESULTS.GRANTED;
         }
-        return true;
+      }
+    
+      return true;
     };
+    
+      
 
     const generateAndDownloadPDF = async (item) => {
         const receiptName = `Receipt_${item?.receiptId || 'Unknown'}`.replace(/[^a-zA-Z0-9_-]/g, '');
@@ -272,7 +289,7 @@ function Receipt({ navigation }) {
             <style>
                 body {
                 font-family: 'Arial', sans-serif;
-                padding:20px;
+                padding:40px;
                 background-color: #fff;
                 color: #000;
                 }
@@ -356,146 +373,34 @@ function Receipt({ navigation }) {
         try {
             const hasPermission = await requestStoragePermission();
             if (!hasPermission) {
-                Alert.alert('Permission Denied', 'Cannot save the PDF without storage permission.');
-                return;
+              Alert.alert('Permission Denied', 'Cannot save the PDF without storage permission.');
+              return;
             }
-
-            const pdf = await RNHTMLtoPDF.convert(options);
-            const sourcePath = pdf.filePath;
-
-            // Target path
-            const targetPath = `${RNFS.DownloadDirectoryPath}/${receiptName}.pdf`;
-
-            // Move file
-            await RNFS.copyFile(sourcePath, targetPath);
-
-            console.log('PDF saved to:', targetPath);
-            Alert.alert(`Receipt saved to Downloads: ${receiptName}.pdf`);
-        } catch (err) {
-            console.log('PDF Generation/Download Error:', err);
-        }
+            setLoading(true)
+            const file = await RNHTMLtoPDF.convert(options);
+        
+            // Share the file using react-native-share
+            const shareOptions = {
+              title: 'Save Receipt PDF',
+              url: `file://${file.filePath}`,
+              type: 'application/pdf',
+              failOnCancel: false,
+            };
+        
+            const result = await Share.open(shareOptions);
+        
+            if (!result.dismissedAction) {
+              Alert.alert('Success', 'Receipt shared successfully.');
+              setLoading(false)
+            }
+        
+            console.log('PDF saved at:', file.filePath);
+            setLoading(false)
+          } catch (err) {
+            console.log('PDF Generation/Sharing Error:', err);
+            setLoading(false)
+          }
     };
-
-
-
-    const generateAndDownloadPDF1 = async (item) => {
-        const hasPermission = await requestStoragePermission();
-        if (!hasPermission) {
-            Alert.alert('Permission Denied', 'Cannot save PDF without permission.');
-            return;
-        }
-
-        const receiptName = `Receipt_${item?.receiptId || 'Unknown'}`.replace(/[^a-zA-Z0-9_-]/g, '');
-        const filePath = `${RNFS.DownloadDirectoryPath}/${receiptName}.pdf`;
-
-        const htmlContent = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-            <style>
-                body {
-                font-family: 'Arial', sans-serif;
-                padding:20px;
-                background-color: #fff;
-                color: #000;
-                }
-                .paymentBox{ text-align:center; background-color:#fff; border-radius:24px; box-shadow:0px 8px 24px 0px #AAAAAA4F; padding:20px; margin-bottom:30px; }
-                .paymentBox img{ margin-bottom:15px; }
-                .paymentBox .payText{ font-size:16px; line-height:1.2; font-weight:400; color:#474747; margin-bottom:8px; }
-                .paymentBox .inrText{ font-size:24px; line-height:1.2; font-weight:600; color:#0C0D36; margin-bottom:0; }
-
-                .receBox{ background-color:#fff; border-radius:24px; box-shadow: 0px 8px 24px 0px #AAAAAA4F; padding:10px 25px 25px; margin-bottom:30px; }
-                .receSubBox{ text-align:center; background-color:#F5F6F7; border-radius:12px;  margin-bottom:18px; padding:12px; }
-                .receSubBox .receTitle{ font-size:16px; line-height:1.2; font-weight:500; color:#0C0D36; margin-bottom:10px; }
-                .receSubBox .receSubTitle{ font-size:14px; line-height:1.2; font-weight:500; color:#707070; }
-
-                .flexDv{ display:flex; justify-content:space-between; margin-bottom:14px; }
-                .flexDv .sndTitle{ font-size:13px; line-height:1.2; font-weight:400; color:#707070; }
-                .flexDv .sndTitle{ font-size:13px; line-height:1.2; font-weight:500; color:#0C0D36; }
-
-                .border-line{ width:90%; border-top:1px dashed #EDEDED; height:1px; display:block; margin:0 auto 14px; }
-                .remarks{ display:flex; align-items:center; background-color:#fff; border-radius:24px; box-shadow: 0px 8px 24px 0px #AAAAAA4F; padding:16px 30px; }
-                .remarks .remTitle{ width:88px; font-size:16px; line-height:1.2; font-weight:500; color:#0C0D36; margin:0; }
-                .remarks .remSubTitle{ font-size:13px; line-height:1.2; font-weight:400; color:#707070; flex:1; margin:0; padding-top:4px; }
-
-            </style>
-            </head>
-            <body>
-            <div class="paymentBox">
-                <img src="${imageBase64}" style="width: 56px; height: 56px;" />
-                <div class="payText">Payment Success!</div>
-                <div class="inrText">INR ${item?.amount || 0}</div>
-            </div>
-
-            <div class="receBox">
-                <div class="receSubBox">
-                <div class="receTitle">Payment Receipt</div>
-                <div class="receSubTitle">Receipt Number: ${item?.receiptId || ''}</div>
-                </div>
-
-                <div class="flexDv">
-                <div class="sndTitle">Sender Name</div>
-                <div class="sndSubTitle">${item?.generatedBy || ''}</div>
-                </div>
-                <div class="flexDv">
-                <div class="sndTitle">Receiver Name</div>
-                <div class="sndSubTitle">${item?.receiverName || ''}</div>
-                </div>
-                <div class="flexDv">
-                <div class="sndTitle">Payment Date</div>
-                <div class="sndSubTitle">${item?.createdAt || ''}</div>
-                </div>
-                <div class="flexDv">
-                <div class="sndTitle">Payment Method</div>
-                <div class="sndSubTitle">${item?.paymentMode || ''}</div>
-                </div>
-                <div class="border-line">&nbsp;</div>
-                <div class="flexDv">
-                <div class="sndTitle">Amount</div>
-                <div class="sndSubTitle">${item?.amount ? `INR ${item.amount}` : '0'} only</div>
-                </div>
-                <div class="flexDv">
-                <div class="sndTitle">Amount In Words</div>
-                <div class="sndSubTitle">${toWords(item?.amount || 0).toLowerCase().replace(/\b\w/g, char => char.toUpperCase())} only</div>
-                </div>
-            </div>
-
-            <div class="remarks">
-                <div class="remTitle">Remarks:</div>
-                <div class="remSubTitle">${item?.remarks || ''}</div>
-            </div>
-            </body>
-            </html>
-            `;
-
-
-        try {
-            const pdf = await RNHTMLtoPDF.convert({
-                html: htmlContent, // your full HTML string
-                fileName: receiptName,
-                base64: true,
-            });
-
-            await RNFS.writeFile(filePath, pdf.base64, 'base64');
-
-            Alert.alert('Success', `PDF saved to:\n${filePath}`);
-            console.log('PDF saved at:', filePath);
-        } catch (err) {
-            console.error('PDF Save Error:', err);
-            Alert.alert('Error', 'Failed to save PDF');
-        }
-    };
-
-    // if (loading) {
-    //     return (
-    //         <>
-    //             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-    //                 <ActivityIndicator size="large" color="#2F81F5" />
-    //                 <Text>Loading Tasks...</Text>
-    //             </View>
-    //         </>
-    //     );
-    // }
 
 
     return (
@@ -600,34 +505,10 @@ function Receipt({ navigation }) {
 
                                                                 <TouchableOpacity
                                                                     style={styles.viewText}
-                                                                    onPress={() => {
-                                                                        // Your Download logic
-                                                                        // setActiveMenuIndex(() => {
-                                                                        //     TaskService.downloadReceipt({ receiptId: item.id }).then((res) => {
-                                                                        //         if (res.status == 1) {
-                                                                        //             showAlertModal('Receipt downloaded successfully.', false);
-                                                                        //             TaskService.handleReceiptDownload(BASE_API_URL+res.data);
-                                                                        //             openPdfInBrowser(BASE_API_URL + res.data);
-                                                                        //         } else {
-                                                                        //             showAlertModal(res?.data || 'Something went wrong.', true);
-                                                                        //         }
-                                                                        //     })
-                                                                        // });
-
-                                                                        generateAndDownloadPDF(item);
-                                                                    }}>
+                                                                    onPress={ () => generateAndDownloadPDF(item)}>
                                                                     <Text style={styles.downloadText}>Download</Text>
                                                                 </TouchableOpacity>
-                                                                <TouchableOpacity
-                                                                    style={styles.viewText}
-                                                                    onPress={() => {
-
-
-                                                                        generateAndDownloadPDF1(item);
-                                                                    }}>
-                                                                    <Text style={styles.downloadText}>Download1</Text>
-                                                                </TouchableOpacity>
-
+                                                                
                                                                 <TouchableOpacity style={styles.viewText} onPress={() => { generateAndSharePDF(item) }}>
                                                                     <Text style={styles.downloadText}>Share</Text>
                                                                 </TouchableOpacity>
@@ -673,6 +554,8 @@ function Receipt({ navigation }) {
                                     <Text style={styles.label}>Client</Text>
                                     <View style={styles.pickerContainer}>
                                         <Picker
+                                        style={styles.picker} // Apply text color here
+                                        dropdownIconColor={lightTheme.inputText}
                                             selectedValue={selectClient}
                                             onValueChange={(itemValue, itemIndex) =>
                                                 setselectClient(itemValue)

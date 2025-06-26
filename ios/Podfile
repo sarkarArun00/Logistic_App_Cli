@@ -6,6 +6,9 @@ require Pod::Executable.execute_command('node', ['-p',
   )', __dir__]).strip
 
 platform :ios, min_ios_version_supported
+
+use_modular_headers! # ✅ Add this line to fix the FirebaseCoreInternal issue
+
 prepare_react_native_project!
 
 linkage = ENV['USE_FRAMEWORKS']
