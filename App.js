@@ -1,18 +1,27 @@
+import React, {useEffect, useState, useRef} from 'react';
 
-import React, { useEffect, useState, useRef} from 'react';
-
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { View, StyleSheet, StatusBar, Text, PermissionsAndroid, Platform,Alert, Animated } from "react-native";
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {
+  View,
+  StyleSheet,
+  StatusBar,
+  Text,
+  PermissionsAndroid,
+  Platform,
+  Alert,
+  Animated,
+} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { GlobalAlertProvider } from './Context/GlobalAlertContext';
-import { AuthProvider } from './Context/AuthContext';
+import {GlobalAlertProvider} from './Context/GlobalAlertContext';
+import {AuthProvider} from './Context/AuthContext';
 // import Password from './Pages/Password/Password';
 import Home from './Pages/Home/Home';
 import Login from './Pages/Login/Login';
 import Assigned from './Pages/Task-management/Assigned/Assigned';
 import Attendance from './Pages/Attendance/Attendance';
+import TaskScreen from './Pages/Task-management/Task-Screen/Task-Screen';
 import Pending from './Pages/Fuel-voucher/Pending/Pending';
 import Wallet from './Pages/Wallet/Wallet';
 import Profile from './Pages/Profile/Profile';
@@ -29,12 +38,11 @@ import Rejected from './Pages/Fuel-voucher/Rejected/Rejected';
 import RejectedTask from './Pages/Task-management/Rejected/RejectedTask';
 import Receiptview from './Pages/Receipt/Receiptview';
 import Notification from './Pages/Notifications/Notification';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import SplashScreen from './Pages/Screens/SplashScreen';
 import messaging from '@react-native-firebase/messaging';
 import Welcome from './Pages/Welcome-pages/Welcome';
 import NetInfo from '@react-native-community/netinfo';
-
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -49,134 +57,148 @@ function TabNavigator() {
         translucent={false} // Set to true only if you want content behind status bar
       />
       <Tab.Navigator
-  screenOptions={{
-    headerShown: false,
-    tabBarShowLabel: false,
-    tabBarStyle: {
-      position: 'absolute',
-      bottom: 0,
-      height: 80 + insets.bottom,
-      paddingBottom: insets.bottom,
-      backgroundColor: '#2F81F5',
-      borderTopWidth: 0,
-      elevation: 2,
-      paddingTop: 15,
-      margin: 0,
-      borderRadius: 20,
-      overflow: 'hidden',
-    },
-  }}
->
-  <Tab.Screen
-    name="Home"
-    component={Home}
-    options={{
-      tabBarIcon: ({ focused }) => (
-        <View style={styles.tabItem}>
-          {focused && <View style={styles.afterline} />}
-          <Ionicons
-            name={focused ? 'home' : 'home-outline'}
-            size={22}
-            color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
-          />
-          <Text style={[styles.tbstitle, { color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF' }]}>
-            Home
-          </Text>
-        </View>
-      ),
-    }}
-  />
+        screenOptions={{
+          headerShown: false,
+          tabBarShowLabel: false,
+          tabBarStyle: {
+            position: 'absolute',
+            bottom: 0,
+            height: 80 + insets.bottom,
+            paddingBottom: insets.bottom,
+            backgroundColor: '#2F81F5',
+            borderTopWidth: 0,
+            elevation: 2,
+            paddingTop: 15,
+            margin: 0,
+            borderRadius: 20,
+            overflow: 'hidden',
+          },
+        }}>
+        <Tab.Screen
+          name="Home"
+          component={Home}
+          options={{
+            tabBarIcon: ({focused}) => (
+              <View style={styles.tabItem}>
+                {focused && <View style={styles.afterline} />}
+                <Ionicons
+                  name={focused ? 'home' : 'home-outline'}
+                  size={22}
+                  color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
+                />
+                <Text
+                  style={[
+                    styles.tbstitle,
+                    {color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'},
+                  ]}>
+                  Home
+                </Text>
+              </View>
+            ),
+          }}
+        />
 
-  <Tab.Screen
-    name="Assigned"
-    component={Assigned}
-    options={{
-      tabBarIcon: ({ focused }) => (
-        <View style={styles.tabItem}>
-          {focused && <View style={styles.afterline} />}
-          <Ionicons
-            name={focused ? 'list' : 'list-outline'}
-            size={22}
-            color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
-          />
-          <Text style={[styles.tbstitle, { color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF' }]}>
-            Task
-          </Text>
-        </View>
-      ),
-    }}
-  />
+        <Tab.Screen
+          name="TaskScreen"
+          component={TaskScreen}
+          options={{
+            tabBarIcon: ({focused}) => (
+              <View style={styles.tabItem}>
+                {focused && <View style={styles.afterline} />}
+                <Ionicons
+                  name={focused ? 'list' : 'list-outline'}
+                  size={22}
+                  color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
+                />
+                <Text
+                  style={[
+                    styles.tbstitle,
+                    {color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'},
+                  ]}>
+                  Task
+                </Text>
+              </View>
+            ),
+          }}
+        />
 
-  <Tab.Screen
-    name="Attendance"
-    component={Attendance}
-    options={{
-      tabBarIcon: ({ focused }) => (
-        <View style={styles.tabItem}>
-          {focused && <View style={styles.afterline} />}
-          <Ionicons
-            name={focused ? 'calendar' : 'calendar-outline'}
-            size={22}
-            color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
-          />
-          <Text style={[styles.tbstitle, { color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF' }]}>
-            Attendance
-          </Text>
-        </View>
-      ),
-    }}
-  />
+        <Tab.Screen
+          name="Attendance"
+          component={Attendance}
+          options={{
+            tabBarIcon: ({focused}) => (
+              <View style={styles.tabItem}>
+                {focused && <View style={styles.afterline} />}
+                <Ionicons
+                  name={focused ? 'calendar' : 'calendar-outline'}
+                  size={22}
+                  color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
+                />
+                <Text
+                  style={[
+                    styles.tbstitle,
+                    {color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'},
+                  ]}>
+                  Attendance
+                </Text>
+              </View>
+            ),
+          }}
+        />
 
-  <Tab.Screen
-    name="Pending"
-    component={Pending}
-    options={{
-      tabBarIcon: ({ focused }) => (
-        <View style={styles.tabItem}>
-          {focused && <View style={styles.afterline} />}
-          <Ionicons
-            name={focused ? 'receipt' : 'receipt-outline'}
-            size={22}
-            color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
-          />
-          <Text style={[styles.tbstitle, { color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF' }]}>
-            Request
-          </Text>
-        </View>
-      ),
-    }}
-  />
+        <Tab.Screen
+          name="Pending"
+          component={Pending}
+          options={{
+            tabBarIcon: ({focused}) => (
+              <View style={styles.tabItem}>
+                {focused && <View style={styles.afterline} />}
+                <Ionicons
+                  name={focused ? 'receipt' : 'receipt-outline'}
+                  size={22}
+                  color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
+                />
+                <Text
+                  style={[
+                    styles.tbstitle,
+                    {color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'},
+                  ]}>
+                  Request
+                </Text>
+              </View>
+            ),
+          }}
+        />
 
-  <Tab.Screen
-    name="Wallet"
-    component={Wallet}
-    options={{
-      tabBarIcon: ({ focused }) => (
-        <View style={styles.tabItem}>
-          {focused && <View style={styles.afterline} />}
-          <Ionicons
-            name={focused ? 'wallet' : 'wallet-outline'}
-            size={22}
-            color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
-          />
-          <Text style={[styles.tbstitle, { color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF' }]}>
-            Wallet
-          </Text>
-        </View>
-      ),
-    }}
-  />
-</Tab.Navigator>
-
-
-
-
+        <Tab.Screen
+          name="Wallet"
+          component={Wallet}
+          options={{
+            tabBarIcon: ({focused}) => (
+              <View style={styles.tabItem}>
+                {focused && <View style={styles.afterline} />}
+                <Ionicons
+                  name={focused ? 'wallet' : 'wallet-outline'}
+                  size={22}
+                  color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
+                />
+                <Text
+                  style={[
+                    styles.tbstitle,
+                    {color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'},
+                  ]}>
+                  Wallet
+                </Text>
+              </View>
+            ),
+          }}
+        />
+      </Tab.Navigator>
     </>
   );
 }
 
 export default function App() {
-
   const [isConnected, setIsConnected] = useState(true);
 
   const slideAnim = useRef(new Animated.Value(-60)).current;
@@ -204,16 +226,15 @@ export default function App() {
       authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
     if (enabled) {
-      console.log('Notification permission status:', authStatus)
+      console.log('Notification permission status:', authStatus);
       getFcmToken();
     } else {
       Alert.alert('Push Notification permission denied');
     }
 
-
     if (Platform.OS === 'android' && Platform.Version >= 33) {
       const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
       );
       if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
         console.log('Notification permission denied');
@@ -226,49 +247,61 @@ export default function App() {
       const fcmToken = await messaging().getToken();
 
       if (fcmToken) {
-        console.log("Fcm Token", fcmToken);
+        console.log('Fcm Token', fcmToken);
       } else {
-        console.log("Failed to get Fcm token")
+        console.log('Failed to get Fcm token');
       }
     } catch (error) {
       console.error('Error fetching FCM token:', error);
     }
-  }
+  };
 
   useEffect(() => {
     requestUserPermission();
 
     const unsubscribe = messaging().onMessage(async remoteMessage => {
-      Alert.alert('New Notification', JSON.stringify(remoteMessage.notification?.body || ""));
-    })
+      Alert.alert(
+        'New Notification',
+        JSON.stringify(remoteMessage.notification?.body || ''),
+      );
+    });
 
     messaging().onNotificationOpenedApp(remoteMessage => {
-      console.log('Notification opened from background state:', remoteMessage.notification)
+      console.log(
+        'Notification opened from background state:',
+        remoteMessage.notification,
+      );
     });
 
-    messaging().getInitialNotification().then(remoteMessage => {
-      console.log('Notification caused app to open from quit state:', remoteMessage.notification);
-    });
+    messaging()
+      .getInitialNotification()
+      .then(remoteMessage => {
+        console.log(
+          'Notification caused app to open from quit state:',
+          remoteMessage.notification,
+        );
+      });
 
     return unsubscribe;
-
-  },);
-
+  });
 
   return (
     <GlobalAlertProvider>
       <AuthProvider>
-      <Animated.View style={[styles.container, { transform: [{ translateY: slideAnim }] }]}>
-      <Text style={styles.text}>No Internet Connection</Text>
-    </Animated.View>
+        <Animated.View
+          style={[styles.container, {transform: [{translateY: slideAnim}]}]}>
+          <Text style={styles.text}>No Internet Connection</Text>
+        </Animated.View>
         <NavigationContainer>
           <Stack.Navigator
-            screenOptions={{ headerShown: false }}
-            initialRouteName="Splash"
-          >
-
+            screenOptions={{headerShown: false}}
+            initialRouteName="Splash">
             <Stack.Screen name="Splash" component={SplashScreen} />
-           <Stack.Screen name="Welcome" component={Welcome} options={{ tabBarStyle: { display: 'none' } }}/>
+            <Stack.Screen
+              name="Welcome"
+              component={Welcome}
+              options={{tabBarStyle: {display: 'none'}}}
+            />
             <Stack.Screen name="Login" component={Login} />
             {/* <Stack.Screen name="Password" component={Password} /> */}
             <Stack.Screen name="MainApp" component={TabNavigator} />
@@ -288,6 +321,7 @@ export default function App() {
             <Stack.Screen name="Receiptview" component={Receiptview} />
             <Stack.Screen name="Notification" component={Notification} />
             <Stack.Screen name="Attendance" component={Attendance} />
+            <Stack.Screen name="TaskScreen" component={TaskScreen} />
           </Stack.Navigator>
           <StatusBar style="auto" backgroundColor="#ddd" />
         </NavigationContainer>
@@ -312,23 +346,23 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   tabItem: {
-    flexDirection:'column',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop:0,
-    marginTop:0,
-    width:90,
-    position:'relative',
+    paddingTop: 0,
+    marginTop: 0,
+    width: 90,
+    position: 'relative',
   },
   tbstitle: {
     fontFamily: 'Montserrat_600SemiBold',
     fontSize: 14,
     color: '#8F9BB3',
-    paddingTop:5,
+    paddingTop: 5,
   },
   afterline: {
     position: 'absolute',
-    top:-15,
+    top: -15,
     left: 0,
     right: 0,
     height: 3,
@@ -337,7 +371,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 2,
     zIndex: 2,
   },
-  
+
   // iconUnfocused: {
   //   width:50,
   //   height:50,
@@ -354,7 +388,4 @@ const styles = StyleSheet.create({
   //   textAlign:'center',
   //   lineHeight:50,
   // },
-  
 });
-
-

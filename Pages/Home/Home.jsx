@@ -518,7 +518,7 @@ export default function Home({ navigation }) {
                     <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, lineHeight: 18, color: '#3085FE', paddingBottom: 20, }}>My Shortcuts</Text>
                     <View style={{ backgroundColor: '#F6FAFF', borderRadius: 40, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8, }}>
                         <TouchableOpacity style={[styles.box, { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', borderRadius: 15, paddingHorizontal: 15, paddingVertical: 15, marginBottom: 12, }]}
-                            onPress={() => navigation.navigate('MainApp', { screen: 'Assigned' })}>
+                            onPress={() => navigation.navigate('MainApp', { screen: 'TaskScreen' })}>
                             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', }}>
                                 <View style={{ width: 34, }}>
                                     <Image style={{ width: 34, height: 34, }} source={require('../../assets/task1.png')} />

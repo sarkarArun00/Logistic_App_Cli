@@ -270,7 +270,7 @@ function Profile({ navigation }) {
                 </View>
 
                 <View>
-                    <TouchableOpacity onPress={() => navigation.navigate('Assigned')} style={styles.tskmain}>
+                    <TouchableOpacity onPress={() => navigation.navigate('TaskScreen')} style={styles.tskmain}>
                         <View style={styles.taskbox}>
                             <View style={styles.tskimg}><Image style={{ width: 58, height: 58, }} source={require('../../assets/pficon1.png')} /></View>
                             <Text style={styles.tsktext}>My Task</Text>
