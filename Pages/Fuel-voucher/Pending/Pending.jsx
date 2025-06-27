@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TouchableWithoutFeedback, TextInput, Modal, Animated, FlatList, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, ActivityIndicator, TouchableWithoutFeedback, TextInput, Modal, Animated, FlatList, Alert } from 'react-native';
 // import { useFonts, Montserrat_600SemiBold, Montserrat_400Regular, Montserrat_500Medium } from '@expo-google-fonts/montserrat'
 import { Picker } from '@react-native-picker/picker';
 // import * as ImagePicker from 'expo-image-picker';
 import { lightTheme } from '../../GlobalStyles';
 import GlobalStyles from '../../GlobalStyles';
+import TaskService from '../../Services/task_service';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 
 function Pending({ navigation }) {
@@ -14,10 +17,84 @@ function Pending({ navigation }) {
     const [showMenu, setShowMenu] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [selectPaymode, setselectPaymode] = useState();
-    const [selectCar, setselectCar] = useState();
+    const [selectVehicle, setVehicle] = useState();
     const bgColor = useRef(new Animated.Value(0)).current;
     const [selectViewMdl, setSelectViewMdl] = useState(false);
     const [images, setImages] = useState([]);
+    const [vehicles, setVehicles] = useState([])
+    const [fuelVoucherList, setFuelVoucherList] = useState([])
+    const [remarks, setRemarks] = useState('')
+    const [amount, setAmount] = useState(0)
+    const [selectedVehicle, setSelectedVehicle] = useState(null);
+    const [loading, setLoading] = useState(false)
+    const [activeMenuId, setActiveMenuId] = useState(null);
+
+
+
+    useFocusEffect(
+        useCallback(() => {
+          vehicleList();
+          getAllFuelVoucher();
+        }, [])
+      );
+      
+
+    const vehicleList = async () => {
+        const userId =  await AsyncStorage.getItem('user_id')
+        const response = await TaskService.getVehicleByEmpId({employeeId: 209})
+        console.log('ressssss', response)
+        if(response.status==1) {
+            setVehicles(response.data)
+        } else {
+            setVehicles([])
+
+        }
+    }
+
+    const formatDateTime = (dateString) => {
+        if (!dateString) return '';
+      
+        const date = new Date(dateString);
+      
+        return date
+          .toLocaleString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            month: 'short',       // "Feb"
+            day: '2-digit',       // "20"
+            year: 'numeric',      // "2025"
+            hour: 'numeric',      // "4"
+            minute: '2-digit',    // "01"
+            hour12: true          // "PM"
+          })
+          .replace(',', ''); // Optional: Remove comma between date and time
+      };
+      
+      
+
+    const formatToINR = (amount) => {
+        return new Intl.NumberFormat('en-IN', {
+          style: 'currency',
+          currency: 'INR',
+          minimumFractionDigits: 2,
+        }).format(amount || 0);
+      };
+
+    const getAllFuelVoucher = async () => {
+        setLoading(true)
+        const response = await TaskService.getAllFuelVouchers();
+        console.log('getAllFuelVoucher 111111 1111111', response)
+        if(response.status==1) {
+            setFuelVoucherList(response.data)
+        setLoading(false)
+
+        } 
+        else {
+            setFuelVoucherList([])
+        setLoading(false)
+
+        }
+    }    
+
 
     // Camera Open
     const requestPermission = async (type) => {
@@ -108,16 +185,36 @@ function Pending({ navigation }) {
         outputRange: ['#FFBB00', 'transparent'],
     });
 
-    // Fonts 
-    // const [fontsLoaded] = useFonts({
-    //     Montserrat_600SemiBold,
-    //     Montserrat_500Medium,
-    //     Montserrat_400Regular,
-    // });
+    const onSubmitFuelvoucher = async () => {
+        const userId = await AsyncStorage.getItem('user_id');
+      
+        console.log('selectedVehicle:', selectedVehicle); 
+        if (!selectedVehicle) {
+          Alert.alert('Missing Information', 'Please select a valid vehicle before submitting.');
+          return;
+        }
+      
+        const request = {
+          employeeId: Number(userId),
+          trackingId: Number(selectedVehicle), 
+          amount: Number(amount),
+          paymentMode: selectPaymode,
+          logisticRemarks: remarks,
+        };
 
-    // if (!fontsLoaded) {
-    //     return null;
-    // }
+        console.log('jhfsdfdfsdfsdfsdjf', request)
+    //   return
+        try {
+          const response = await TaskService.saveFuelVoucher(request);
+          console.log('API Response:', response.data);
+          Alert.alert('Success', 'Fuel voucher submitted successfully.');
+        } catch (err) {
+          console.error('API Error:', err);
+          Alert.alert('Error', 'Failed to submit fuel voucher.');
+        }
+      };
+      
+
 
     return (
         <SafeAreaView style={[
@@ -175,55 +272,108 @@ function Pending({ navigation }) {
                     </View>
                 </ScrollView>
 
-                <View>
-                    <Text style={styles.title}>Feb 22, 2025</Text>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15, }}>
-                        <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center', }}>
-                            <View>
-                                <Image style={{ width: 28, height: 20, }} source={require('../../../assets/voucher.png')} />
-                            </View>
-                            <View style={{ paddingLeft: 6, }}>
-                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, color: '#0C0D36', paddingBottom: 2, }}>#589AGRD</Text>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', }}>
-                                    <View style={styles.bgborder}><Animated.View style={[styles.animatebg, { backgroundColor }]} /></View>
-                                    <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 11, color: '#0C0D36', }}>Payment Pending</Text>
-                                </View>
-                            </View>
-                        </View>
-                        <TouchableWithoutFeedback onPress={() => setShowMenu(false)}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', }}>
-                                <View style={{ paddingRight: 15, }}>
-                                    <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 14, color: '#FFBB00', }}>3000.00</Text>
-                                </View>
-                                <TouchableOpacity
-                                    style={[styles.touchBtn, { paddingHorizontal: 4 }]}
-                                    onPress={(e) => {
-                                        e.stopPropagation();
-                                        setShowMenu(!showMenu);
-                                    }}>
-                                    <Image style={{ width: 4, height: 23 }} source={require('../../../assets/dotimg1.png')} />
-                                </TouchableOpacity>
+                {fuelVoucherList.map((allVehicles) => (
+                <View key={allVehicles.id}>
+                    <Text style={styles.title}>{formatDateTime(allVehicles.createdAt)}</Text>
 
-                                {showMenu && (
-                                    <View style={styles.viewBx}>
-                                        <TouchableOpacity style={styles.viewText} onPress={() => {
-                                            setSelectViewMdl(true);
-                                            setShowMenu(false);
-                                        }}>
-                                            <Text style={styles.downloadText}>View</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity style={styles.viewText} onPress={() => setShowMenu(false)}>
-                                            <Text style={styles.downloadText}>Download</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity style={styles.viewText} onPress={() => setShowMenu(false)}>
-                                            <Text style={styles.downloadText}>Share</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                )}
+                    <View
+                    style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: 15,
+                    }}
+                    >
+                    <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
+                        <Image
+                        style={{ width: 28, height: 20 }}
+                        source={require('../../../assets/voucher.png')}
+                        />
+                        <View style={{ paddingLeft: 6 }}>
+                        <Text
+                            style={{
+                            fontFamily: 'Montserrat_500Medium',
+                            fontSize: 16,
+                            color: '#0C0D36',
+                            paddingBottom: 2,
+                            }}
+                        >
+                            #SDHKHF7688
+                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <View style={styles.bgborder}>
+                            <Animated.View style={[styles.animatebg, { backgroundColor }]} />
                             </View>
-                        </TouchableWithoutFeedback>
+                            <Text
+                            style={{
+                                fontFamily: 'Montserrat_600SemiBold',
+                                fontSize: 11,
+                                color: '#0C0D36',
+                            }}
+                            >
+                            Payment Pending
+                            </Text>
+                        </View>
+                        </View>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ paddingRight: 15 }}>
+                        <Text
+                            style={{
+                            fontFamily: 'Montserrat_600SemiBold',
+                            fontSize: 14,
+                            color: '#FFBB00',
+                            }}
+                        >
+                            {formatToINR(allVehicles.amount)}
+                        </Text>
+                        </View>
+                        <TouchableOpacity
+                        style={[styles.touchBtn, { paddingHorizontal: 4 }]}
+                        onPress={() =>
+                            setActiveMenuId(
+                            activeMenuId === allVehicles.id ? null : allVehicles.id
+                            )
+                        }
+                        >
+                        <Image
+                            style={{ width: 4, height: 23 }}
+                            source={require('../../../assets/dotimg1.png')}
+                        />
+                        </TouchableOpacity>
+
+                        {activeMenuId === allVehicles.id && (
+                        <View style={styles.viewBx}>
+                            <TouchableOpacity
+                            style={styles.viewText}
+                            onPress={() => {
+                                setSelectViewMdl(true);
+                                setActiveMenuId(null);
+                            }}
+                            >
+                            <Text style={styles.downloadText}>View</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                            style={styles.viewText}
+                            onPress={() => setActiveMenuId(null)}
+                            >
+                            <Text style={styles.downloadText}>Download</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                            style={styles.viewText}
+                            onPress={() => setActiveMenuId(null)}
+                            >
+                            <Text style={styles.downloadText}>Share</Text>
+                            </TouchableOpacity>
+                        </View>
+                        )}
+                    </View>
                     </View>
                 </View>
+                ))}
+
+
 
                 {/* Filter Modal */}
                 <Modal
@@ -373,14 +523,23 @@ function Pending({ navigation }) {
                                 <View>
                                     <Text style={styles.label}>Select Vehicle</Text>
                                     <View style={styles.pickerContainer}>
-                                        <Picker
-                                            selectedValue={selectCar}
-                                            onValueChange={(itemValue, itemIndex) =>
-                                                setselectCar(itemValue)
-                                            }>
-                                            <Picker.Item label="Car" value="Car" />
-                                            <Picker.Item label="Bike" value="Bike" />
-                                        </Picker>
+                                    <Picker
+                                    selectedValue={selectedVehicle}
+                                    onValueChange={(itemValue, itemIndex) => {
+                                        setSelectedVehicle(itemValue); // Only trackingId
+                                    }}
+                                    >
+                                    <Picker.Item enabled={false} label="Select Vehicle" value="" />
+                                    {vehicles.map(v => (
+                                        <Picker.Item
+                                        key={v.id}
+                                        label={v.vehicle?.modelName}
+                                        value={v.id} // value is trackingId now
+                                        />
+                                    ))}
+                                    </Picker>
+
+
                                     </View>
                                 </View>
                                 <View>
@@ -391,9 +550,9 @@ function Pending({ navigation }) {
                                             onValueChange={(itemValue, itemIndex) =>
                                                 setselectPaymode(itemValue)
                                             }>
-                                            <Picker.Item label="Cash" value="Cash" />
-                                            <Picker.Item label="UPI" value="UPI" />
-                                            <Picker.Item label="Net Banking" value="Net Banking" />
+                                            <Picker.Item key={'cash'} label="Cash" value="cash" />
+                                            <Picker.Item key={'UPI'} label="UPI" value="UPI" />
+                                            <Picker.Item key={'Net Banking'} label="Net Banking" value="Net Banking" />
                                         </Picker>
                                     </View>
                                 </View>
@@ -403,6 +562,8 @@ function Pending({ navigation }) {
                                         style={styles.input}
                                         placeholder="Enter Amount"
                                         placeholderTextColor="#0C0D36"
+                                        value={amount}
+                                        onChangeText={setAmount}
                                     />
                                 </View>
 
@@ -454,10 +615,12 @@ function Pending({ navigation }) {
                                         style={styles.input}
                                         placeholder="Placeholder"
                                         placeholderTextColor="#0C0D36"
+                                        value={remarks}
+                                        onChangeText={setRemarks}
                                     />
                                 </View>
                                 <View>
-                                    <TouchableOpacity style={{ backgroundColor: '#2F81F5', borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10, }}>
+                                    <TouchableOpacity onPress={() => onSubmitFuelvoucher()} style={{ backgroundColor: '#2F81F5', borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10, }}>
                                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 16, color: 'white', textAlign: 'center', }}>Send</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -467,6 +630,25 @@ function Pending({ navigation }) {
                 </View>
             </Modal>
 
+
+            {loading && (
+                <View
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 9999,
+                    }}
+                >
+                    <ActivityIndicator size="large" color="#FFFFFF" />
+                    <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
+                </View>
+            )}
         </SafeAreaView>
     )
 }
@@ -479,7 +661,7 @@ const styles = StyleSheet.create({
     },
     title: {
         fontFamily: 'Montserrat_500Medium',
-        fontSize: 16,
+        fontSize: 12,
         color: '#2F81F5',
         marginVertical: 20,
     },

@@ -188,9 +188,9 @@ function Accepted({ navigation }) {
                 </View>
 
                 {/* Tab Navigation */}
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollContainer}>
+                {/* <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollContainer}>
                     <TaskStatusTabs activeTab="Accepted" />
-                </ScrollView>
+                </ScrollView> */}
 
                 <View style={{ paddingHorizontal: 3, }}>
 

@@ -317,6 +317,7 @@ export default function App() {
             <Stack.Screen name="Approved" component={Approved} />
             <Stack.Screen name="Processed" component={Processed} />
             <Stack.Screen name="Rejected" component={Rejected} />
+            <Stack.Screen name='Pending' component={Pending} />
             <Stack.Screen name="Rejected Task" component={RejectedTask} />
             <Stack.Screen name="Receiptview" component={Receiptview} />
             <Stack.Screen name="Notification" component={Notification} />

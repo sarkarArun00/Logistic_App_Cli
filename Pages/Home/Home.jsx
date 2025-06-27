@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-    StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Platform, PermissionsAndroid,FlatList
+    StyleSheet, View, Text, Alert, TouchableOpacity, Image, ScrollView, Modal, TextInput, Platform, PermissionsAndroid, FlatList, Linking
 } from 'react-native';
 // import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 // import { useFonts, Montserrat_600SemiBold, Montserrat_400Regular, Montserrat_500Medium } from '@expo-google-fonts/montserrat';
@@ -17,6 +17,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import Geolocation from '@react-native-community/geolocation';
 import { Vibration } from 'react-native';
 import { lightTheme } from '../GlobalStyles';
+// import IntentLauncher from 'react-native-intent-launcher';
 
 
 export default function Home({ navigation }) {
@@ -39,16 +40,20 @@ export default function Home({ navigation }) {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredPages, setFilteredPages] = useState([]);
-  
-    const pages = [
-      { id: '1', name: 'Profile', link: 'Profile' },
-      { id: '2', name: 'Task', link: 'Assigned'},
-      { id: '3', name: 'Notifications', link: 'Notification' },
-      { id: '4', name: 'Attendance', link: 'Attendance' },
-      { id: '5', name: 'Receipt', link: 'Receipt' },
-      // Add more pages as needed
-    ];
+    const [showLocationModal, setShowLocationModal] = useState(false);
 
+    const pages = [
+        { id: '1', name: 'Profile', link: 'Profile' },
+        { id: '2', name: 'Assigned', link: 'Assigned' },
+        { id: '3', name: 'Accepted', link: 'Accepted' },
+        { id: '4', name: 'In Progress', link: 'In Progress' },
+        { id: '5', name: 'Collected', link: 'Collected' },
+        { id: '6', name: 'Completed', link: 'Completed' },
+        { id: '7', name: 'Notification', link: 'Notification' },
+        { id: '8', name: 'Attendance', link: 'Attendance' },
+        { id: '9', name: 'Receipt', link: 'Receipt' },
+        { id: '10', name: 'Rejected Task', link: 'Rejected Task' },
+    ];
 
     useEffect(() => {
         const getUserData = async () => {
@@ -163,69 +168,70 @@ export default function Home({ navigation }) {
 
     const requestLocationPermission = async () => {
         if (Platform.OS === 'ios') {
-          const auth =  Geolocation.requestAuthorization('whenInUse');
-          return auth === 'granted';
+            const auth = Geolocation.requestAuthorization('whenInUse');
+            return auth === 'granted';
         }
-      
+
         if (Platform.OS === 'android') {
-          try {
-            const granted = await PermissionsAndroid.request(
-              PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-              {
-                title: 'Location Permission',
-                message: 'We need to access your location to continue.',
-                buttonNeutral: 'Ask Me Later',
-                buttonNegative: 'Cancel',
-                buttonPositive: 'OK',
-              }
-            );
-      
-            return granted === PermissionsAndroid.RESULTS.GRANTED;
-          } catch (err) {
-            console.warn('Permission error:', err);
-            return false;
-          }
+            try {
+                const granted = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                    {
+                        title: 'Location Permission',
+                        message: 'We need to access your location to continue.',
+                        buttonNeutral: 'Ask Me Later',
+                        buttonNegative: 'Cancel',
+                        buttonPositive: 'OK',
+                    }
+                );
+
+                return granted === PermissionsAndroid.RESULTS.GRANTED;
+            } catch (err) {
+                console.warn('Permission error:', err);
+                return false;
+            }
         }
-      
+
         return false;
-      };
-      
-      const getCurrentLocation = async () => {
+    };
+
+    const getCurrentLocation = async () => {
         const hasPermission = await requestLocationPermission();
-      
+
         if (!hasPermission) {
-          showAlertModal('Location permission denied or unavailable.', true);
-          return;
+            showAlertModal('Location permission denied or unavailable.', true);
+            return;
         }
-      
+
         Geolocation.getCurrentPosition(
-          position => {
-            const { latitude, longitude } = position.coords;
-            setLatitude(latitude);
-            setLongitude(longitude);
-            console.log('Latitude:', latitude);
-            console.log('Longitude:', longitude);
-          },
-          error => {
-            console.warn('Location Error:', error.code, error.message);
-            setLatitude(null);
-            setLongitude(null);
-          },
-          {
-            enableHighAccuracy: false,
-            timeout: 60000,
-            maximumAge: 10000,
-            forceRequestLocation: true,
-            showLocationDialog: true,
-          }
+            position => {
+                const { latitude, longitude } = position.coords;
+                setLatitude(latitude);
+                setLongitude(longitude);
+                console.log('Latitude:', latitude);
+                console.log('Longitude:', longitude);
+            },
+            error => {
+                console.warn('Location Error:', error.code, error.message);
+                setLatitude(null);
+                setLongitude(null);
+            },
+            {
+                enableHighAccuracy: false,
+                timeout: 60000,
+                maximumAge: 10000,
+                forceRequestLocation: true,
+                showLocationDialog: true,
+            }
         );
-      };
+    };
 
     const handleSwipe = async () => {
         try {
             //    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             if (latitude === null || longitude === null) {
-                showAlertModal('Unable to fetch location. Please try again.', true);
+                // showAlertModal('Unable to fetch location. Please try again.', true);
+                setShowLocationModal(true);
                 swipeRef.current?.reset();
                 return;
             }
@@ -267,6 +273,7 @@ export default function Home({ navigation }) {
                     showAlertModal('You have successfully checked out.', false);
                     setTimeout(() => hideAlert(), 3000);
                     await AsyncStorage.multiRemove(['isCheckedIn', 'checkInTime', 'checkInTimeDisplay']);
+                    Vibration.vibrate(500);
                     setIsCheckedIn(false);
                     setCheckInTimeDisplay(null);
                     setWorkingDuration('00:00');
@@ -285,7 +292,15 @@ export default function Home({ navigation }) {
         }
     };
 
-
+    const openSettings = () => {
+        if (Platform.OS === 'android') {
+          IntentLauncher.startActivity({
+            action: 'android.settings.LOCATION_SOURCE_SETTINGS',
+          });
+        } else {
+          Linking.openURL('app-settings:');
+        }
+      };
 
     const startTimer = (checkInDate) => {
         clearInterval(timerRef.current);
@@ -307,46 +322,46 @@ export default function Home({ navigation }) {
     const handleSearch = (text) => {
         setSearchQuery(text);
         const results = pages.filter((page) =>
-          page.name.toLowerCase().includes(text.toLowerCase())
+            page.name.toLowerCase().includes(text.toLowerCase())
         );
         setFilteredPages(results);
-      };
-    
-      const renderItem = ({ item, index }) => {
+    };
+
+    const renderItem = ({ item, index }) => {
         console.log('jhfsdhfjhjshjfshjfsjfjh', item.name)
         return (
-        <TouchableOpacity
-          onPress={() => navigation.navigate(item.name)}
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingVertical: 12,
-            paddingHorizontal: 20,
-            borderBottomWidth: index === filteredPages.length - 1 ? 0 : 1,
-            borderColor: '#f0f0f0',
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 15,
-              fontFamily: 'Montserrat_500Medium',
-              color: '#0C0D36',
-            }}
-          >
-            {item.name}
-          </Text>
-    
-          {/* Navigation Arrow Icon */}
-          <Image
-            source={require('../../assets/arrow.png')}
-            style={{
-              width: 16,
-              height: 16,
-              tintColor: 'green',
-            }}
-          />
-        </TouchableOpacity>
+            <TouchableOpacity
+                onPress={() => navigation.navigate(item.name)}
+                style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    paddingVertical: 12,
+                    paddingHorizontal: 20,
+                    borderBottomWidth: index === filteredPages.length - 1 ? 0 : 1,
+                    borderColor: '#f0f0f0',
+                }}
+            >
+                <Text
+                    style={{
+                        fontSize: 15,
+                        fontFamily: 'Montserrat_500Medium',
+                        color: '#0C0D36',
+                    }}
+                >
+                    {item.name}
+                </Text>
+
+                {/* Navigation Arrow Icon */}
+                <Image
+                    source={require('../../assets/arrow.png')}
+                    style={{
+                        width: 16,
+                        height: 16,
+                        tintColor: 'green',
+                    }}
+                />
+            </TouchableOpacity>
         )
     };
 
@@ -412,40 +427,40 @@ export default function Home({ navigation }) {
                 </View>
 
                 {searchQuery.length > 0 && (
-        <View
-          style={{
-            marginTop: 12,
-            backgroundColor: '#fff',
-            borderRadius: 16,
-            paddingVertical: 8,
-            elevation: 3,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-          }}
-        >
-          {filteredPages.length > 0 ? (
-            <FlatList
-            data={filteredPages}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderItem}
-            />
-          ) : (
-            <Text
-              style={{
-                textAlign: 'center',
-                fontSize: 14,
-                fontFamily: 'Montserrat_500Medium',
-                color: '#999',
-                padding: 10,
-              }}
-            >
-              No results found
-            </Text>
-          )}
-        </View>
-      )}
+                    <View
+                        style={{
+                            marginTop: 12,
+                            backgroundColor: '#fff',
+                            borderRadius: 16,
+                            paddingVertical: 8,
+                            elevation: 3,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.1,
+                            shadowRadius: 4,
+                        }}
+                    >
+                        {filteredPages.length > 0 ? (
+                            <FlatList
+                                data={filteredPages}
+                                keyExtractor={(item) => item.id.toString()}
+                                renderItem={renderItem}
+                            />
+                        ) : (
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    fontSize: 14,
+                                    fontFamily: 'Montserrat_500Medium',
+                                    color: '#999',
+                                    padding: 10,
+                                }}
+                            >
+                                No results found
+                            </Text>
+                        )}
+                    </View>
+                )}
 
                 <View style={{ marginTop: 20, backgroundColor: '#ecf2fc', borderWidth: 1, borderColor: '#bdd7fc', borderRadius: 40, paddingHorizontal: 15, paddingTop: 35, paddingBottom: 24, }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25, }}>
@@ -530,45 +545,45 @@ export default function Home({ navigation }) {
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.box, { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', borderRadius: 15, paddingHorizontal: 15, paddingVertical: 15, marginBottom: 12, }]}>
-                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                        <View style={{ width: 34 }}>
-                            <Image
-                            style={{ width: 34, height: 34 }}
-                            source={require('../../assets/task2.png')}
-                            />
-                        </View>
-                        <Text
-                            style={{
-                            fontFamily: 'Montserrat_500Medium',
-                            fontSize: 14,
-                            lineHeight: 18,
-                            color: '#0C0D36',
-                            paddingLeft: 9,
-                            }}
-                        >
-                            Estimated Route
-                        </Text>
+                            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                                <View style={{ width: 34 }}>
+                                    <Image
+                                        style={{ width: 34, height: 34 }}
+                                        source={require('../../assets/task2.png')}
+                                    />
+                                </View>
+                                <Text
+                                    style={{
+                                        fontFamily: 'Montserrat_500Medium',
+                                        fontSize: 14,
+                                        lineHeight: 18,
+                                        color: '#0C0D36',
+                                        paddingLeft: 9,
+                                    }}
+                                >
+                                    Estimated Route
+                                </Text>
 
-                        <View
-                            style={{
-                            backgroundColor: '#FFE4B5', // light orange/yellow for highlight
-                            paddingHorizontal: 8,
-                            paddingVertical: 2,
-                            borderRadius: 10,
-                            marginLeft: 8,
-                            }}
-                        >
-                            <Text
-                            style={{
-                                fontSize: 12,
-                                color: '#D2691E', // darker orange
-                                fontWeight: 'bold',
-                            }}
-                            >
-                            Coming Soon
-                            </Text>
-                        </View>
-                        </View>
+                                <View
+                                    style={{
+                                        backgroundColor: '#FFE4B5', // light orange/yellow for highlight
+                                        paddingHorizontal: 8,
+                                        paddingVertical: 2,
+                                        borderRadius: 10,
+                                        marginLeft: 8,
+                                    }}
+                                >
+                                    <Text
+                                        style={{
+                                            fontSize: 12,
+                                            color: '#D2691E', // darker orange
+                                            fontWeight: 'bold',
+                                        }}
+                                    >
+                                        Coming Soon
+                                    </Text>
+                                </View>
+                            </View>
 
                             <View style={{ width: 22, }}>
                                 <Image style={{ width: 22, height: 16, }} source={require('../../assets/rightarrow.png')} />
@@ -598,6 +613,45 @@ export default function Home({ navigation }) {
                         </TouchableOpacity>
                     </View>
                 </View>
+
+                <Modal
+                    transparent
+                    animationType="fade"
+                    visible={showLocationModal}
+                    onRequestClose={() => setShowLocationModal(false)}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalBox}>
+                            <Text style={styles.modalTitle}>Enable Location</Text>
+                            <Text style={styles.modalText}>
+                                Unable to fetch location. Please enable your location services.
+                            </Text>
+
+                            <View style={styles.buttonContainer}>
+                                <TouchableOpacity
+                                    onPress={() => setShowLocationModal(false)}
+                                    style={[styles.button, styles.cancelButton]}
+                                >
+                                    <Text style={styles.cancelText}>Cancel</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setShowLocationModal(false);
+                                        if (Platform.OS === 'android') {
+                                            Linking.openURL('android.settings.LOCATION_SOURCE_SETTINGS');
+                                        } else {
+                                            Linking.openURL('app-settings:');
+                                        }
+                                    }}
+                                    style={[styles.button, styles.openButton]}
+                                >
+                                    <Text style={styles.openText} onPress={() => {openSettings()}}>Open Settings</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
 
             </ScrollView>
         </SafeAreaView>
@@ -630,6 +684,52 @@ const styles = StyleSheet.create({
         color: '#fff',
     },
 
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      modalBox: {
+        width: '80%',
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 24,
+        elevation: 5,
+      },
+      modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#0C0D36',
+        marginBottom: 12,
+      },
+      modalText: {
+        fontSize: 14,
+        color: '#444',
+        marginBottom: 24,
+      },
+      buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+      },
+      button: {
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        marginLeft: 10,
+      },
+      cancelButton: {
+        backgroundColor: '#ccc',
+      },
+      openButton: {
+        backgroundColor: '#2F81F5',
+      },
+      cancelText: {
+        color: '#333',
+      },
+      openText: {
+        color: '#fff',
+      },
 
 
 })

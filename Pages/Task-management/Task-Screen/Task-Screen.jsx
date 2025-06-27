@@ -40,7 +40,7 @@ const TaskScreen = () => {
   {
     id: 3,
     title: 'In Progress',
-    screen: 'InProgress',
+    screen: 'In Progress',
     icon: '🛠️',
     gradient: ['#4776E6', '#8E54E9'],
     shadowColor:'#4776E6'
@@ -64,7 +64,7 @@ const TaskScreen = () => {
   {
     id: 6,
     title: 'Rejected Task',
-    screen: 'RejectedTask',
+    screen: 'Rejected Task',
     icon: '⛔',
     gradient: ['#003973', '#E5E5BE'],
     shadowColor:'#003973'

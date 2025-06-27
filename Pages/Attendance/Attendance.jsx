@@ -133,7 +133,7 @@ function Attendance({ navigation }) {
                 } else {
                     setIsCheckedIn(false);
                 }
-                console.log('Attendance Page Focused', isChecked);
+
                 if (isChecked == null) {
                     setIsCheckedIn(false);
                     setCheckInTime(null);
@@ -168,26 +168,46 @@ function Attendance({ navigation }) {
                 monthDate,
             });
 
+            console.log('sssssss', response)
             if (response?.data?.data && Array.isArray(response.data.data)) {
-                const uniqueDates = Array.from(
-                    new Set(response.data.data.map(item => item.weekDate))
-                );
-
-                const dateMarks = {};
-                uniqueDates.forEach(date => {
-                    dateMarks[date] = {
-                        customStyles: {
-                            container: {
-                                backgroundColor: '#3085FE',
-                                borderRadius: 20,
-                            },
-                            text: {
-                                color: 'white',
-                                fontWeight: 'bold',
-                            },
+                const rawData = response.data.data;
+                const formatDateForCalendar = (dateStr) => {
+                    const [day, month, year] = dateStr.split('/');
+                    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                  };
+                  
+                  const getColor = (shiftType, isPresent) => {
+                    if (shiftType === 'WD') {
+                      if (isPresent === true) return '#4CAF50'; // Green - Present
+                      if (isPresent === false) return '#FF5252'; // Red - Absent
+                      return '#3085FE'; // Blue - Working day, no status
+                    } else if (shiftType === 'WO') {
+                      return '#F9C74F'; // Yellow - Weekly Off
+                    } else if (shiftType === 'HO') {
+                      return '#FF6B6B'; // Red - Holiday
+                    }
+                    return '#C4C4C4'; // Default grey
+                  };
+                  
+                  const dateMarks = {};
+                  
+                  rawData.forEach(item => {
+                    const formattedDate = formatDateForCalendar(item.weekDate);
+                    const bgColor = getColor(item.shiftType, item.isPresent);
+                  
+                    dateMarks[formattedDate] = {
+                      customStyles: {
+                        container: {
+                          backgroundColor: bgColor,
+                          borderRadius: 20,
                         },
+                        text: {
+                          color: 'white',
+                          fontWeight: 'bold',
+                        },
+                      },
                     };
-                });
+                  });
 
                 setMarkedDates(dateMarks);
                 setLoading(false);
@@ -446,26 +466,7 @@ function Attendance({ navigation }) {
     }, []);
 
 
-    // const [fontsLoaded] = useFonts({
-    //     Montserrat_700Bold,
-    //     Montserrat_400Regular,
-    //     Montserrat_500Medium,
-    // });
 
-    // if (!fontsLoaded) {
-    //     return null;
-    // }
-
-    if (loading) {
-        return (
-            <>
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <ActivityIndicator size="large" color="#2F81F5" />
-                    <Text>Loading...</Text>
-                </View>
-            </>
-        );
-    }
 
     return (
         <SafeAreaView style={[
@@ -603,6 +604,24 @@ function Attendance({ navigation }) {
 
             </ScrollView>
 
+            {loading && (
+                <View
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 9999,
+                    }}
+                >
+                    <ActivityIndicator size="large" color="#FFFFFF" />
+                    <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
+                </View>
+            )}
         </SafeAreaView>
     )
 }

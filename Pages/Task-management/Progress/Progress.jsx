@@ -637,7 +637,7 @@ function Progress({ navigation }) {
                 showsHorizontalScrollIndicator={false}>
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
-                    <TouchableOpacity onPress={() => navigation.navigate('Accepted')} style={{ flexDirection: 'row', alignItems: 'center', }}>
+                    <TouchableOpacity onPress={() => navigation.navigate('TaskScreen')} style={{ flexDirection: 'row', alignItems: 'center', }}>
                         <Image style={{ width: 14, height: 14, }} source={require('../../../assets/leftarrow.png')} />
                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Task Management</Text>
                     </TouchableOpacity>
@@ -657,9 +657,9 @@ function Progress({ navigation }) {
                     <Image style={{ position: 'absolute', top: 16, right: 20, width: 20, height: 20, }} source={require('../../../assets/search.png')} />
                 </View>
 
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollContainer}>
+                {/* <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollContainer}>
                     <TaskStatusTabs activeTab="In Progress" />
-                </ScrollView>
+                </ScrollView> */}
 
                 <View style={{ paddingHorizontal: 3, }}>
                     {visibleTasks && visibleTasks.length > 0 ? (

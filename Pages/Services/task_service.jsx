@@ -387,6 +387,35 @@ const TaskService = {
     }
   },
 
+  getVehicleByEmpId: async (data) => {
+    try {
+      const response = await apiClient.post('/tracking/tracking/getTrackingByEmployeeIds', data);
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  saveFuelVoucher: async (data) => {
+    try {
+      const response = await apiClient.post('/operation/logistics/fuel-voucher/createFuelVoucher', data);
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+  getAllFuelVouchers: async () => {
+    try {
+      const response = await apiClient.get('/operation/fuel-voucher/getAllFuelVouchers');
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   handleReceiptDownload: async (url) => {
     const { showAlertModal, hideAlert } = useGlobalAlert();
     try {
