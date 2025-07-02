@@ -472,7 +472,8 @@ function Attendance({ navigation }) {
         <SafeAreaView style={[
             styles.container,
             GlobalStyles.SafeAreaView,
-            { paddingBottom: lightTheme.paddingBottomNew }
+            styles.paddingBottom
+            // { paddingBottom: lightTheme.paddingBottomNew }
           ]}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
@@ -497,7 +498,7 @@ function Attendance({ navigation }) {
                 <View style={{ marginTop: 20, backgroundColor: '#ecf2fc', borderWidth: 1, borderColor: '#bdd7fc', borderRadius: 40, paddingHorizontal: 15, paddingTop: 35, paddingBottom: 24, }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25, }}>
                         <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 14, lineHeight: 15, color: '#3085FE', }}>Attendence Managing {'\n'}Platform</Text>
-                        <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 12, lineHeight: 14, color: '#0C0D36', }}>Updated {displayTime}</Text>
+                        {/* <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 12, lineHeight: 14, color: '#0C0D36', }}>Updated {displayTime}</Text> */}
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', }}>
                         <View style={{ width: '47%', backgroundColor: '#fff', borderRadius: 15, paddingHorizontal: 15, paddingVertical: 15, }}>
@@ -632,6 +633,9 @@ const styles = StyleSheet.create({
     //     paddingTop: 50, // adjust based on header/tab
     //     backgroundColor: '#fff',
     //   },
+    paddingBottom: {
+        paddingBottom: 85
+      },
     centered: {
         flex: 1,
         justifyContent: 'center',

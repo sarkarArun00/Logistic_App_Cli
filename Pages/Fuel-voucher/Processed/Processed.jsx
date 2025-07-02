@@ -4,6 +4,8 @@ import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TouchableW
 // import { useFonts, Montserrat_600SemiBold, Montserrat_400Regular, Montserrat_500Medium } from '@expo-google-fonts/montserrat'
 import { Picker } from '@react-native-picker/picker';
 // import * as ImagePicker from 'expo-image-picker';
+import { lightTheme, GlobalStyles } from '../../GlobalStyles';
+import FeulVoucherRequest from '../FeulVoucherRequest';
 
 function Processed({ navigation }) {
     const [filter, setFilter] = useState(false);
@@ -106,15 +108,15 @@ function Processed({ navigation }) {
     });
 
     // Fonts 
-    const [fontsLoaded] = useFonts({
-        Montserrat_600SemiBold,
-        Montserrat_500Medium,
-        Montserrat_400Regular,
-    });
+    // const [fontsLoaded] = useFonts({
+    //     Montserrat_600SemiBold,
+    //     Montserrat_500Medium,
+    //     Montserrat_400Regular,
+    // });
 
-    if (!fontsLoaded) {
-        return null;
-    }
+    // if (!fontsLoaded) {
+    //     return null;
+    // }
 
     return (
         <SafeAreaView style={styles.container}>
@@ -152,17 +154,17 @@ function Processed({ navigation }) {
 
                 {/* ScrollView Tab */}
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollContainer}>
-                    <View style={{ flexDirection: 'row', paddingTop: 20, }}>
-                        <TouchableOpacity onPress={() => navigation.navigate('MainApp', { screen: 'Pending' })} style={[styles.tcbtn,]}>
-                            <Text style={[styles.acttext,]}>Pending</Text>
+                <View style={{ flexDirection: 'row', paddingTop: 20, }}>
+                        <TouchableOpacity onPress={() => navigation.navigate('FeulStack', { screen: 'Pending' })} style={[styles.tcbtn]}>
+                            <Text style={[styles.acttext, ]}>Pending</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => navigation.navigate('Approved')} style={[styles.tcbtn,]}>
+                        <TouchableOpacity onPress={() => navigation.navigate('FeulStack', { screen: 'Approved' })} style={[styles.tcbtn,]}>
                             <Text style={[styles.acttext,]}>Approved</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => navigation.navigate('Processed')} style={[styles.tcbtn, styles.active]}>
+                        <TouchableOpacity onPress={() => navigation.navigate('FeulStack', { screen: 'Processed' })} style={[styles.tcbtn,styles.active]}>
                             <Text style={[styles.acttext, styles.testactive]}>Processed</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => navigation.navigate('Rejected')} style={[styles.tcbtn,]}>
+                        <TouchableOpacity onPress={() => navigation.navigate('FeulStack', { screen: 'Rejected' })} style={[styles.tcbtn,]}>
                             <Text style={[styles.acttext,]}>Rejected</Text>
                         </TouchableOpacity>
                     </View>
@@ -352,129 +354,33 @@ function Processed({ navigation }) {
                 </View>
             </TouchableOpacity>
 
-            {/* Request Modal */}
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}>
-                <View style={styles.modalBackground}>
-                    <View style={[styles.modalContainer, styles.scrlablModalContainer]}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
-                            <Text style={styles.modalText}>Fuel Voucher Request Details</Text>
-                            <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                <Image style={{ width: 18, height: 18 }} source={require('../../../assets/mdlclose.png')} />
-                            </TouchableOpacity>
-                        </View>
-                        <ScrollView>
-                            <View style={{ padding: 15, }}>
-                                <View>
-                                    <Text style={styles.label}>Select Vehicle</Text>
-                                    <View style={styles.pickerContainer}>
-                                        <Picker
-                                            selectedValue={selectCar}
-                                            onValueChange={(itemValue, itemIndex) =>
-                                                setselectCar(itemValue)
-                                            }>
-                                            <Picker.Item label="Car" value="Car" />
-                                            <Picker.Item label="Bike" value="Bike" />
-                                        </Picker>
-                                    </View>
-                                </View>
-                                <View>
-                                    <Text style={styles.label}>Payment Mode</Text>
-                                    <View style={styles.pickerContainer}>
-                                        <Picker
-                                            selectedValue={selectPaymode}
-                                            onValueChange={(itemValue, itemIndex) =>
-                                                setselectPaymode(itemValue)
-                                            }>
-                                            <Picker.Item label="Cash" value="Cash" />
-                                            <Picker.Item label="UPI" value="UPI" />
-                                            <Picker.Item label="Net Banking" value="Net Banking" />
-                                        </Picker>
-                                    </View>
-                                </View>
-                                <View>
-                                    <Text style={styles.label}>Enter Amount</Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Enter Amount"
-                                        placeholderTextColor="#0C0D36"
-                                    />
-                                </View>
-                                <View>
-                                    <Text style={styles.label}>Attachment</Text>
-                                    <View style={styles.imageContainer}>
-                                        {/* <Button title="Select Images" onPress={selectImages} /> */}
-                                        <TouchableOpacity style={styles.uploadContainer} onPress={selectImages}>
-                                            <Image style={{ width: 30, height: 28, marginHorizontal: 'auto', }} source={require('../../../assets/upload-icon.png')} />
-                                            <Text style={styles.uploadTitle}>Upload</Text>
-                                            <Text style={styles.uploadSubTitle}>Supports JPG, JPEG, and PNG</Text>
-                                        </TouchableOpacity>
-
-                                        {images.length > 0 ? (
-                                            <FlatList
-                                                style={styles.flatList}
-                                                data={images}
-                                                keyExtractor={(item, index) => index.toString()}
-                                                renderItem={({ item, index }) => (
-                                                    <View style={{ position: 'relative', marginRight: 10 }}>
-                                                        <Image
-                                                            source={{ uri: `file://${item.uri}` }}
-                                                            style={{ width: 60, height: 60, borderRadius: 5 }}
-                                                        />
-                                                        <TouchableOpacity
-                                                            onPress={() => handleDeleteImage(index)}
-                                                            style={{
-                                                                position: 'absolute',
-                                                                top: -8,
-                                                                right: -8,
-                                                                backgroundColor: 'red',
-                                                                borderRadius: 10,
-                                                                width: 20,
-                                                                height: 20,
-                                                                justifyContent: 'center',
-                                                                alignItems: 'center',
-                                                                elevation: 5,
-                                                            }}
-                                                        >
-                                                            <Text style={{ color: 'white', fontSize: 12, lineHeight: 14, }}>✕</Text>
-                                                        </TouchableOpacity>
-                                                    </View>
-                                                )}
-                                                horizontal
-                                            />
-                                        ) : (
-                                            <Text style={styles.noImgSelected}>No images selected</Text>
-                                        )}
-
-                                    </View>
-                                </View>
-                                <View>
-                                    <Text style={styles.label}>Remarks</Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Placeholder"
-                                        placeholderTextColor="#0C0D36"
-                                    />
-                                </View>
-                                <View>
-                                    <TouchableOpacity style={{ backgroundColor: '#2F81F5', borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10, }}>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 16, color: 'white', textAlign: 'center', }}>Send</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </ScrollView>
-                    </View>
-                </View>
-            </Modal>
+            <FeulVoucherRequest visible={modalVisible} onClose={() => setModalVisible(false)} />
 
         </SafeAreaView>
     )
 }
 
 const styles = StyleSheet.create({
+    ScrollView:{
+        paddingBottom:185,
+    },
+    label: {
+        fontSize: 16,
+        marginBottom: 8,
+        color: lightTheme.text,
+    },
+    pickerContainer: {
+        backgroundColor: lightTheme.inputBackground,
+        borderWidth: 1,
+        borderColor: lightTheme.border,
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginBottom: 16,
+    },
+    picker: {
+        height: 50,
+        color: lightTheme.inputText, // Works on iOS and sometimes Android
+    },
     container: {
         flex: 1,
         padding: 15,
@@ -512,7 +418,7 @@ const styles = StyleSheet.create({
     createBtn: {
         position: 'absolute',
         right: 15,
-        bottom: 100,
+        bottom: 120,
         backgroundColor: '#EBF2FB',
         borderRadius: 28,
         flexDirection: 'row',

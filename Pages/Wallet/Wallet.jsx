@@ -14,6 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import dayjs from 'dayjs';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { lightTheme } from '../GlobalStyles'
+import NotificationCount from '../Notifications/NotificationCount';
 
 const wait = (timeout) => {
     return new Promise(resolve => setTimeout(resolve, timeout));
@@ -25,8 +26,6 @@ function Wallet({ navigation, progress = 0.5 }) {
     const [selectType, setselectType] = useState();
     const [filter, setFilter] = useState(false);
     const [selectClient, setselectClient] = useState();
-    const [open, setOpen] = useState(false);
-    const [date, setDate] = useState(new Date());
     const [loading, setLoading] = useState(true);
     const [details, setDetails] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
@@ -55,7 +54,7 @@ function Wallet({ navigation, progress = 0.5 }) {
     const [showFromPicker, setShowFromPicker] = useState(false);
     const [showToPicker, setShowToPicker] = useState(false);
     const [selectTransactiontype, setTransactiontype] = useState(false);
-    const [isTransActive, setActiveTransaction] = useState(false)
+
 
     const [activeTransactionId, setActiveTransactionId] = useState(null);
     const [userId, setUserId] = useState(null)
@@ -111,7 +110,6 @@ function Wallet({ navigation, progress = 0.5 }) {
         resetFilter();
         wait(2000).then(() => setRefreshing(false));
 
-        console.log('trannnnnnnnnn', transactions)
     }, []);
 
 
@@ -450,12 +448,11 @@ function Wallet({ navigation, progress = 0.5 }) {
                         <Image style={{ width: 14, height: 14, }} source={require('../../assets/leftarrow.png')} />
                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Wallet</Text>
                     </TouchableOpacity>
-                    {/* <View style={{ position: 'relative', width: 50, height: 50, borderRadius: 25, backgroundColor: '#F6FAFF', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
-                        <TouchableOpacity>
-                            <Image style={{ width: 18, height: 18, }} source={require('../../assets/noti.png')} />
+                    <View style={{ position: 'relative', width: 50, height: 50, marginTop:5, marginRight:2, borderRadius: 25, backgroundColor: '#F6FAFF', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
+                    <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
+                            <NotificationCount></NotificationCount>
                         </TouchableOpacity>
-                        <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>2</Text>
-                    </View> */}
+                    </View>
                 </View>
 
                 {/* Wallet Details */}

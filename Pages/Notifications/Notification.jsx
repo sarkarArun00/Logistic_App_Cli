@@ -100,7 +100,7 @@ function Notification({ navigation }) {
     };
 
     const NotificationItem = ({ item }) => (
-        <View style={styles.notificationContainer}>
+        <View style={{flexDirection:'row', paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: '#E0E0E0'}}>
             <Ionicons name={item.status == '1' ? "mail-outline" : "mail-outline"} size={32}
                 color={item.status == '1' ? "#64748B" : "#1E40AF"} style={styles.icon} />
             <View style={styles.textContainer}>
@@ -234,9 +234,9 @@ const styles = StyleSheet.create({
     },
     time: {
         fontFamily: 'Montserrat-Medium',
-        fontSize: 15,
+        fontSize: 12,
         color: '#A5ACB8',
-        marginTop: 8,
+        marginTop: 5,
     },
     tabs: {
         position: 'relative',

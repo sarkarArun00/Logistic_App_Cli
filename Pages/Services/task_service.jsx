@@ -408,7 +408,40 @@ const TaskService = {
   },
   getAllFuelVouchers: async () => {
     try {
-      const response = await apiClient.get('/operation/fuel-voucher/getAllFuelVouchers');
+      const response = await apiClient.get('/operation/logistics/fuel-voucher/getAllFuelVouchers');
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  addFuelVoucherAttachment: async (data) => {
+    try {
+      const response = await apiClient.post('/operation/logistics/fuel-voucher/addFuelVoucherAttachment',data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  getFeulVoucherById: async (data) => {
+    try {
+      const response = await apiClient.post('/operation/logistics/fuel-voucher/getVoucherById',data);
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+  getAllAttachmentsById: async (data) => {
+    try {
+      const response = await apiClient.post('/operation/logistics/fuel-voucher/getAllAttachments',data);
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);

@@ -14,7 +14,7 @@ export const lightTheme = {
 
 const GlobalStyles = StyleSheet.create({
   SafeAreaView: {
-    paddingBottom:155,
+    paddingBottom:200,
     text: {
       fontSize: 16,
       color: 'red',

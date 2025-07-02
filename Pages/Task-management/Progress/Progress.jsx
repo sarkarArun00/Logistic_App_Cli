@@ -637,9 +637,9 @@ function Progress({ navigation }) {
                 showsHorizontalScrollIndicator={false}>
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
-                    <TouchableOpacity onPress={() => navigation.navigate('TaskScreen')} style={{ flexDirection: 'row', alignItems: 'center', }}>
+                    <TouchableOpacity onPress={() => navigation.navigate("TaskStack", { screen: "TaskScreen" })} style={{ flexDirection: 'row', alignItems: 'center', }}>
                         <Image style={{ width: 14, height: 14, }} source={require('../../../assets/leftarrow.png')} />
-                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Task Management</Text>
+                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>In Progress Task</Text>
                     </TouchableOpacity>
                     <View >
                         <TouchableOpacity onPress={() => navigation.navigate('Notification')} >

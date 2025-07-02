@@ -274,7 +274,7 @@ function Profile({ navigation }) {
                 </View>
 
                 <View>
-                    <TouchableOpacity onPress={() => navigation.navigate('TaskScreen')} style={styles.tskmain}>
+                    <TouchableOpacity onPress={() => navigation.navigate("TaskStack", { screen: "TaskScreen" })} style={styles.tskmain}>
                         <View style={styles.taskbox}>
                             <View style={styles.tskimg}><Image style={{ width: 58, height: 58, }} source={require('../../assets/pficon1.png')} /></View>
                             <Text style={styles.tsktext}>My Task</Text>
@@ -310,7 +310,7 @@ function Profile({ navigation }) {
                             <Image style={{ width: 8, height: 14, }} source={require('../../assets/rightarrow2.png')} />
                         </View>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('Pending')} style={styles.tskmain}>
+                    <TouchableOpacity onPress={() => navigation.navigate('MainApp', {screen: 'FeulStack', params: {screen: 'Pending'}})} style={styles.tskmain}>
                         <View style={styles.taskbox}>
                             <View style={styles.tskimg}><Image style={{ width: 58, height: 58, }} source={require('../../assets/pficon5.png')} /></View>
                             <Text style={styles.tsktext}>Fuel Voucher</Text>

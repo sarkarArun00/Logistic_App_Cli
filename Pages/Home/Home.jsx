@@ -16,6 +16,7 @@ import { useGlobalAlert } from '../../Context/GlobalAlertContext';
 import { useFocusEffect } from '@react-navigation/native';
 import Geolocation from '@react-native-community/geolocation';
 import { Vibration } from 'react-native';
+import TaskScreen from '../Task-management/Task-Screen/Task-Screen';
 import { lightTheme } from '../GlobalStyles';
 // import IntentLauncher from 'react-native-intent-launcher';
 
@@ -292,11 +293,19 @@ export default function Home({ navigation }) {
         }
     };
 
+    // const openSettings = () => {
+    //     if (Platform.OS === 'android') {
+    //       IntentLauncher.startActivity({
+    //         action: 'android.settings.LOCATION_SOURCE_SETTINGS',
+    //       });
+    //     } else {
+    //       Linking.openURL('app-settings:');
+    //     }
+    //   };
+
     const openSettings = () => {
         if (Platform.OS === 'android') {
-          IntentLauncher.startActivity({
-            action: 'android.settings.LOCATION_SOURCE_SETTINGS',
-          });
+          Linking.openSettings(); // opens app settings
         } else {
           Linking.openURL('app-settings:');
         }
@@ -465,7 +474,7 @@ export default function Home({ navigation }) {
                 <View style={{ marginTop: 20, backgroundColor: '#ecf2fc', borderWidth: 1, borderColor: '#bdd7fc', borderRadius: 40, paddingHorizontal: 15, paddingTop: 35, paddingBottom: 24, }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25, }}>
                         <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 14, lineHeight: 15, color: '#3085FE', }}>Attendence Managing {'\n'}Platform</Text>
-                        <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 12, lineHeight: 14, color: '#0C0D36', }}>Updated {displayTime}</Text>
+                        {/* <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 12, lineHeight: 14, color: '#0C0D36', }}>Updated {displayTime}</Text> */}
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', }}>
                         <View style={{ width: '47%', backgroundColor: '#fff', borderRadius: 15, paddingHorizontal: 15, paddingVertical: 15, }}>
@@ -533,7 +542,7 @@ export default function Home({ navigation }) {
                     <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, lineHeight: 18, color: '#3085FE', paddingBottom: 20, }}>My Shortcuts</Text>
                     <View style={{ backgroundColor: '#F6FAFF', borderRadius: 40, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8, }}>
                         <TouchableOpacity style={[styles.box, { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', borderRadius: 15, paddingHorizontal: 15, paddingVertical: 15, marginBottom: 12, }]}
-                            onPress={() => navigation.navigate('MainApp', { screen: 'TaskScreen' })}>
+                            onPress={() => navigation.navigate("TaskStack", { screen: "TaskScreen" })}>
                             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', }}>
                                 <View style={{ width: 34, }}>
                                     <Image style={{ width: 34, height: 34, }} source={require('../../assets/task1.png')} />

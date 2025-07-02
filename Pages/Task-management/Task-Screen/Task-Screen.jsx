@@ -8,84 +8,98 @@ import {
   StatusBar,
   FlatList,
   Dimensions,
-  Platform
+  Platform,
+  Image,
+  ScrollView
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Feather';
+import { useFocusEffect } from '@react-navigation/native';
+import { GlobalStyles, lightTheme } from '../../GlobalStyles';
 
-const {width} = Dimensions.get('window');
-const CARD_WIDTH = (width - 60) / 2; 
+
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = (width - 60) / 2;
+
+
 
 const TaskScreen = () => {
   const navigation = useNavigation();
 
+  useFocusEffect(
+    React.useCallback(() => {
+      StatusBar.setBackgroundColor('#2F81F5');
+      StatusBar.setBarStyle('light-content');
+    }, [])
+  );
+
   const tasks = [
-  {
-    id: 1,
-    title: 'Assigned',
-    screen: 'Assigned',
-    icon: '📌',
-    gradient: ['#D16BA5', '#86A8E7'], 
-    shadowColor:'#D16BA5'
-  },
-  {
-    id: 2,
-    title: 'Accepted',
-    screen: 'Accepted',
-    icon: '👍',
-    gradient: ['#43C6AC', '#191654'],
-    shadowColor:'#43C6AC'
-  },
-  {
-    id: 3,
-    title: 'In Progress',
-    screen: 'In Progress',
-    icon: '🛠️',
-    gradient: ['#4776E6', '#8E54E9'],
-    shadowColor:'#4776E6'
-  },
-  {
-    id: 4,
-    title: 'Collected',
-    screen: 'Collected',
-    icon: '📦',
-    gradient: ['#1D976C', '#93F9B9'], 
-    shadowColor:'#1D976C'
-  },
-  {
-    id: 5,
-    title: 'Completed',
-    screen: 'Completed',
-    icon: '✅',
-    gradient: ['#1A2980', '#26D0CE'],
-    shadowColor:'#1A2980'
-  },
-  {
-    id: 6,
-    title: 'Rejected Task',
-    screen: 'Rejected Task',
-    icon: '⛔',
-    gradient: ['#003973', '#E5E5BE'],
-    shadowColor:'#003973'
-  },
-];
+    {
+      id: 1,
+      title: 'Assigned',
+      screen: 'Assigned',
+      icon: require('../../../assets/task-icn01.png'),
+      gradient: ['#0B75FF', '#569FFF'],
+      shadowColor: '#0B75FF'
+    },
+    {
+      id: 2,
+      title: 'Accepted',
+      screen: 'Accepted',
+      icon: require('../../../assets/task-icn02.png'),
+      gradient: ['#40B8A5', '#1CC5AA'],
+      shadowColor: '#40B8A5'
+    },
+    {
+      id: 3,
+      title: 'In Progress',
+      screen: 'In Progress',
+      icon: require('../../../assets/task-icn03.png'),
+      gradient: ['#C8B73C', '#B99400'],
+      shadowColor: '#C8B73C'
+    },
+    {
+      id: 4,
+      title: 'Collected',
+      screen: 'Collected',
+      icon: require('../../../assets/task-icn04.png'),
+      gradient: ['#3CD1E2', '#1C8996'],
+      shadowColor: '#3CD1E2'
+    },
+    {
+      id: 5,
+      title: 'Completed',
+      screen: 'Completed',
+      icon: require('../../../assets/task-icn05.png'),
+      gradient: ['#C77DFF', '#8581FF'],
+      shadowColor: '#C77DFF'
+    },
+    {
+      id: 6,
+      title: 'Rejected Task',
+      screen: 'RejectedTask',
+      icon: require('../../../assets/task-icn06.png'),
+      gradient: ['#999999', '#B2B2B2'],
+      shadowColor: '#999999'
+    },
+  ];
 
   const getCardHeight = (index) => {
     const row = Math.floor(index / 2);
     const isLeftCard = index % 2 === 0;
-    
+
     if (row % 2 === 0) {
-      return isLeftCard ? 200 : 200; // Even rows: left shorter, right taller
+      return isLeftCard ? 170 : 170; // Even rows: left shorter, right taller
     } else {
-      return isLeftCard ? 200 : 200; // Odd rows: left taller, right shorter
+      return isLeftCard ? 170 : 170; // Odd rows: left taller, right shorter
     }
   };
 
   const getCardMarginTop = (index) => {
     const row = Math.floor(index / 2);
     const isLeftCard = index % 2 === 0;
-    
+
     if (row % 2 === 0) {
       // Even rows: left card offset down, right card at top
       return isLeftCard ? 0 : 0;
@@ -95,55 +109,45 @@ const TaskScreen = () => {
     }
   };
 
-  const renderTaskCard = ({item, index}) => {
+  const renderTaskCard = ({ item, index }) => {
     const cardHeight = getCardHeight(index);
     const marginTop = getCardMarginTop(index);
 
     // Dynamic shadow style based on the card's gradient color
-    const dynamicShadowStyle = Platform.OS === 'ios' 
+    const dynamicShadowStyle = Platform.OS === 'ios'
       ? {
-          shadowColor: item.shadowColor,
-          shadowOffset: {
-            width: 1,
-            height: 8,
-          },
-          shadowOpacity: 0.3,
-          shadowRadius: 12,
-        }
+        shadowColor: item.shadowColor,
+        shadowOffset: {
+          width: 1,
+          height: 8,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+      }
       : {
-          elevation: 8,
-          shadowColor: item.shadowColor,
-        };
+        elevation: 8,
+        shadowColor: item.shadowColor,
+      };
 
     return (
-      <View style={[styles.cardWrapper, {marginTop}]}>
+      <View style={[styles.cardWrapper, { marginTop }]}>
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => navigation.navigate(item.screen)}>
-          <LinearGradient 
-            colors={item.gradient} 
+          <LinearGradient
+            colors={item.gradient}
             style={[
-              styles.taskCard, 
-              {height: cardHeight},
+              styles.taskCard,
+              { height: cardHeight },
               dynamicShadowStyle
             ]}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 1}}>
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}>
             <View style={styles.cardContent}>
-              <View style={styles.iconContainer}>
-                <View style={styles.iconBackground}>
-                  <Text style={styles.icon}>{item.icon}</Text>
-                </View>
-              </View>
-              
-              <View style={styles.textContainer}>
-                <Text style={styles.title}>{item.title}</Text>
-              </View>
-              
-              <View style={styles.arrowContainer}>
-                <View style={styles.arrowBackground}>
-                  <Icon name="arrow-right" size={20} color="#fff" />
-                </View>
+              <Image source={item.icon} style={styles.icon} />
+              <Text style={styles.title}>{item.title}</Text>
+              <View style={styles.arrowBackground}>
+                <Icon name="arrow-right" size={20} color="#fff" />
               </View>
             </View>
           </LinearGradient>
@@ -153,13 +157,12 @@ const TaskScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
-      
-      <View style={styles.headerContainer}>
-        <Text style={styles.header}>My Tasks</Text>
-        <Text style={styles.headerSubtitle}>View and manage your task</Text>
-      </View>
+    <SafeAreaView style={[
+      styles.container,styles.paddingBottom
+    ]}
+    >
+
+      <StatusBar backgroundColor="#2F81F5" barStyle="dark-content" />
 
       <FlatList
         data={tasks}
@@ -170,38 +173,56 @@ const TaskScreen = () => {
         renderItem={renderTaskCard}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
+        ListHeaderComponent={() => (
+          <View style={styles.headerContainer}>
+            <Image
+              style={{ width: '100%', height: 280, resizeMode: 'cover' }} // use resizeMode
+              source={require('../../../assets/task-shape.png')}
+            />
+            <View style={{ position: 'absolute', left: 16, bottom: 76 }}>
+              <Text style={styles.header}>My Tasks</Text>
+              <Text style={styles.headerSubtitle}>View and manage your task</Text>
+            </View>
+          </View>
+        )}
       />
+
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  paddingBottom: {
+    paddingBottom: 20
+  },
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#fff',
+    padding: 0,
   },
   headerContainer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 0,
     paddingTop: Platform.OS === 'ios' ? 20 : 45,
     paddingBottom: 30,
     backgroundColor: '#F8FAFC',
+    position: 'relative',
   },
   header: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1A202C',
-    marginBottom: 4,
-    letterSpacing: -0.5,
+    fontFamily: 'Montserrat-Bold',
+    fontSize: 24,
+    color: '#fff',
+    marginBottom: 2,
+    letterSpacing: 0.05,
   },
   headerSubtitle: {
-    fontSize: 16,
-    color: '#718096',
-    fontWeight: '400',
-    letterSpacing: 0.2,
+    fontFamily: 'Montserrat-Regular',
+    fontSize: 12,
+    color: '#fff',
   },
+
   listContainer: {
     paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingBottom: 80,
   },
   row: {
     justifyContent: 'space-between',
@@ -224,53 +245,29 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   cardContent: {
-    flex: 1,
-    padding: 20,
+    position: 'relative',
+    paddingVertical: 52,
+    paddingHorizontal: 18,
     justifyContent: 'space-between',
   },
-  iconContainer: {
-    alignItems: 'flex-start',
-  },
-  iconBackground: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    borderRadius: 12,
-    padding: 10,
-    minWidth: 48,
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  icon: {
-    fontSize: 22,
-    textAlign: 'center',
-  },
-  textContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    marginTop: 16,
-    marginBottom: 16,
-  },
   title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    textAlign: 'left',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: {width: 0, height: 1},
-    textShadowRadius: 4,
-    letterSpacing: 0.5,
-    lineHeight: 22,
-  },
-  arrowContainer: {
-    alignItems: 'flex-end',
+    fontFamily: 'Montserrat-SemiBold',
+    fontSize: 17,
+    color: '#fff',
+    letterSpacing: -0.5,
+    paddingTop: 18,
   },
   arrowBackground: {
+    position: 'absolute',
+    right: 4,
+    top: 4,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 18,
-    width: 36,
-    height: 36,
+    width: 34,
+    height: 34,
     alignItems: 'center',
     justifyContent: 'center',
+    transform: [{ rotate: '-50deg' }],
   },
 });
 

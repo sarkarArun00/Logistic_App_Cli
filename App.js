@@ -1,5 +1,4 @@
 import React, {useEffect, useState, useRef} from 'react';
-
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -16,7 +15,6 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {GlobalAlertProvider} from './Context/GlobalAlertContext';
 import {AuthProvider} from './Context/AuthContext';
-// import Password from './Pages/Password/Password';
 import Home from './Pages/Home/Home';
 import Login from './Pages/Login/Login';
 import Assigned from './Pages/Task-management/Assigned/Assigned';
@@ -24,190 +22,151 @@ import Attendance from './Pages/Attendance/Attendance';
 import TaskScreen from './Pages/Task-management/Task-Screen/Task-Screen';
 import Pending from './Pages/Fuel-voucher/Pending/Pending';
 import Wallet from './Pages/Wallet/Wallet';
-import Profile from './Pages/Profile/Profile';
-// import MapNavigation from './Pages/Task-management/MapNavigation';
 import Accepted from './Pages/Task-management/Accepted/Accepted';
 import Progress from './Pages/Task-management/Progress/Progress';
-import Collected from './Pages/Task-management/Collected/Collected';
-import Completed from './Pages/Task-management/Completed/Completed';
-import Receipt from './Pages/Receipt/Receipt';
-import TrackingScreen from './Pages/Tracking/traking';
-import Approved from './Pages/Fuel-voucher/Approved/Approved';
-import Processed from './Pages/Fuel-voucher/Processed/Processed';
-import Rejected from './Pages/Fuel-voucher/Rejected/Rejected';
-import RejectedTask from './Pages/Task-management/Rejected/RejectedTask';
-import Receiptview from './Pages/Receipt/Receiptview';
-import Notification from './Pages/Notifications/Notification';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import SplashScreen from './Pages/Screens/SplashScreen';
 import messaging from '@react-native-firebase/messaging';
 import Welcome from './Pages/Welcome-pages/Welcome';
 import NetInfo from '@react-native-community/netinfo';
+import PushNotifiactionModal from './Pages/PushNotificationModal';
+import VoucherDetails from './Pages/Fuel-voucher/VoucherDetails';
+import Receipt from './Pages/Receipt/Receipt';
+import Notification from './Pages/Notifications/Notification';
+import TrackingScreen from './Pages/Tracking/traking';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Collected from './Pages/Task-management/Collected/Collected';
+import Completed from './Pages/Task-management/Completed/Completed';
+import RejectedTask from './Pages/Task-management/Rejected/RejectedTask';
+import Profile from './Pages/Profile/Profile';
+import Approved from './Pages/Fuel-voucher/Approved/Approved';
+import Processed from './Pages/Fuel-voucher/Processed/Processed';
+import Rejected from './Pages/Fuel-voucher/Rejected/Rejected';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
-// Create a component for the main tab navigation with Menu bar
-function TabNavigator() {
-  const insets = useSafeAreaInsets();
+
+const TaskStack = createNativeStackNavigator();
+function TaskStackScreen() {
   return (
-    <>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#ffffff" // Customize as needed
-        translucent={false} // Set to true only if you want content behind status bar
-      />
-      <Tab.Navigator
-        screenOptions={{
-          headerShown: false,
-          tabBarShowLabel: false,
-          tabBarStyle: {
-            position: 'absolute',
-            bottom: 0,
-            height: 80 + insets.bottom,
-            paddingBottom: insets.bottom,
-            backgroundColor: '#2F81F5',
-            borderTopWidth: 0,
-            elevation: 2,
-            paddingTop: 15,
-            margin: 0,
-            borderRadius: 20,
-            overflow: 'hidden',
-          },
-        }}>
-        <Tab.Screen
-          name="Home"
-          component={Home}
-          options={{
-            tabBarIcon: ({focused}) => (
-              <View style={styles.tabItem}>
-                {focused && <View style={styles.afterline} />}
-                <Ionicons
-                  name={focused ? 'home' : 'home-outline'}
-                  size={22}
-                  color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
-                />
-                <Text
-                  style={[
-                    styles.tbstitle,
-                    {color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'},
-                  ]}>
-                  Home
-                </Text>
-              </View>
-            ),
-          }}
-        />
-
-        <Tab.Screen
-          name="TaskScreen"
-          component={TaskScreen}
-          options={{
-            tabBarIcon: ({focused}) => (
-              <View style={styles.tabItem}>
-                {focused && <View style={styles.afterline} />}
-                <Ionicons
-                  name={focused ? 'list' : 'list-outline'}
-                  size={22}
-                  color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
-                />
-                <Text
-                  style={[
-                    styles.tbstitle,
-                    {color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'},
-                  ]}>
-                  Task
-                </Text>
-              </View>
-            ),
-          }}
-        />
-
-        <Tab.Screen
-          name="Attendance"
-          component={Attendance}
-          options={{
-            tabBarIcon: ({focused}) => (
-              <View style={styles.tabItem}>
-                {focused && <View style={styles.afterline} />}
-                <Ionicons
-                  name={focused ? 'calendar' : 'calendar-outline'}
-                  size={22}
-                  color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
-                />
-                <Text
-                  style={[
-                    styles.tbstitle,
-                    {color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'},
-                  ]}>
-                  Attendance
-                </Text>
-              </View>
-            ),
-          }}
-        />
-
-        <Tab.Screen
-          name="Pending"
-          component={Pending}
-          options={{
-            tabBarIcon: ({focused}) => (
-              <View style={styles.tabItem}>
-                {focused && <View style={styles.afterline} />}
-                <Ionicons
-                  name={focused ? 'receipt' : 'receipt-outline'}
-                  size={22}
-                  color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
-                />
-                <Text
-                  style={[
-                    styles.tbstitle,
-                    {color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'},
-                  ]}>
-                  Request
-                </Text>
-              </View>
-            ),
-          }}
-        />
-
-        <Tab.Screen
-          name="Wallet"
-          component={Wallet}
-          options={{
-            tabBarIcon: ({focused}) => (
-              <View style={styles.tabItem}>
-                {focused && <View style={styles.afterline} />}
-                <Ionicons
-                  name={focused ? 'wallet' : 'wallet-outline'}
-                  size={22}
-                  color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
-                />
-                <Text
-                  style={[
-                    styles.tbstitle,
-                    {color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'},
-                  ]}>
-                  Wallet
-                </Text>
-              </View>
-            ),
-          }}
-        />
-      </Tab.Navigator>
-    </>
+    <TaskStack.Navigator screenOptions={{ headerShown: false }}>
+      <TaskStack.Screen name="TaskScreen" component={TaskScreen} />
+      <TaskStack.Screen name="Assigned" component={Assigned} />
+      <TaskStack.Screen name="Accepted" component={Accepted} />
+      <TaskStack.Screen name="In Progress" component={Progress} />
+      <TaskStack.Screen name="Collected" component={Collected} />
+      <TaskStack.Screen name="Completed" component={Completed} />
+      <TaskStack.Screen name="RejectedTask" component={RejectedTask} />
+    </TaskStack.Navigator>
   );
 }
 
+const FeulStack = createNativeStackNavigator();
+function FeulStackScreen() {
+  return (
+    <FeulStack.Navigator screenOptions={{ headerShown: false }}>
+      <FeulStack.Screen name="Pending" component={Pending} />
+      <FeulStack.Screen name="Approved" component={Approved} />
+      <FeulStack.Screen name="Processed" component={Processed} />
+      <FeulStack.Screen name="Rejected" component={Rejected} />
+    </FeulStack.Navigator>
+  );
+}
+
+function TabNavigator() {
+  const insets = useSafeAreaInsets();
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarShowLabel: false,
+        tabBarStyle: {
+          position: 'absolute',
+          bottom: 0,
+          height: 80 + insets.bottom,
+          paddingBottom: insets.bottom,
+          backgroundColor: '#2F81F5',
+          borderTopWidth: 0,
+          elevation: 2,
+          paddingTop: 15,
+          margin: 0,
+          borderRadius: 20,
+          overflow: 'hidden',
+        },
+      }}>
+      <Tab.Screen
+        name="Home"
+        
+        component={Home}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <TabIcon focused={focused} icon="home" label="Home" />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="TaskStack"
+        component={TaskStackScreen}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <TabIcon focused={focused} icon="list" label="Task" />
+            
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Attendance"
+        component={Attendance}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <TabIcon focused={focused} icon="calendar" label="Attendance" />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="FeulStack"
+        component={FeulStackScreen}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <TabIcon focused={focused} icon="receipt" label="Request" />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Wallet"
+        component={Wallet}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <TabIcon focused={focused} icon="wallet" label="Wallet" />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+const TabIcon = ({ focused, icon, label }) => (
+  <View style={{ alignItems: 'center' }}>
+    {focused && <View style={{ height: 2, backgroundColor: 'white', width:50, marginBottom: 5 }} />}
+    <Ionicons
+      name={focused ? icon : `${icon}-outline`}
+      size={22}
+      color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
+    />
+    <Text style={{ color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF', fontSize: 12, width:65, textAlign:'center', paddingTop:2, }}>
+      {label}
+    </Text>
+  </View>
+);
+
 export default function App() {
   const [isConnected, setIsConnected] = useState(true);
-
+  const notificationRef = useRef();
   const slideAnim = useRef(new Animated.Value(-60)).current;
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       setIsConnected(state.isConnected);
     });
-
     return () => unsubscribe();
   }, []);
 
@@ -225,12 +184,8 @@ export default function App() {
       authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
       authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
-    if (enabled) {
-      console.log('Notification permission status:', authStatus);
-      getFcmToken();
-    } else {
-      Alert.alert('Push Notification permission denied');
-    }
+    if (enabled) getFcmToken();
+    else Alert.alert('Push Notification permission denied');
 
     if (Platform.OS === 'android' && Platform.Version >= 33) {
       const granted = await PermissionsAndroid.request(
@@ -245,12 +200,7 @@ export default function App() {
   const getFcmToken = async () => {
     try {
       const fcmToken = await messaging().getToken();
-
-      if (fcmToken) {
-        console.log('Fcm Token', fcmToken);
-      } else {
-        console.log('Failed to get Fcm token');
-      }
+      console.log('Fcm Token', fcmToken);
     } catch (error) {
       console.error('Error fetching FCM token:', error);
     }
@@ -258,73 +208,66 @@ export default function App() {
 
   useEffect(() => {
     requestUserPermission();
+    getFcmToken();
 
     const unsubscribe = messaging().onMessage(async remoteMessage => {
-      Alert.alert(
-        'New Notification',
-        JSON.stringify(remoteMessage.notification?.body || ''),
-      );
+      const title = remoteMessage.notification?.title || 'New Notification';
+      const message = remoteMessage.notification?.body || '';
+
+      notificationRef.current?.showNotification({
+        title,
+        message,
+        icon: require('./assets/bell.png'),
+      });
     });
 
     messaging().onNotificationOpenedApp(remoteMessage => {
-      console.log(
-        'Notification opened from background state:',
-        remoteMessage.notification,
-      );
+      console.log('Notification opened from background state:', remoteMessage.notification);
     });
 
-    messaging()
-      .getInitialNotification()
-      .then(remoteMessage => {
-        console.log(
-          'Notification caused app to open from quit state:',
-          remoteMessage.notification,
-        );
-      });
+    messaging().getInitialNotification().then(remoteMessage => {
+      if (remoteMessage) {
+        const title = remoteMessage.notification?.title || 'New Notification';
+        const message = remoteMessage.notification?.body || '';
+
+        notificationRef.current?.showNotification({
+          title,
+          message,
+          icon: require('./assets/bell.png'),
+        });
+      }
+    });
 
     return unsubscribe;
-  });
+  }, []);
 
   return (
     <GlobalAlertProvider>
       <AuthProvider>
-        <Animated.View
-          style={[styles.container, {transform: [{translateY: slideAnim}]}]}>
-          <Text style={styles.text}>No Internet Connection</Text>
+        <Animated.View style={[{ position: 'absolute', left:0, width:'100%', top: 0, zIndex: 1000, }, { transform: [{ translateY: slideAnim }] }]}>
+          <Text style={{ textAlign: 'center', backgroundColor: 'red', color: '#fff', padding: 10 }}>
+            No Internet Connection
+          </Text>
         </Animated.View>
+
         <NavigationContainer>
-          <Stack.Navigator
-            screenOptions={{headerShown: false}}
-            initialRouteName="Splash">
+          <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
+            {/* Screens without Tab Bar */}
             <Stack.Screen name="Splash" component={SplashScreen} />
-            <Stack.Screen
-              name="Welcome"
-              component={Welcome}
-              options={{tabBarStyle: {display: 'none'}}}
-            />
+            <Stack.Screen name="Welcome" component={Welcome} />
             <Stack.Screen name="Login" component={Login} />
-            {/* <Stack.Screen name="Password" component={Password} /> */}
-            <Stack.Screen name="MainApp" component={TabNavigator} />
-            <Stack.Screen name="Profile" component={Profile} />
-            <Stack.Screen name="Assigned" component={Assigned} />
-            {/* <Stack.Screen name="MapNavigation" options={{ headerShown: true, title: 'Navigation' }} component={MapNavigation} /> */}
-            <Stack.Screen name="Accepted" component={Accepted} />
-            <Stack.Screen name="In Progress" component={Progress} />
-            <Stack.Screen name="Collected" component={Collected} />
-            <Stack.Screen name="Completed" component={Completed} />
+            <Stack.Screen name="VoucherDetails" component={VoucherDetails} />
             <Stack.Screen name="Receipt" component={Receipt} />
-            <Stack.Screen name="Tracking" component={TrackingScreen} />
-            <Stack.Screen name="Approved" component={Approved} />
-            <Stack.Screen name="Processed" component={Processed} />
-            <Stack.Screen name="Rejected" component={Rejected} />
-            <Stack.Screen name='Pending' component={Pending} />
-            <Stack.Screen name="Rejected Task" component={RejectedTask} />
-            <Stack.Screen name="Receiptview" component={Receiptview} />
             <Stack.Screen name="Notification" component={Notification} />
+            <Stack.Screen name="Tracking" component={TrackingScreen} />
+            <Stack.Screen name="Profile" component={Profile} />
             <Stack.Screen name="Attendance" component={Attendance} />
-            <Stack.Screen name="TaskScreen" component={TaskScreen} />
+
+            {/* Main Tab Navigator */}
+            <Stack.Screen name="MainApp" component={TabNavigator} />
           </Stack.Navigator>
-          <StatusBar style="auto" backgroundColor="#ddd" />
+          <StatusBar backgroundColor="#ddd" barStyle="dark-content" />
+          <PushNotifiactionModal ref={notificationRef} />
         </NavigationContainer>
       </AuthProvider>
     </GlobalAlertProvider>
@@ -340,53 +283,41 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
     zIndex: 9999,
-    elevation: 5,
-  },
-  text: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  tabItem: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 0,
-    marginTop: 0,
-    width: 90,
-    position: 'relative',
-  },
-  tbstitle: {
-    fontFamily: 'Montserrat_600SemiBold',
-    fontSize: 14,
-    color: '#8F9BB3',
-    paddingTop: 5,
-  },
-  afterline: {
-    position: 'absolute',
-    top: -15,
-    left: 0,
-    right: 0,
-    height: 3,
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 2,
-    borderTopRightRadius: 2,
-    zIndex: 2,
+    elevation: 2,
   },
 
-  // iconUnfocused: {
-  //   width:50,
-  //   height:50,
-  //   backgroundColor: 'transparent',
-  //   borderRadius:50,
-  //   textAlign:'center',
-  //   lineHeight:50,
+  dd: {
+    fontSize: 50
+  }
+  // text: {
+  //   color: '#fff',
+  //   fontWeight: '600',
   // },
-  // iconFocused: {
-  //   width:50,
-  //   height:50,
-  //   borderRadius:50,
-  //   backgroundColor: '#3085FE',
-  //   textAlign:'center',
-  //   lineHeight:50,
+  // tabItem: {
+  //   flexDirection: 'column',
+  //   alignItems: 'center',
+  //   justifyContent: 'center',
+  //   paddingTop: 0,
+  //   marginTop: 0,
+  //   width:90,
+  //   position: 'relative',
   // },
+  // tbstitle: {
+  //   fontFamily: 'Montserrat_600SemiBold',
+  //   fontSize: 13,
+  //   color: '#8F9BB3',
+  //   paddingTop: 5,
+  // },
+  // afterline: {
+  //   position: 'absolute',
+  //   top: -15,
+  //   left: 0,
+  //   right: 0,
+  //   height: 3,
+  //   backgroundColor: '#FFFFFF',
+  //   borderTopLeftRadius: 2,
+  //   borderTopRightRadius: 2,
+  //   zIndex: 2,
+  // },
+
 });

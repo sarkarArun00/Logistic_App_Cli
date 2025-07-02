@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TouchableWithoutFeedback, TextInput, Modal, Animated, FlatList, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, ActivityIndicator, TextInput, Modal, Animated, FlatList, Alert } from 'react-native';
 // import { useFonts, Montserrat_600SemiBold, Montserrat_400Regular, Montserrat_500Medium } from '@expo-google-fonts/montserrat'
 import { Picker } from '@react-native-picker/picker';
 // import * as ImagePicker from 'expo-image-picker';
 import { GlobalStyles, lightTheme } from '../../GlobalStyles';
-
-
-
+import TaskService from '../../Services/task_service';
+import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
+import FeulVoucherRequest from '../FeulVoucherRequest';
 
 
 
@@ -23,6 +23,62 @@ function Approved({ navigation }) {
     const bgColor = useRef(new Animated.Value(0)).current;
     const [selectViewMdl, setSelectViewMdl] = useState(false);
     const [images, setImages] = useState([]);
+    const [fuelVoucherList, setFuelVoucherList] = useState([])
+    const [loading, setLoading] = useState(false)
+    const [activeMenuId, setActiveMenuId] = useState(null);
+    const { showAlertModal, hideAlert } = useGlobalAlert();
+    
+
+
+
+    useEffect(() => {
+        getAllFuelVoucher();
+      }, [])
+
+    const formatDateTime = (dateString) => {
+        if (!dateString) return '';
+      
+        const date = new Date(dateString);
+      
+        return date
+          .toLocaleString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            month: 'short',       // "Feb"
+            day: '2-digit',       // "20"
+            year: 'numeric',      // "2025"
+            hour: 'numeric',      // "4"
+            minute: '2-digit',    // "01"
+            hour12: true          // "PM"
+          })
+          .replace(',', ''); // Optional: Remove comma between date and time
+      };
+
+    const formatToINR = (amount) => {
+        return new Intl.NumberFormat('en-IN', {
+          style: 'currency',
+          currency: 'INR',
+          minimumFractionDigits: 2,
+        }).format(amount || 0);
+      };
+
+      const getAllFuelVoucher = async () => {
+        try {
+          setLoading(true);
+          const response = await TaskService.getAllFuelVouchers();
+          console.log('getAllFuelVoucher response:', response.data.filter((item) => item.opStatus=="approved"))
+            
+          if (response?.status) {
+            setFuelVoucherList(response.data.filter((item) => item.opStatus=="approved"));
+          } else {
+            setFuelVoucherList([]);
+          }
+        } catch (error) {
+          console.error('Error fetching fuel vouchers:', error);
+          setFuelVoucherList([]);
+        } finally {
+          setLoading(false);
+        }
+      };
 
     // Camera Open
     const requestPermission = async (type) => {
@@ -113,21 +169,10 @@ function Approved({ navigation }) {
         outputRange: ['#1AA123', 'transparent'],
     });
 
-    // Fonts 
-    const [fontsLoaded] = useFonts({
-        Montserrat_600SemiBold,
-        Montserrat_500Medium,
-        Montserrat_400Regular,
-    });
-
-    if (!fontsLoaded) {
-        return null;
-    }
-
     return (
         <SafeAreaView style={[
             styles.container,
-            GlobalStyles.SafeAreaView,
+            // GlobalStyles.SafeAreaView,
             { paddingBottom: lightTheme.paddingBottomNew }
           ]}>
             <ScrollView
@@ -164,7 +209,7 @@ function Approved({ navigation }) {
 
                 {/* ScrollView Tab */}
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollContainer}>
-                    <View style={{ flexDirection: 'row', paddingTop: 20, }}>
+                    {/* <View style={{ flexDirection: 'row', paddingTop: 20, }}>
                         <TouchableOpacity onPress={() => navigation.navigate('MainApp', { screen: 'Pending' })} style={[styles.tcbtn,]}>
                             <Text style={[styles.acttext,]}>Pending</Text>
                         </TouchableOpacity>
@@ -177,59 +222,112 @@ function Approved({ navigation }) {
                         <TouchableOpacity onPress={() => navigation.navigate('Rejected')} style={[styles.tcbtn,]}>
                             <Text style={[styles.acttext,]}>Rejected</Text>
                         </TouchableOpacity>
+                    </View> */}
+                    <View style={{ flexDirection: 'row', paddingTop: 20, }}>
+                        <TouchableOpacity onPress={() => navigation.navigate('FeulStack', { screen: 'Pending' })} style={[styles.tcbtn]}>
+                            <Text style={[styles.acttext]}>Pending</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => navigation.navigate('FeulStack', { screen: 'Approved' })} style={[styles.tcbtn, styles.active]}>
+                            <Text style={[styles.acttext, styles.testactive]}>Approved</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => navigation.navigate('FeulStack', { screen: 'Processed' })} style={[styles.tcbtn,]}>
+                            <Text style={[styles.acttext,]}>Processed</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => navigation.navigate('FeulStack', { screen: 'Rejected' })} style={[styles.tcbtn,]}>
+                            <Text style={[styles.acttext,]}>Rejected</Text>
+                        </TouchableOpacity>
                     </View>
                 </ScrollView>
 
-                <View>
-                    <Text style={styles.title}>Feb 22, 2025</Text>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15, }}>
-                        <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center', }}>
-                            <View>
-                                <Image style={{ width: 28, height: 20, }} source={require('../../../assets/voucher.png')} />
-                            </View>
-                            <View style={{ paddingLeft: 6, }}>
-                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, color: '#0C0D36', paddingBottom: 2, }}>#589AGRD</Text>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', }}>
+                {fuelVoucherList.map((allVehicles) => (
+                <View key={allVehicles.id}>
+                    <Text style={styles.title}>{formatDateTime(allVehicles.createdAt)}</Text>
+
+                    <View
+                    style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: 15,
+                    }}
+                    >
+                    <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
+                        <Image
+                        style={{ width: 28, height: 20 }}
+                        source={require('../../../assets/voucher.png')}
+                        />
+                        <View style={{ paddingLeft: 6 }}>
+                        <Text
+                            style={{
+                            fontFamily: 'Montserrat_500Medium',
+                            fontSize: 16,
+                            color: '#0C0D36',
+                            paddingBottom: 2,
+                            }}
+                        >
+                            {allVehicles?.fuelVoucherNo}
+                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', }}>
                                     <View style={styles.bgborder}><Animated.View style={[styles.animatebg, { backgroundColor }]} /></View>
                                     <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 11, color: '#0C0D36', }}>Payment Approved</Text>
                                 </View>
-                            </View>
                         </View>
-                        <TouchableWithoutFeedback onPress={() => setShowMenu(false)}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', }}>
-                                <View style={{ paddingRight: 15, }}>
-                                    <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 14, color: '#FFBB00', }}>3000.00</Text>
-                                    <Text style={{ fontFamily: 'Montserrat_400Regular', fontSize: 12, color: '#0C0D36', }}>(5000.00)</Text>
-                                </View>
-                                <TouchableOpacity
-                                    style={[styles.touchBtn, { paddingHorizontal: 4 }]}
-                                    onPress={(e) => {
-                                        e.stopPropagation();
-                                        setShowMenu(!showMenu);
-                                    }}>
-                                    <Image style={{ width: 4, height: 23 }} source={require('../../../assets/dotimg1.png')} />
-                                </TouchableOpacity>
+                    </View>
 
-                                {showMenu && (
-                                    <View style={styles.viewBx}>
-                                        <TouchableOpacity style={styles.viewText} onPress={() => {
-                                            setSelectViewMdl(true);
-                                            setShowMenu(false);
-                                        }}>
-                                            <Text style={styles.downloadText}>View</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity style={styles.viewText} onPress={() => setShowMenu(false)}>
-                                            <Text style={styles.downloadText}>Download</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity style={styles.viewText} onPress={() => setShowMenu(false)}>
-                                            <Text style={styles.downloadText}>Share</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                )}
-                            </View>
-                        </TouchableWithoutFeedback>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ paddingRight: 15 }}>
+                        <Text
+                            style={{
+                            fontFamily: 'Montserrat_600SemiBold',
+                            fontSize: 14,
+                            color: '#FFBB00',
+                            }}
+                        >
+                            {formatToINR(allVehicles.amount)}
+                        </Text>
+                        </View>
+                        <TouchableOpacity
+                        style={[styles.touchBtn, { paddingHorizontal: 4 }]}
+                        onPress={() =>
+                            setActiveMenuId(
+                            activeMenuId === allVehicles.id ? null : allVehicles.id
+                            )
+                        }
+                        >
+                        <Image
+                            style={{ width: 4, height: 23 }}
+                            source={require('../../../assets/dotimg1.png')}
+                        />
+                        </TouchableOpacity>
+
+                        {activeMenuId === allVehicles.id && (
+                        <View style={styles.viewBx}>
+                            <TouchableOpacity
+                            style={styles.viewText}
+                            
+                            onPress={() => navigation.navigate("VoucherDetails", { fuelVoucherId: allVehicles.id })}
+                            >
+                            <Text style={styles.downloadText}>View</Text>
+                            </TouchableOpacity>
+                            {/* <TouchableOpacity
+                            style={styles.viewText}
+                            onPress={() => setActiveMenuId(null)}
+                            >
+                            <Text style={styles.downloadText}>Download</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                            style={styles.viewText}
+                            onPress={() => setActiveMenuId(null)}
+                            >
+                            <Text style={styles.downloadText}>Share</Text>
+                            </TouchableOpacity> */}
+                        </View>
+                        )}
+                    </View>
                     </View>
                 </View>
+                ))}
+
 
                 {/* Filter Modal */}
                 <Modal
@@ -357,125 +455,54 @@ function Approved({ navigation }) {
                     <Image style={{ width: 12, height: 12, marginLeft: 8, marginTop: 4, }} source={require('../../../assets/plusicon.png')} />
                 </View>
             </TouchableOpacity>
+            
+            <FeulVoucherRequest visible={modalVisible} onClose={() => setModalVisible(false)} />
+            
 
-            {/* Request Modal */}
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}>
-                <View style={styles.modalBackground}>
-                    <View style={[styles.modalContainer, styles.scrlablModalContainer]}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
-                            <Text style={styles.modalText}>Fuel Voucher Request Details</Text>
-                            <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                <Image style={{ width: 18, height: 18 }} source={require('../../../assets/mdlclose.png')} />
-                            </TouchableOpacity>
-                        </View>
-                        <ScrollView>
-                            <View style={{ padding: 15, }}>
-                                <View>
-                                    <Text style={styles.label}>Select Vehicle</Text>
-                                    <View style={styles.pickerContainer}>
-                                        <Picker
-                                            selectedValue={selectCar}
-                                            onValueChange={(itemValue, itemIndex) =>
-                                                setselectCar(itemValue)
-                                            }>
-                                            <Picker.Item label="Car" value="Car" />
-                                            <Picker.Item label="Bike" value="Bike" />
-                                        </Picker>
-                                    </View>
-                                </View>
-                                <View>
-                                    <Text style={styles.label}>Payment Mode</Text>
-                                    <View style={styles.pickerContainer}>
-                                        <Picker
-                                            selectedValue={selectPaymode}
-                                            onValueChange={(itemValue, itemIndex) =>
-                                                setselectPaymode(itemValue)
-                                            }>
-                                            <Picker.Item label="Cash" value="Cash" />
-                                            <Picker.Item label="UPI" value="UPI" />
-                                            <Picker.Item label="Net Banking" value="Net Banking" />
-                                        </Picker>
-                                    </View>
-                                </View>
-                                <View>
-                                    <Text style={styles.label}>Enter Amount</Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Enter Amount"
-                                        placeholderTextColor="#0C0D36"
-                                    />
-                                </View>
 
-                                <View>
-                                    <Text style={styles.label}>Attachment</Text>
-
-                                    <TouchableOpacity style={styles.uploadContainer} onPress={selectImages}>
-                                        <Image style={{ width: 30, height: 28, marginHorizontal: 'auto', }} source={require('../../../assets/upload-icon.png')} />
-                                        <Text style={styles.uploadTitle}>Upload</Text>
-                                        <Text style={styles.uploadSubTitle}>Supports JPG, JPEG, and PNG</Text>
-                                    </TouchableOpacity>
-
-                                    {images.length > 0 ? (
-                                        <FlatList
-                                            style={styles.flatList}
-                                            data={images}
-                                            keyExtractor={(item, index) => index.toString()}
-                                            renderItem={({ item, index }) => (
-                                                <View>
-                                                    <Image source={{ uri: item.uri }} style={{ width:60, height:60, borderRadius:5, marginRight:10, }} />
-                                                    <TouchableOpacity
-                                                        onPress={() => handleDeleteImage(index)}
-                                                        style={{
-                                                            position:'absolute',
-                                                            top:-5,
-                                                            right:5,
-                                                            backgroundColor:'red',
-                                                            borderRadius:12,
-                                                            width:22,
-                                                            height:22,
-                                                            justifyContent:'center',
-                                                            alignItems:'center'
-                                                        }}
-                                                    >
-                                                        <Text style={{ color:'white', fontSize:12, lineHeight:14, }}>✕</Text>
-                                                    </TouchableOpacity>
-                                                </View>
-                                            )}
-                                            horizontal
-                                        />
-                                    ) : (
-                                        <Text style={styles.noImgSelected}>No images selected</Text>
-                                    )}
-                                </View>
-
-                                <View>
-                                    <Text style={styles.label}>Remarks</Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Placeholder"
-                                        placeholderTextColor="#0C0D36"
-                                    />
-                                </View>
-                                <View>
-                                    <TouchableOpacity style={{ backgroundColor: '#2F81F5', borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10, }}>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 16, color: 'white', textAlign: 'center', }}>Send</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </ScrollView>
-                    </View>
+            {loading && (
+                <View
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 9999,
+                    }}
+                >
+                    <ActivityIndicator size="large" color="#FFFFFF" />
+                    <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
                 </View>
-            </Modal>
-
+            )}
         </SafeAreaView>
     )
 }
 
 const styles = StyleSheet.create({
+    ScrollView:{
+        paddingBottom:185,
+    },
+    label: {
+        fontSize: 16,
+        marginBottom: 8,
+        color: lightTheme.text,
+    },
+    pickerContainer: {
+        backgroundColor: lightTheme.inputBackground,
+        borderWidth: 1,
+        borderColor: lightTheme.border,
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginBottom: 16,
+    },
+    picker: {
+        height: 50,
+        color: lightTheme.inputText, // Works on iOS and sometimes Android
+    },
     container: {
         flex: 1,
         padding: 15,
@@ -513,7 +540,7 @@ const styles = StyleSheet.create({
     createBtn: {
         position: 'absolute',
         right: 15,
-        bottom: 100,
+        bottom: 120,
         backgroundColor: '#EBF2FB',
         borderRadius: 28,
         flexDirection: 'row',
