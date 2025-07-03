@@ -20,21 +20,22 @@ import NotificationCount from '../../Notifications/NotificationCount';
 function Pending({ navigation }) {
     const [filter, setFilter] = useState(false);
     const [selectStatus, setselectStatus] = useState();
+    const [showMenu, setShowMenu] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
+    const [selectPaymode, setselectPaymode] = useState();
+    const [selectVehicle, setVehicle] = useState();
     const bgColor = useRef(new Animated.Value(0)).current;
+    const [selectViewMdl, setSelectViewMdl] = useState(false);
     const [images, setImages] = useState([]);
     const [vehicles, setVehicles] = useState([])
     const [fuelVoucherList, setFuelVoucherList] = useState([])
+    const [remarks, setRemarks] = useState('')
+    const [amount, setAmount] = useState(0)
+    const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [loading, setLoading] = useState(false)
     const [activeMenuId, setActiveMenuId] = useState(null);
+    const { showAlertModal, hideAlert } = useGlobalAlert();
 
-
-    // useFocusEffect(
-    //     useCallback(() => {
-    //       vehicleList();
-    //       getAllFuelVoucher();
-    //     }, [])
-    //   );
       
 
       useEffect(() => {
@@ -44,14 +45,21 @@ function Pending({ navigation }) {
       }, [])
 
     const vehicleList = async () => {
-        const userId =  await AsyncStorage.getItem('user_id')
-        const response = await TaskService.getVehicleByEmpId({employeeId: 209})
-        console.log('ressssss', response)
-        if(response.status==1) {
-            setVehicles(response.data)
-        } else {
+        try {
+            const userId =  await AsyncStorage.getItem('user_id')
+            const response = await TaskService.getVehicleByEmpId({employeeId: 209})
+            console.log('ressssss', response)
+            if(response.status==1) {
+                setVehicles(response.data)
+            } else {
+                setVehicles([])
+    
+            }
+        } catch (error) {
+            showAlertModal(error, true)
             setVehicles([])
-
+        } finally{
+            setVehicles([])
         }
     }
 
@@ -103,167 +111,6 @@ function Pending({ navigation }) {
       };
 
 
-    // Camera Open
-    // const requestPermission = async (type) => {
-    //     try {
-    //         if (Platform.OS === 'android') {
-    //             if (type === 'camera') {
-    //                 const granted = await PermissionsAndroid.request(
-    //                     PermissionsAndroid.PERMISSIONS.CAMERA,
-    //                     {
-    //                         title: 'Camera Permission',
-    //                         message: 'App needs access to your camera to take pictures.',
-    //                         buttonNeutral: 'Ask Me Later',
-    //                         buttonNegative: 'Cancel',
-    //                         buttonPositive: 'OK',
-    //                     }
-    //                 );
-    //                 return granted === PermissionsAndroid.RESULTS.GRANTED;
-    //             } else {
-    //                 const granted = await PermissionsAndroid.request(
-    //                     PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-    //                     {
-    //                         title: 'Storage Permission',
-    //                         message: 'App needs access to your photos.',
-    //                         buttonNeutral: 'Ask Me Later',
-    //                         buttonNegative: 'Cancel',
-    //                         buttonPositive: 'OK',
-    //                     }
-    //                 );
-    //                 return granted === PermissionsAndroid.RESULTS.GRANTED;
-    //             }
-    //         }
-    //         // iOS auto handles permissions via Info.plist
-    //         return true;
-    //     } catch (error) {
-    //         console.error('Permission error:', error);
-    //         return false;
-    //     }
-    // };
-
-    // const openCamera = async () => {
-    //     const hasPermission = await requestPermission('camera');
-      
-    //     if (!hasPermission) {
-    //       showAlertModal('Camera access is needed to take pictures.', true);
-    //       return;
-    //     }
-      
-    //     const options = {
-    //       mediaType: 'photo',
-    //       includeBase64: false, // base64 not needed if uploading as binary
-    //       quality: 1,
-    //       saveToPhotos: true,
-    //     };
-      
-    //     launchCamera(options, async (response) => {
-    //       console.log('Camera response:', response);
-      
-    //       if (response.didCancel) {
-    //         console.log('User cancelled camera');
-    //       } else if (response.errorCode) {
-    //         console.error('Camera error:', response.errorMessage);
-    //         showAlertModal('Camera error occurred.', true);
-    //       } else if (response.assets && response.assets.length > 0) {
-    //         const image = response.assets[0];
-      
-    //         // Compress and return binary-compatible object
-    //         const compressedImage = await compressImage(image.uri);
-      
-    //         // Store the file for upload
-    //         setImages([compressedImage]); // compressedImage has { uri, type, name }
-    //       }
-    //     });
-    //   };
-      
-
-    // const openGallery = async () => {
-    //     const hasPermission = await requestPermission('gallery');
-    //     if (!hasPermission) {
-    //         Alert.alert('Permission Required', 'Gallery access is needed to select images.');
-    //         return;
-    //     }
-    
-    //     const options = {
-    //         mediaType: 'photo',
-    //         includeBase64: true,
-    //         quality: 1,
-    //     };
-    
-    //     launchImageLibrary(options, async (response) => {
-    //         console.log('Gallery response:', response);
-    //         if (response.didCancel) {
-    //             console.log('User cancelled gallery');
-    //         } else if (response.errorCode) {
-    //             console.error('Gallery error:', response.errorMessage);
-    //             showAlertModal('Gallery error occurred.', true);
-    //         } else if (response.assets && response.assets.length > 0) {
-    //             const image = response.assets[0];
-    
-    //             const compressedImage = await compressImage(image.uri);
-    //             setImages([compressedImage]);
-    //         }
-    //     });
-    // };
-    
-
-    // const compressImage = async (uri) => {
-    //     let currentUri = uri;
-    //     let sizeInKB = Infinity;
-    //     let compressedImage = null;
-      
-    //     while (sizeInKB > 50) {
-    //       try {
-    //         const resizedImage = await ImageResizer.createResizedImage(
-    //           currentUri,
-    //           500,        // width
-    //           500,        // height
-    //           'JPEG',
-    //           50          // quality (0–100)
-    //         );
-      
-    //         const base64 = await readFile(resizedImage.uri, 'base64');
-    //         sizeInKB = base64.length * (3 / 4) / 1024;
-      
-    //         if (sizeInKB <= 50) {
-    //           const fileName = `compressed_${Date.now()}.jpg`;
-    //           compressedImage = {
-    //             uri: Platform.OS === 'android' ? resizedImage.uri : resizedImage.uri.replace('file://', ''),
-    //             type: 'image/jpeg',
-    //             name: fileName,
-    //           };
-    //           break;
-    //         }
-      
-    //         currentUri = resizedImage.uri;
-    //       } catch (error) {
-    //         console.error('Compression failed:', error);
-    //         break;
-    //       }
-    //     }
-      
-    //     console.log('Final compressed image:', compressedImage);
-    //     return compressedImage;
-    //   };
-
-
-    // const selectImages = () => {
-    //     Alert.alert(
-    //         'Select Image',
-    //         'Choose an option',
-    //         [
-    //             { text: 'Camera', onPress: openCamera },
-    //             { text: 'Gallery', onPress: openGallery },
-    //             { text: 'Cancel', style: 'cancel' }
-    //         ]
-    //     );
-    // };
-
-    // const handleDeleteImage = (index) => {
-    //     const updatedImages = images.filter((_, i) => i !== index);
-    //     setImages(updatedImages);
-    // };
-    // Camera End
 
     useEffect(() => {
         Animated.loop(
@@ -287,73 +134,73 @@ function Pending({ navigation }) {
         outputRange: ['#FFBB00', 'transparent'],
     });
 
-    // const onSubmitFuelvoucher = async () => {
-    //     const userId = await AsyncStorage.getItem('user_id');
+    const onSubmitFuelvoucher = async () => {
+        const userId = await AsyncStorage.getItem('user_id');
       
-    //     if (!selectedVehicle) {
-    //         Alert.alert('Missing Information', 'Please select a valid vehicle before submitting.');
-    //         return;
-    //     }
+        if (!selectedVehicle) {
+            Alert.alert('Missing Information', 'Please select a valid vehicle before submitting.');
+            return;
+        }
         
-    //     setLoading(true)
-    //     const request = {
-    //         employeeId: Number(userId),
-    //         trackingId: Number(selectedVehicle), 
-    //         amount: Number(amount),
-    //         paymentMode: selectPaymode,
-    //         logisticRemarks: remarks,
-    //     };
+        setLoading(true)
+        const request = {
+            employeeId: Number(userId),
+            trackingId: Number(selectedVehicle), 
+            amount: Number(amount),
+            paymentMode: selectPaymode,
+            logisticRemarks: remarks,
+        };
         
-    //     try {
-    //         const response = await TaskService.saveFuelVoucher(request);
-    //         await submitFuelVoucherAttachments(response.data?.id);
-    //         console.log('API Response:', response.data);
-    //       showAlertModal('Fuel voucher submitted successfully.', false)
-    //       getAllFuelVoucher();
-    //       setLoading(false)
-    //     } catch (err) {
-    //       console.error('API Error:', err);
-    //       showAlertModal('Failed to submit fuel voucher.', true)
-    //       setLoading(false)
+        try {
+            const response = await TaskService.saveFuelVoucher(request);
+            await submitFuelVoucherAttachments(response.data?.id);
+            console.log('API Response:', response.data);
+          showAlertModal('Fuel voucher submitted successfully.', false)
+          getAllFuelVoucher();
+          setLoading(false)
+        } catch (err) {
+          console.error('API Error:', err);
+          showAlertModal('Failed to submit fuel voucher.', true)
+          setLoading(false)
 
-    //     }
-    //   };
+        }
+      };
       
 
-    //   const submitFuelVoucherAttachments = async (fuelVoucherId) => {
-    //     if (!images.length) {
-    //       console.warn('No image selected');
-    //       return;
-    //     }
+      const submitFuelVoucherAttachments = async (fuelVoucherId) => {
+        if (!images.length) {
+          console.warn('No image selected');
+          return;
+        }
       
-    //     const file = images[0]; // get the first image
-    //     setLoading(true)
-    //     const formData = new FormData();
-    //     formData.append('fuelVoucherId', fuelVoucherId);
-    //     formData.append('attachment', {
-    //       uri: file.uri,
-    //       type: file.type || 'image/jpeg',
-    //       name: file.name || `attachment_${Date.now()}.jpg`,
-    //     });
+        const file = images[0]; // get the first image
+        setLoading(true)
+        const formData = new FormData();
+        formData.append('fuelVoucherId', fuelVoucherId);
+        formData.append('attachment', {
+          uri: file.uri,
+          type: file.type || 'image/jpeg',
+          name: file.name || `attachment_${Date.now()}.jpg`,
+        });
       
-    //     try {
-    //       const response = await TaskService.addFuelVoucherAttachment(formData);
-    //       if(response.status==1) {
-    //         // showAlertModal(response.data, false);
-    //         setModalVisible(false)
-    //         console.log('Upload success:', response);
-    //         setLoading(false)
-    //       } else {
-    //         showAlertModal('Failed to upload attachments', true);
-    //         setLoading(false)
-    //       }
-    //       return 
-    //     } catch (error) {
-    //       console.error('Upload error:', error);
-    //       setLoading(false)
-    //       throw error;
-    //     }
-    //   };
+        try {
+          const response = await TaskService.addFuelVoucherAttachment(formData);
+          if(response.status==1) {
+            // showAlertModal(response.data, false);
+            setModalVisible(false)
+            console.log('Upload success:', response);
+            setLoading(false)
+          } else {
+            showAlertModal('Failed to upload attachments', true);
+            setLoading(false)
+          }
+          return 
+        } catch (error) {
+          console.error('Upload error:', error);
+          setLoading(false)
+          throw error;
+        }
+      };
       
 
 
@@ -469,7 +316,8 @@ function Pending({ navigation }) {
                             {formatToINR(allVehicles.amount)}
                         </Text>
                         </View>
-                        <TouchableOpacity
+
+                        {/* <TouchableOpacity
                         style={[styles.touchBtn, { paddingHorizontal: 4 }]}
                         onPress={() =>
                             setActiveMenuId(
@@ -481,9 +329,9 @@ function Pending({ navigation }) {
                             style={{ width: 4, height: 23 }}
                             source={require('../../../assets/dotimg1.png')}
                         />
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
 
-                        {activeMenuId === allVehicles.id && (
+                        {/* {activeMenuId === allVehicles.id && (
                         <View style={styles.viewBx}>
                             <TouchableOpacity
                             style={styles.viewText}
@@ -492,7 +340,7 @@ function Pending({ navigation }) {
                             >
                             <Text style={styles.downloadText}>View</Text>
                             </TouchableOpacity>
-                            {/* <TouchableOpacity
+                            <TouchableOpacity
                             style={styles.viewText}
                             onPress={() => setActiveMenuId(null)}
                             >
@@ -503,9 +351,9 @@ function Pending({ navigation }) {
                             onPress={() => setActiveMenuId(null)}
                             >
                             <Text style={styles.downloadText}>Share</Text>
-                            </TouchableOpacity> */}
+                            </TouchableOpacity>
                         </View>
-                        )}
+                        )} */}
                     </View>
                     </View>
                 </View>

@@ -41,6 +41,7 @@ import Profile from './Pages/Profile/Profile';
 import Approved from './Pages/Fuel-voucher/Approved/Approved';
 import Processed from './Pages/Fuel-voucher/Processed/Processed';
 import Rejected from './Pages/Fuel-voucher/Rejected/Rejected';
+import Receiptview from './Pages/Receipt/Receiptview';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -258,6 +259,7 @@ export default function App() {
             <Stack.Screen name="Login" component={Login} />
             <Stack.Screen name="VoucherDetails" component={VoucherDetails} />
             <Stack.Screen name="Receipt" component={Receipt} />
+            <Stack.Screen name="Receiptview" component={Receiptview} />
             <Stack.Screen name="Notification" component={Notification} />
             <Stack.Screen name="Tracking" component={TrackingScreen} />
             <Stack.Screen name="Profile" component={Profile} />

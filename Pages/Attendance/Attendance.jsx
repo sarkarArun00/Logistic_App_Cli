@@ -184,7 +184,7 @@ function Attendance({ navigation }) {
                     } else if (shiftType === 'WO') {
                       return '#F9C74F'; // Yellow - Weekly Off
                     } else if (shiftType === 'HO') {
-                      return '#FF6B6B'; // Red - Holiday
+                      return '#b624f0'; // Red - Holiday
                     }
                     return '#C4C4C4'; // Default grey
                   };
@@ -248,6 +248,7 @@ function Attendance({ navigation }) {
         };
 
         const response = await TaskService.getLoginByDate(request);
+        console.log("Press Day: ", response)
         if (response.status == 1) {
             setAttendance(response.data);
         } else {

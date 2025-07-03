@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TouchableWithoutFeedback, TextInput, Modal, Animated, FlatList, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, ActivityIndicator, TextInput, Modal, Animated, FlatList, Alert } from 'react-native';
 // import { useFonts, Montserrat_600SemiBold, Montserrat_400Regular, Montserrat_500Medium } from '@expo-google-fonts/montserrat'
 import { Picker } from '@react-native-picker/picker';
 // import * as ImagePicker from 'expo-image-picker';
 import { lightTheme, GlobalStyles } from '../../GlobalStyles';
 import FeulVoucherRequest from '../FeulVoucherRequest';
+import TaskService from '../../Services/task_service';
+import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
+
 
 function Processed({ navigation }) {
     const [filter, setFilter] = useState(false);
@@ -18,72 +21,62 @@ function Processed({ navigation }) {
     const [selectViewMdl, setSelectViewMdl] = useState(false);
     const [images, setImages] = useState([]);
 
+
+    const [fuelVoucherList, setFuelVoucherList] = useState([])
+    const [loading, setLoading] = useState(false)
+    const [activeMenuId, setActiveMenuId] = useState(null);
+
     // Camera Open
-    const requestPermission = async (type) => {
-        if (type === 'camera') {
-            const { status } = await ImagePicker.requestCameraPermissionsAsync();
-            return status === 'granted';
-        } else {
-            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            return status === 'granted';
+  
+    useEffect(() => {
+        getAllFuelVoucher();
+      }, [])
+
+    const formatDateTime = (dateString) => {
+        if (!dateString) return '';
+      
+        const date = new Date(dateString);
+      
+        return date
+          .toLocaleString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            month: 'short',       // "Feb"
+            day: '2-digit',       // "20"
+            year: 'numeric',      // "2025"
+            hour: 'numeric',      // "4"
+            minute: '2-digit',    // "01"
+            hour12: true          // "PM"
+          })
+          .replace(',', ''); // Optional: Remove comma between date and time
+      };
+
+    const formatToINR = (amount) => {
+        return new Intl.NumberFormat('en-IN', {
+          style: 'currency',
+          currency: 'INR',
+          minimumFractionDigits: 2,
+        }).format(amount || 0);
+      };
+
+      const getAllFuelVoucher = async () => {
+        try {
+          setLoading(true);
+          const response = await TaskService.getAllFuelVouchers();
+          console.log('getAllFuelVoucher response:', response.data.filter((item) => item.opStatus=="approved" && item.acStatus=="approved"))
+            
+          if (response?.status) {
+            setFuelVoucherList(response.data.filter((item) => item.acStatus=="approved"));
+          } else {
+            setFuelVoucherList([]);
+          }
+        } catch (error) {
+          console.error('Error fetching fuel vouchers:', error);
+          setFuelVoucherList([]);
+        } finally {
+          setLoading(false);
         }
-    };
+      };
 
-    const openCamera = async () => {
-        const hasPermission = await requestPermission('camera');
-        if (!hasPermission) {
-            Alert.alert('Permission Required', 'Camera access is needed to take pictures.');
-            return;
-        }
-
-        const result = await ImagePicker.launchCameraAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            const newImage = { uri: result.assets[0].uri };
-            setImages((prev) => [...prev, newImage]);
-        }
-    };
-
-    const openGallery = async () => {
-        const hasPermission = await requestPermission('gallery');
-        if (!hasPermission) {
-            Alert.alert('Permission Required', 'Gallery access is needed to select images.');
-            return;
-        }
-
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsMultipleSelection: true,
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            const newImages = result.assets.map((asset) => ({ uri: asset.uri }));
-            setImages((prev) => [...prev, ...newImages]);
-        }
-    };
-
-    const selectImages = () => {
-        Alert.alert(
-            'Select Image',
-            'Choose an option',
-            [
-                { text: 'Camera', onPress: openCamera },
-                { text: 'Gallery', onPress: openGallery },
-                { text: 'Cancel', style: 'cancel' }
-            ]
-        );
-    };
-
-    const handleDeleteImage = (index) => {
-        const updatedImages = images.filter((_, i) => i !== index);
-        setImages(updatedImages);
-    };
-    // Camera End
 
     useEffect(() => {
         Animated.loop(
@@ -107,16 +100,6 @@ function Processed({ navigation }) {
         outputRange: ['#1952A3', 'transparent'],
     });
 
-    // Fonts 
-    // const [fontsLoaded] = useFonts({
-    //     Montserrat_600SemiBold,
-    //     Montserrat_500Medium,
-    //     Montserrat_400Regular,
-    // });
-
-    // if (!fontsLoaded) {
-    //     return null;
-    // }
 
     return (
         <SafeAreaView style={styles.container}>
@@ -170,60 +153,98 @@ function Processed({ navigation }) {
                     </View>
                 </ScrollView>
 
-                <View>
-                    <Text style={styles.title}>Feb 22, 2025</Text>
+                {fuelVoucherList.map((allVehicles) => (
+                <View key={allVehicles.id}>
+                    <Text style={styles.title}>{formatDateTime(allVehicles.createdAt)}</Text>
 
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15, }}>
-                        <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center', }}>
-                            <View>
-                                <Image style={{ width: 28, height: 20, }} source={require('../../../assets/voucher.png')} />
-                            </View>
-                            <View style={{ paddingLeft: 6, }}>
-                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, color: '#0C0D36', paddingBottom: 2, }}>#589AGRD</Text>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', }}>
+                    <View
+                    style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: 15,
+                    }}
+                    >
+                    <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
+                        <Image
+                        style={{ width: 28, height: 20 }}
+                        source={require('../../../assets/voucher.png')}
+                        />
+                        <View style={{ paddingLeft: 6 }}>
+                        <Text
+                            style={{
+                            fontFamily: 'Montserrat_500Medium',
+                            fontSize: 16,
+                            color: '#0C0D36',
+                            paddingBottom: 2,
+                            }}
+                        >
+                            {allVehicles?.fuelVoucherNo}
+                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', }}>
                                     <View style={styles.bgborder}><Animated.View style={[styles.animatebg, { backgroundColor }]} /></View>
                                     <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 11, color: '#0C0D36', }}>Payment Processed</Text>
                                 </View>
-                            </View>
                         </View>
-                        <TouchableWithoutFeedback onPress={() => setShowMenu(false)}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', }}>
-                                <View style={{ width: 24, height: 24, borderWidth: 1, borderColor: '#2F81F5', borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginRight: 15, }}>
-                                    <Image style={{ width: 11, height: 9, }} source={require('../../../assets/tick2.png')} />
-                                </View>
-                                <View style={{ paddingRight: 15, }}>
-                                    <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 14, color: '#1952A3', }}>3000.00</Text>
-                                    <Text style={{ fontFamily: 'Montserrat_400Regular', fontSize: 12, color: '#0C0D36', }}>(5000.00)</Text>
-                                </View>
-                                <TouchableOpacity
-                                    style={[styles.touchBtn, { paddingHorizontal: 4 }]}
-                                    onPress={(e) => {
-                                        e.stopPropagation();
-                                        setShowMenu(!showMenu);
-                                    }}>
-                                    <Image style={{ width: 4, height: 23 }} source={require('../../../assets/dotimg1.png')} />
-                                </TouchableOpacity>
+                    </View>
 
-                                {showMenu && (
-                                    <View style={styles.viewBx}>
-                                        <TouchableOpacity style={styles.viewText} onPress={() => {
-                                            setSelectViewMdl(true);
-                                            setShowMenu(false);
-                                        }}>
-                                            <Text style={styles.downloadText}>View</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity style={styles.viewText} onPress={() => setShowMenu(false)}>
-                                            <Text style={styles.downloadText}>Download</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity style={styles.viewText} onPress={() => setShowMenu(false)}>
-                                            <Text style={styles.downloadText}>Share</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                )}
-                            </View>
-                        </TouchableWithoutFeedback>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ paddingRight: 15 }}>
+                        <Text
+                            style={{
+                            fontFamily: 'Montserrat_600SemiBold',
+                            fontSize: 14,
+                            color: '#FFBB00',
+                            }}
+                        >
+                            {formatToINR(allVehicles.amount)}
+                        </Text>
+                        </View>
+                        <TouchableOpacity
+                        style={[styles.touchBtn, { paddingHorizontal: 4 }]}
+                        onPress={() =>
+                            setActiveMenuId(
+                            activeMenuId === allVehicles.id ? null : allVehicles.id
+                            )
+                        }
+                        >
+                        <Image
+                            style={{ width: 4, height: 23 }}
+                            source={require('../../../assets/dotimg1.png')}
+                        />
+                        </TouchableOpacity>
+
+                        {activeMenuId === allVehicles.id && (
+                        <View style={styles.viewBx}>
+                            <TouchableOpacity
+                            style={styles.viewText}
+                            
+                            onPress={() => navigation.navigate("VoucherDetails", {
+                                fuelVoucherId: allVehicles.id,
+                                type: "success"
+                              })}
+                            >
+                            <Text style={styles.downloadText}>View</Text>
+                            </TouchableOpacity>
+                            {/* <TouchableOpacity
+                            style={styles.viewText}
+                            onPress={() => setActiveMenuId(null)}
+                            >
+                            <Text style={styles.downloadText}>Download</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                            style={styles.viewText}
+                            onPress={() => setActiveMenuId(null)}
+                            >
+                            <Text style={styles.downloadText}>Share</Text>
+                            </TouchableOpacity> */}
+                        </View>
+                        )}
+                    </View>
                     </View>
                 </View>
+                ))}
 
                 {/* Filter Modal */}
                 <Modal
@@ -275,72 +296,6 @@ function Processed({ navigation }) {
                     </View>
                 </Modal>
 
-                {/* View Modal */}
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={selectViewMdl}
-                    onRequestClose={() => setSelectViewMdl(false)}>
-                    <View style={styles.modalBackground}>
-                        <View style={[styles.modalContainer, styles.viewModalContainer]}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0' }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', }}>
-                                    <Text style={styles.modalText}>Fuel Voucher View</Text>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: 10, }}>
-                                        <View style={styles.bgborder}><Animated.View style={[styles.animatebg, { backgroundColor }]} /></View>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 13, color: '#1952A3', }}>Processed</Text>
-                                    </View>
-                                </View>
-                                <TouchableOpacity onPress={() => setSelectViewMdl(false)}>
-                                    <Image style={{ width: 18, height: 18 }} source={require('../../../assets/mdlclose.png')} />
-                                </TouchableOpacity>
-                            </View>
-                            <ScrollView>
-                                <View style={{ padding: 15 }}>
-                                    <View>
-                                        <Text style={styles.label}>Vehicle</Text>
-                                        <Text style={styles.selLabel}>Car</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={styles.label}>Model Name</Text>
-                                        <Text style={styles.selLabel}>Car</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={styles.label}>Manufacturer</Text>
-                                        <Text style={styles.selLabel}>Car</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={styles.label}>Voucher ID</Text>
-                                        <Text style={styles.selLabel}>#65546AKJH</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={styles.label}>Employee Name</Text>
-                                        <Text style={styles.selLabel}>Akash Kundu</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={styles.label}>Amount</Text>
-                                        <Text style={styles.selLabel}>1205</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={styles.label}>Payment Mode</Text>
-                                        <Text style={styles.selLabel}>Cash</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={styles.label}>Attachment</Text>
-                                        <View style={styles.attachmentImg}>
-                                            <Image style={{ width: 50, height: 50, borderRadius: 5, }} source={require('../../../assets/user.jpg')} />
-                                            <Image style={{ width: 50, height: 50, borderRadius: 5, }} source={require('../../../assets/user.jpg')} />
-                                        </View>
-                                    </View>
-                                    <View>
-                                        <Text style={styles.label}>Remarks</Text>
-                                        <Text style={styles.selLabel}>Nice</Text>
-                                    </View>
-                                </View>
-                            </ScrollView>
-                        </View>
-                    </View>
-                </Modal>
 
             </ScrollView>
 
@@ -356,6 +311,25 @@ function Processed({ navigation }) {
 
             <FeulVoucherRequest visible={modalVisible} onClose={() => setModalVisible(false)} />
 
+
+            {loading && (
+                <View
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 9999,
+                    }}
+                >
+                    <ActivityIndicator size="large" color="#FFFFFF" />
+                    <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
+                </View>
+            )}
         </SafeAreaView>
     )
 }

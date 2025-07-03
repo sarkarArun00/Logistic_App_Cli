@@ -15,8 +15,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Feather';
-import { useFocusEffect } from '@react-navigation/native';
-import { GlobalStyles, lightTheme } from '../../GlobalStyles';
+
 
 
 const { width } = Dimensions.get('window');
@@ -26,13 +25,9 @@ const CARD_WIDTH = (width - 60) / 2;
 
 const TaskScreen = () => {
   const navigation = useNavigation();
+  const STATUS_BAR_HEIGHT = Platform.OS === 'android' ? StatusBar.currentHeight : 0;
 
-  useFocusEffect(
-    React.useCallback(() => {
-      StatusBar.setBackgroundColor('#2F81F5');
-      StatusBar.setBarStyle('light-content');
-    }, [])
-  );
+  console.log('status bar colour: ', STATUS_BAR_HEIGHT)
 
   const tasks = [
     {
@@ -156,13 +151,14 @@ const TaskScreen = () => {
     );
   };
 
+
   return (
     <SafeAreaView style={[
-      styles.container,styles.paddingBottom
+      styles.container, styles.paddingBottom
     ]}
     >
+      <StatusBar style={{ paddingTop: STATUS_BAR_HEIGHT, backgroundColor: '#5D5FEF', flex: 1 }}  barStyle="light-content" />
 
-      <StatusBar backgroundColor="#2F81F5" barStyle="dark-content" />
 
       <FlatList
         data={tasks}
@@ -174,9 +170,13 @@ const TaskScreen = () => {
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
         ListHeaderComponent={() => (
-          <View style={styles.headerContainer}>
+          <View style={[styles.headerContainer, { marginHorizontal: -20 }, { paddingTop: STATUS_BAR_HEIGHT, marginBottom:20, backgroundColor: '#5D5FEF', borderTopLeftRadius:0, borderBottomLeftRadius:20, flex: 1 }]}>
             <Image
-              style={{ width: '100%', height: 280, resizeMode: 'cover' }} // use resizeMode
+              style={{
+                width: '100%',
+                height: 250,
+                resizeMode: 'cover',
+              }}
               source={require('../../../assets/task-shape.png')}
             />
             <View style={{ position: 'absolute', left: 16, bottom: 76 }}>
@@ -184,8 +184,10 @@ const TaskScreen = () => {
               <Text style={styles.headerSubtitle}>View and manage your task</Text>
             </View>
           </View>
+
         )}
       />
+
 
     </SafeAreaView>
   );
@@ -221,6 +223,7 @@ const styles = StyleSheet.create({
   },
 
   listContainer: {
+    paddingTop:0,
     paddingHorizontal: 20,
     paddingBottom: 80,
   },
@@ -230,6 +233,7 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     width: CARD_WIDTH,
+    // paddingTop:20,
   },
   taskCard: {
     borderRadius: 20,

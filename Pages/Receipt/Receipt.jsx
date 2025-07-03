@@ -155,77 +155,135 @@ function Receipt({ navigation }) {
             <html>
             <head>
             <style>
-                body {
-                font-family: 'Arial', sans-serif;
-                padding:20px;
-                background-color: #fff;
-                color: #000;
-                }
-                .paymentBox{ text-align:center; background-color:#fff; border-radius:24px; box-shadow:0px 8px 24px 0px #AAAAAA4F; padding:20px; margin-bottom:30px; }
-                .paymentBox img{ margin-bottom:15px; }
-                .paymentBox .payText{ font-size:16px; line-height:1.2; font-weight:400; color:#474747; margin-bottom:8px; }
-                .paymentBox .inrText{ font-size:24px; line-height:1.2; font-weight:600; color:#0C0D36; margin-bottom:0; }
+                 * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-                .receBox{ background-color:#fff; border-radius:24px; box-shadow: 0px 8px 24px 0px #AAAAAA4F; padding:10px 25px 25px; margin-bottom:30px; }
-                .receSubBox{ text-align:center; background-color:#F5F6F7; border-radius:12px;  margin-bottom:18px; padding:12px; }
-                .receSubBox .receTitle{ font-size:16px; line-height:1.2; font-weight:500; color:#0C0D36; margin-bottom:10px; }
-                .receSubBox .receSubTitle{ font-size:14px; line-height:1.2; font-weight:500; color:#707070; }
+        body{ font-family: "Montserrat", sans-serif; background:#f0f4f8; padding:20px;  }
+        .payment-card{ position:relative; background:#ffffff; border-radius:20px; padding:40px 25px; max-width:550px;  width:100%; position:relative; border:1px solid #e5e7eb; border-top:2px solid #4CAF50; margin:0 auto; }
+        .success-icon{ width:60px; height:60px; background:#4CAF50; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 30px; position:relative; animation:pulse 2s infinite; }
 
-                .flexDv{ display:flex; justify-content:space-between; margin-bottom:14px; }
-                .flexDv .sndTitle{ font-size:13px; line-height:1.2; font-weight:400; color:#707070; }
-                .flexDv .sndTitle{ font-size:13px; line-height:1.2; font-weight:500; color:#0C0D36; }
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 20px rgba(76, 175, 80, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+            }
+        }
 
-                .border-line{ width:90%; border-top:1px dashed #EDEDED; height:1px; display:block; margin:0 auto 14px; }
-                .remarks{ display:flex; align-items:center; background-color:#fff; border-radius:24px; box-shadow: 0px 8px 24px 0px #AAAAAA4F; padding:16px 30px; }
-                .remarks .remTitle{ width:88px; font-size:16px; line-height:1.2; font-weight:500; color:#0C0D36; margin:0; }
-                .remarks .remSubTitle{ font-size:13px; line-height:1.2; font-weight:400; color:#707070; flex:1; margin:0; padding-top:4px; }
+        .checkmark { color:white; font-size:24px; font-weight:bold; }
+        .title{ color:#1f2937; font-size:28px; font-weight:600; text-align:center; margin-bottom:10px; }
+        .subtitle{ color:#6b7280; font-size:16px; text-align:center; margin-bottom:0; }
+        .amount-section{ text-align:center; margin:20px 0 40px; padding:20px; background:#f9fafb; border-radius:12px; border:1px solid #e5e7eb; }
+        .amount-label{ color:#6b7280; font-size:14px; margin-bottom:8px; }
+        .amount-value{ color:#1f2937; font-size:36px; font-weight:700; }
+        .details-section{ margin-bottom:30px; }
+        .detail-row{ display:flex; justify-content:space-between; align-items:center; padding:15px 0; border-bottom:1px solid #e5e7eb; }
+        .detail-row:last-child{ border-bottom:none; }
+        .detail-label{ color:#6b7280; font-size:14px; }
+        .detail-value{ color:#1f2937; font-size:14px; font-weight:500; text-align:right; max-width:200px; }
+        .fee-section{ background:#f9fafb; border-radius:8px; padding:15px; margin-top:20px; border:1px solid #e5e7eb; }
+        .fee-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+        .fee-row:last-child{ margin-bottom:0; font-weight:600; color:#4CAF50; }
+        .fee-label{ color:#6b7280; font-size:14px; }
+        .fee-value{ color:#1f2937; font-size:14px; }
+        .reference-code{ background:rgba(76, 175, 80, 0.1); border:1px solid rgba(76, 175, 80, 0.3); border-radius:8px; padding:12px; margin-top:20px; text-align:center; }
+        .reference-label{ color:#4CAF50; font-size:12px; margin-bottom:5px; }
+        .reference-value{ color:#1f2937; font-size:16px; font-weight:600; letter-spacing:1px; }
+        .partner{ position:relative; z-index:1; color:#1f2937; font-size:16px; line-height:1; font-weight:400; letter-spacing:1px; text-align:center; margin:25px 0 15px; }
+        .partner .bg{ display:inline-block; background:#fff; padding:0 6px; }
+        .partner .line{ position:absolute; left:0; right:0; top:8px; width:70%; height:1px; background:#e5e7eb; z-index:-1; margin:0 auto; }
+        .part-main{ background:#f9fafb; border-radius:8px; padding:15px; margin-top:20px; border:1px solid #e5e7eb; border-top:2px solid #4CAF50; }
+        .branding{ display:flex; align-items:center; justify-content:center; }
+        .branding .logo{ width:70px; }
+        .branding .logo img{ max-width:100%; }
+        .branding .text{ padding-left:10px; }
+        .branding .text h3{ font-family: "Arima", system-ui; font-size:23px; line-height:1; font-weight:600; color:#33a651; }
+
+        .dv-line{ position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between; margin:0 -40px; margin-top:20px; }
+        .round-box-one{ width:30px; height:30px; background:#f0f4f8; border-radius:50%; }
+        .round-box-two{ width:30px; height:30px; background:#f0f4f8; border-radius:50%; }
+        .dotted-line{ position:absolute; width:100%; height:2px; left:0; right:0; top:50%; transform:translateY(-50%); border:2px dashed #e2e9f0; z-index:-1; }
 
             </style>
             </head>
             <body>
-            <div class="paymentBox">
-                <img src="${imageBase64}" style="width: 56px; height: 56px;" />
-                <div class="payText">Payment Success!</div>
-                <div class="inrText">INR ${item?.amount || 0}</div>
-            </div>
+            <div class="payment-card">
+        <div class="success-icon">
+            <span class="checkmark">✓</span>
+        </div>
 
-            <div class="receBox">
-                <div class="receSubBox">
-                <div class="receTitle">Payment Receipt</div>
-                <div class="receSubTitle">Receipt Number: ${item?.receiptId || ''}</div>
-                </div>
-
-                <div class="flexDv">
-                <div class="sndTitle">Sender Name</div>
-                <div class="sndSubTitle">${item?.generatedBy || ''}</div>
-                </div>
-                <div class="flexDv">
-                <div class="sndTitle">Receiver Name</div>
-                <div class="sndSubTitle">${item?.receiverName || ''}</div>
-                </div>
-                <div class="flexDv">
-                <div class="sndTitle">Payment Date</div>
-                <div class="sndSubTitle">${item?.createdAt || ''}</div>
-                </div>
-                <div class="flexDv">
-                <div class="sndTitle">Payment Method</div>
-                <div class="sndSubTitle">${item?.paymentMode || ''}</div>
-                </div>
-                <div class="border-line">&nbsp;</div>
-                <div class="flexDv">
-                <div class="sndTitle">Amount</div>
-                <div class="sndSubTitle">${item?.amount ? `INR ${item.amount}` : '0'} only</div>
-                </div>
-                <div class="flexDv">
-                <div class="sndTitle">Amount In Words</div>
-                <div class="sndSubTitle">${toWords(item?.amount || 0).toLowerCase().replace(/\b\w/g, char => char.toUpperCase())} only</div>
-                </div>
+        <h1 class="title">Payment Success!</h1>
+        <p class="subtitle">Your payment has been successfully processed.</p>
+        <div class="dv-line">
+            <div class="round-box-one"></div>
+            <div class="round-box-two"></div>
+            <div class="dotted-line"></div>  
+        </div>
+        <div class="amount-section">
+            <div class="amount-label">Total Payment</div>
+            <div class="amount-value">${formatToINR(item?.amount)}</div>
+        </div>
+        
+        <div class="details-section">
+            <div class="detail-row">
+                <span class="detail-label">Payment Method</span>
+                <span class="detail-value">${item?.paymentMode || ''}</span>
             </div>
-
-            <div class="remarks">
-                <div class="remTitle">Remarks:</div>
-                <div class="remSubTitle">${item?.remarks || ''}</div>
+            <div class="detail-row">
+                <span class="detail-label">Payment Date and Time</span>
+                <span class="detail-value">${formatDateTime(item?.createdAt)}</span>
             </div>
+            <div class="detail-row">
+                <span class="detail-label">Sender Name</span>
+                <span class="detail-value">${item?.generatedBy || ''}</span>
+            </div>
+        </div>
+        
+        <div class="fee-section">
+            <div class="fee-row">
+                <span class="fee-label">Amount</span>
+                <span class="fee-value">${formatToINR(item?.amount)}</span>
+            </div>
+            <div class="fee-row">
+                <span class="fee-label">Amount In Words</span>
+                <span class="fee-value">${toWords(item?.amount || 0).toLowerCase().replace(/\b\w/g, char => char.toUpperCase())} only</span>
+            </div>
+        </div>
+        
+        <div class="dv-line">
+            <div class="round-box-one"></div>
+            <div class="round-box-two"></div>
+            <div class="dotted-line"></div>  
+        </div>
+
+        <div class="reference-code">
+            <div class="reference-label">Payment Receipt</div>
+            <div class="reference-value">${item?.receiptId || ''}</div>
+        </div>
+
+        <h5 class="partner">
+            <span class="bg">Your Trusted Partner</span>
+            <span class="line"></span>
+        </h5>
+
+        <div class="part-main">
+            <div class="branding">
+            <div class="logo">
+                <img src="${logoBase64}" alt="logo" />
+            </div>
+            <div class="text">
+                <h3>Nirnayan</h3>
+            </div>
+            </div>
+        </div>
+    </div>
             </body>
             </html>
             `;

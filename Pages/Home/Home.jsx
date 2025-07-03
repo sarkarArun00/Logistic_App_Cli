@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-    StyleSheet, View, Text, Alert, TouchableOpacity, Image, ScrollView, Modal, TextInput, Platform, PermissionsAndroid, FlatList, Linking
+    StyleSheet, View, Text, Alert, TouchableOpacity, Image, ScrollView, Modal, TextInput, Platform, PermissionsAndroid, FlatList, Linking, RefreshControl
 } from 'react-native';
 // import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 // import { useFonts, Montserrat_600SemiBold, Montserrat_400Regular, Montserrat_500Medium } from '@expo-google-fonts/montserrat';
@@ -21,6 +21,10 @@ import { lightTheme } from '../GlobalStyles';
 // import IntentLauncher from 'react-native-intent-launcher';
 
 
+const wait = (timeout) => {
+    return new Promise(resolve => setTimeout(resolve, timeout));
+};
+
 export default function Home({ navigation }) {
     const swipeRef = useRef(null);
     const [isCheckedIn, setIsCheckedIn] = useState(false);
@@ -37,7 +41,7 @@ export default function Home({ navigation }) {
     const [latitude, setLatitude] = useState(null);
     const [longitude, setLongitude] = useState(null);
     const [userInfo, setUserInfo] = useState(null);
-
+    const [refreshing, setRefreshing] = useState(false);
 
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredPages, setFilteredPages] = useState([]);
@@ -72,7 +76,24 @@ export default function Home({ navigation }) {
     }, [navigation])
 
 
+    const onRefresh = async () => {
+        setRefreshing(true);
+        try {
+          // await your data fetching function
+          await getCurrentLocation();
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setRefreshing(false);
+        }
+      };
+      
+    // const onRefresh = useCallback(() => {
+    //     setRefreshing(true);
+    //     getCurrentLocation();
+    //     wait(2000).then(() => setRefreshing(false));
 
+    // }, []);
 
     useFocusEffect(
         useCallback(() => {
@@ -419,7 +440,10 @@ export default function Home({ navigation }) {
         <SafeAreaView style={styles.container}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                showsHorizontalScrollIndicator={false}>
+                showsHorizontalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }>
 
                 {/* App Header */}
                 <Header navigation={navigation} profileImage={userInfo?.employeePhoto} />

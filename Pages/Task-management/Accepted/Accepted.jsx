@@ -192,7 +192,7 @@ function Accepted({ navigation }) {
                     <TaskStatusTabs activeTab="Accepted" />
                 </ScrollView> */}
 
-                <View style={{ paddingHorizontal: 3, }}>
+                <View style={{ paddingHorizontal: 3}}>
 
                     {visibleTasks && visibleTasks.length > 0 ? (
                         visibleTasks.map((task, index) => (
@@ -448,6 +448,9 @@ function Accepted({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+    paddingBottom1: {
+        paddingBottom: 100
+    },
     container: {
         flex: 1,
         padding: 15,

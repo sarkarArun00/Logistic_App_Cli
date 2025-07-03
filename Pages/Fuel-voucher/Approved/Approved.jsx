@@ -286,7 +286,7 @@ function Approved({ navigation }) {
                             {formatToINR(allVehicles.amount)}
                         </Text>
                         </View>
-                        <TouchableOpacity
+                        {/* <TouchableOpacity
                         style={[styles.touchBtn, { paddingHorizontal: 4 }]}
                         onPress={() =>
                             setActiveMenuId(
@@ -309,7 +309,7 @@ function Approved({ navigation }) {
                             >
                             <Text style={styles.downloadText}>View</Text>
                             </TouchableOpacity>
-                            {/* <TouchableOpacity
+                            <TouchableOpacity
                             style={styles.viewText}
                             onPress={() => setActiveMenuId(null)}
                             >
@@ -320,9 +320,9 @@ function Approved({ navigation }) {
                             onPress={() => setActiveMenuId(null)}
                             >
                             <Text style={styles.downloadText}>Share</Text>
-                            </TouchableOpacity> */}
+                            </TouchableOpacity>
                         </View>
-                        )}
+                        )} */}
                     </View>
                     </View>
                 </View>

@@ -63,10 +63,10 @@ function Rejected({ navigation }) {
         try {
           setLoading(true);
           const response = await TaskService.getAllFuelVouchers();
-          console.log('getAllFuelVoucher response:', response.data.filter((item) => item.opStatus=="rejected"))
+          console.log('getAllFuelVoucher response:', response.data.filter((item) => item.opStatus=="rejected" || item.acStatus=="rejected"))
             
           if (response?.status) {
-            setFuelVoucherList(response.data.filter((item) => item.opStatus=="rejected"));
+            setFuelVoucherList(response.data.filter((item) => item.opStatus=="rejected " || item.acStatus=="rejected"));
           } else {
             setFuelVoucherList([]);
           }
@@ -78,72 +78,7 @@ function Rejected({ navigation }) {
         }
       };
 
-    // Camera Open
-    const requestPermission = async (type) => {
-        if (type === 'camera') {
-            const { status } = await ImagePicker.requestCameraPermissionsAsync();
-            return status === 'granted';
-        } else {
-            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            return status === 'granted';
-        }
-    };
 
-    const openCamera = async () => {
-        const hasPermission = await requestPermission('camera');
-        if (!hasPermission) {
-            Alert.alert('Permission Required', 'Camera access is needed to take pictures.');
-            return;
-        }
-
-        const result = await ImagePicker.launchCameraAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            const newImage = { uri: result.assets[0].uri };
-            setImages((prev) => [...prev, newImage]);
-        }
-    };
-
-    const openGallery = async () => {
-        const hasPermission = await requestPermission('gallery');
-        if (!hasPermission) {
-            Alert.alert('Permission Required', 'Gallery access is needed to select images.');
-            return;
-        }
-
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsMultipleSelection: true,
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            const newImages = result.assets.map((asset) => ({ uri: asset.uri }));
-            setImages((prev) => [...prev, ...newImages]);
-        }
-    };
-
-    const selectImages = () => {
-        Alert.alert(
-            'Select Image',
-            'Choose an option',
-            [
-                { text: 'Camera', onPress: openCamera },
-                { text: 'Gallery', onPress: openGallery },
-                { text: 'Cancel', style: 'cancel' }
-            ]
-        );
-    };
-
-    const handleDeleteImage = (index) => {
-        const updatedImages = images.filter((_, i) => i !== index);
-        setImages(updatedImages);
-    };
-    // Camera End
 
     useEffect(() => {
         Animated.loop(
@@ -167,16 +102,7 @@ function Rejected({ navigation }) {
         outputRange: ['#F43232', 'transparent'],
     });
 
-    // Fonts 
-    // const [fontsLoaded] = useFonts({
-    //     Montserrat_600SemiBold,
-    //     Montserrat_500Medium,
-    //     Montserrat_400Regular,
-    // });
 
-    // if (!fontsLoaded) {
-    //     return null;
-    // }
 
     return (
         <SafeAreaView style={styles.container}>
@@ -296,7 +222,7 @@ function Rejected({ navigation }) {
                             <TouchableOpacity
                             style={styles.viewText}
                             
-                            onPress={() => navigation.navigate("VoucherDetails", { fuelVoucherId: allVehicles.id })}
+                            onPress={() => navigation.navigate("VoucherDetails", { fuelVoucherId: allVehicles.id }, {type: "failed"})}
                             >
                             <Text style={styles.downloadText}>View</Text>
                             </TouchableOpacity>
@@ -369,72 +295,6 @@ function Rejected({ navigation }) {
                     </View>
                 </Modal>
 
-                {/* View Modal */}
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={selectViewMdl}
-                    onRequestClose={() => setSelectViewMdl(false)}>
-                    <View style={styles.modalBackground}>
-                        <View style={[styles.modalContainer, styles.viewModalContainer]}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0' }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', }}>
-                                    <Text style={styles.modalText}>Fuel Voucher View</Text>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: 10, }}>
-                                        <View style={styles.bgborder}><Animated.View style={[styles.animatebg, { backgroundColor }]} /></View>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 13, color: '#F43232', }}>Rejected</Text>
-                                    </View>
-                                </View>
-                                <TouchableOpacity onPress={() => setSelectViewMdl(false)}>
-                                    <Image style={{ width: 18, height: 18 }} source={require('../../../assets/mdlclose.png')} />
-                                </TouchableOpacity>
-                            </View>
-                            <ScrollView>
-                                <View style={{ padding: 15 }}>
-                                    <View>
-                                        <Text style={styles.label}>Vehicle</Text>
-                                        <Text style={styles.selLabel}>Car</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={styles.label}>Model Name</Text>
-                                        <Text style={styles.selLabel}>Car</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={styles.label}>Manufacturer</Text>
-                                        <Text style={styles.selLabel}>Car</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={styles.label}>Voucher ID</Text>
-                                        <Text style={styles.selLabel}>#65546AKJH</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={styles.label}>Employee Name</Text>
-                                        <Text style={styles.selLabel}>Akash Kundu</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={styles.label}>Amount</Text>
-                                        <Text style={styles.selLabel}>1205</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={styles.label}>Payment Mode</Text>
-                                        <Text style={styles.selLabel}>Cash</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={styles.label}>Attachment</Text>
-                                        <View style={styles.attachmentImg}>
-                                            <Image style={{ width: 50, height: 50, borderRadius: 5, }} source={require('../../../assets/user.jpg')} />
-                                            <Image style={{ width: 50, height: 50, borderRadius: 5, }} source={require('../../../assets/user.jpg')} />
-                                        </View>
-                                    </View>
-                                    <View>
-                                        <Text style={styles.label}>Remarks</Text>
-                                        <Text style={styles.selLabel}>Nice</Text>
-                                    </View>
-                                </View>
-                            </ScrollView>
-                        </View>
-                    </View>
-                </Modal>
 
             </ScrollView>
 

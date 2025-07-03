@@ -340,7 +340,7 @@ function Assigned({ navigation }) {
         <SafeAreaView style={[
             styles.container,
             GlobalStyles.SafeAreaView,
-            { paddingBottom: lightTheme.paddingBottomNew }
+            
           ]}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
@@ -792,6 +792,7 @@ function Assigned({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+
     container: {
         flex: 1,
         padding: 15,
