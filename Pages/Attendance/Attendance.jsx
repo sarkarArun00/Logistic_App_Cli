@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Text, ActivityIndicator, Image, ScrollView, TextInput, Alert, RefreshControl } from 'react-native';
+import { StyleSheet, View, Text, ActivityIndicator, Image, ScrollView, TextInput, Modal, RefreshControl, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'
 // import { useFonts, Montserrat_700Bold, Montserrat_400Regular, Montserrat_500Medium } from '@expo-google-fonts/montserrat'
 import RNSwipeVerify from 'react-native-swipe-verify';
@@ -19,6 +19,16 @@ import { Calendar } from 'react-native-calendars';
 import { useGlobalAlert } from '../../Context/GlobalAlertContext'
 import Geolocation from '@react-native-community/geolocation';
 import { lightTheme } from '../GlobalStyles';
+
+
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(customParseFormat);
 
 
 const wait = (timeout) => {
@@ -51,6 +61,8 @@ function Attendance({ navigation }) {
     const [latitude, setLatitude] = useState(null);
     const [longitude, setLongitude] = useState(null);
     const [userInfo, setUserInfo] = useState(null);
+    const [checkInCheckout, setCheckInCheckOut] = useState([]);
+    const [showLocationModal, setShowLocationModal] = useState(false);
 
 
     const fetchProfilePicture = async () => {
@@ -129,7 +141,6 @@ function Attendance({ navigation }) {
 
                     const parsedCheckIn = new Date(checkInStr);
                     startTimer(parsedCheckIn);               // Update UI timer
-                    // startAutoCheckoutTimer(parsedCheckIn);   // Auto checkout logic
                 } else {
                     setIsCheckedIn(false);
                 }
@@ -174,40 +185,40 @@ function Attendance({ navigation }) {
                 const formatDateForCalendar = (dateStr) => {
                     const [day, month, year] = dateStr.split('/');
                     return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-                  };
-                  
-                  const getColor = (shiftType, isPresent) => {
+                };
+
+                const getColor = (shiftType, isPresent) => {
                     if (shiftType === 'WD') {
-                      if (isPresent === true) return '#4CAF50'; // Green - Present
-                      if (isPresent === false) return '#FF5252'; // Red - Absent
-                      return '#3085FE'; // Blue - Working day, no status
+                        if (isPresent === true) return '#4CAF50'; // Green - Present
+                        if (isPresent === false) return '#FF5252'; // Red - Absent
+                        return '#3085FE'; // Blue - Working day, no status
                     } else if (shiftType === 'WO') {
-                      return '#F9C74F'; // Yellow - Weekly Off
+                        return '#F9C74F'; // Yellow - Weekly Off
                     } else if (shiftType === 'HO') {
-                      return '#b624f0'; // Red - Holiday
+                        return '#b624f0'; // Red - Holiday
                     }
                     return '#C4C4C4'; // Default grey
-                  };
-                  
-                  const dateMarks = {};
-                  
-                  rawData.forEach(item => {
+                };
+
+                const dateMarks = {};
+
+                rawData.forEach(item => {
                     const formattedDate = formatDateForCalendar(item.weekDate);
                     const bgColor = getColor(item.shiftType, item.isPresent);
-                  
+
                     dateMarks[formattedDate] = {
-                      customStyles: {
-                        container: {
-                          backgroundColor: bgColor,
-                          borderRadius: 20,
+                        customStyles: {
+                            container: {
+                                backgroundColor: bgColor,
+                                borderRadius: 20,
+                            },
+                            text: {
+                                color: 'white',
+                                fontWeight: 'bold',
+                            },
                         },
-                        text: {
-                          color: 'white',
-                          fontWeight: 'bold',
-                        },
-                      },
                     };
-                  });
+                });
 
                 setMarkedDates(dateMarks);
                 setLoading(false);
@@ -248,9 +259,16 @@ function Attendance({ navigation }) {
         };
 
         const response = await TaskService.getLoginByDate(request);
-        console.log("Press Day: ", response)
+        const format = 'D/M/YYYY, h:mm:ss a';
+
+        
         if (response.status == 1) {
+            const loginTime = dayjs.tz(response.data.login, format, 'Asia/Kolkata').format('hh:mm A');
+            const logoutTime = dayjs.tz(response.data.logout, format, 'Asia/Kolkata').format('hh:mm A');
+            // console.log('jdfhdjfhjdfhjdfjdjfdjfdjfjdfh', loginTime, logoutTime)
+            setCheckInCheckOut({checkIn: loginTime, checkOut: logoutTime})
             setAttendance(response.data);
+            console.log('jdfhdjfhjdfhjdfjdjfdjfdjfjdfh', checkInCheckout)
         } else {
             showAlertModal(response.message || 'Failed to fetch attendance details for the selected date.', true);
             setAttendance([]);
@@ -327,8 +345,9 @@ function Attendance({ navigation }) {
                 setLongitude(longitude);
             },
             error => {
-                console.error('Location Error:', error.code, error.message);
-                showAlertModal('Unable to fetch location. Please try again.', true);
+                console.log('Location Error:', error.code, error.message);
+                // showAlertModal('Unable to fetch location. Please try again.', true);
+                setShowLocationModal();
                 setLatitude(null);
                 setLongitude(null);
             },
@@ -347,7 +366,8 @@ function Attendance({ navigation }) {
         // await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
         const userId = await AsyncStorage.getItem("user_id");
         if (latitude === null || longitude === null) {
-            showAlertModal('Unable to fetch location. Please try again.', true);
+            // showAlertModal('Unable to fetch location. Please try again.', true);
+            setShowLocationModal(true);
             swipeRef.current?.reset();
             return;
         }
@@ -363,7 +383,7 @@ function Attendance({ navigation }) {
             // 👉 Check In Logic
             let response = await AuthService.attendanceCheckIn(request);
             if (response.status == 1) {
-                showAlertModal('Checked In, You have successfully checked in.', false);
+                showAlertModal('You have successfully checked in.', false);
                 const now = new Date();
                 const isoString = now.toISOString();
                 const formattedTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -377,9 +397,6 @@ function Attendance({ navigation }) {
                 setIsCheckedIn(true);
                 Vibration.vibrate(500);
                 startTimer(now);
-                setLatitude(null);
-                setLongitude(null);
-                // startAutoCheckoutTimer(now);
             } else {
                 showAlertModal('Failed to check in, Please try again.', true);
             }
@@ -387,7 +404,7 @@ function Attendance({ navigation }) {
             // 👉 Check Out Logic
             let response = await AuthService.attendanceCheckOut(request);
             if (response.status == 1) {
-                showAlertModal('Checked Out, You have successfully checked out.', false);
+                showAlertModal('You have successfully checked out.', false);
                 await AsyncStorage.multiRemove(['isCheckedIn', 'checkInTime', 'checkInTimeDisplay']);
 
                 setIsCheckedIn(false);
@@ -395,8 +412,6 @@ function Attendance({ navigation }) {
                 setWorkingDuration('00:00');
                 clearInterval(timerRef.current);
                 Vibration.vibrate(500);
-                setLatitude(null);
-                setLongitude(null);
             } else {
                 showAlertModal('Failed to check out, Please try again..', true);
             }
@@ -428,39 +443,11 @@ function Attendance({ navigation }) {
         const month = String(now.getMonth() + 1).padStart(2, '0');
         return `${year}-${month}-01`;
     }
-    // const handleAutoCheckout = async () => {
-    //     const userId = await AsyncStorage.getItem('user_id');
 
-    //     const request = {
-    //         employeeId: userId,
-    //         loginDate: new Date().toISOString().split('T')[0],
-    //         latitude: latitude.toString(),
-    //         longitude: longitude.toString(),
-    //     };
-
-    //     const response = await AuthService.attendanceCheckOut(request);
-    //     if (response.status === 1) {
-    //         showAlertModal("Auto Checked Out" + "You have been automatically checked out after 12 hours.");
-    //         await AsyncStorage.removeItem('isCheckedIn');
-    //         await AsyncStorage.removeItem('checkInTime');
-    //         setIsCheckedIn(false);
-    //         setWorkingDuration('00:00');
-    //         clearInterval(timerRef.current);
-    //     } else {
-    //         showAlertModal('Failed to auto check out, Please try again.', true);
-    //     }
-    // };
-
-    // const startAutoCheckoutTimer = (checkInDate) => {
-    //     const thirtySecondsInMs = 30 * 1000;
-
-    //     setTimeout(() => {
-    //         handleAutoCheckout();
-    //     }, thirtySecondsInMs - (new Date() - new Date(checkInDate)));
-    // };
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
+        getCurrentLocation();
         const currentMonth = getCurrentMonthDate();
         handleMonthChange({ year: parseInt(currentMonth.slice(0, 4)), month: parseInt(currentMonth.slice(5, 7)) });
         wait(2000).then(() => setRefreshing(false));
@@ -475,7 +462,7 @@ function Attendance({ navigation }) {
             GlobalStyles.SafeAreaView,
             styles.paddingBottom
             // { paddingBottom: lightTheme.paddingBottomNew }
-          ]}>
+        ]}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 showsHorizontalScrollIndicator={false}
@@ -485,7 +472,7 @@ function Attendance({ navigation }) {
                 }>
 
                 {/* App Header */}
-                <Header navigation={navigation} profileImage={userInfo?.employeePhoto}/>
+                <Header navigation={navigation} profileImage={userInfo?.employeePhoto} />
 
                 <View style={{ position: 'relative', marginTop: 30 }}>
                     <TextInput
@@ -498,7 +485,7 @@ function Attendance({ navigation }) {
 
                 <View style={{ marginTop: 20, backgroundColor: '#ecf2fc', borderWidth: 1, borderColor: '#bdd7fc', borderRadius: 40, paddingHorizontal: 15, paddingTop: 35, paddingBottom: 24, }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25, }}>
-                        <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 14, lineHeight: 15, color: '#3085FE', }}>Attendence Managing {'\n'}Platform</Text>
+                        <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 14, lineHeight: 15, color: '#3085FE', }}>Manage Attendence</Text>
                         {/* <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 12, lineHeight: 14, color: '#0C0D36', }}>Updated {displayTime}</Text> */}
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', }}>
@@ -586,14 +573,14 @@ function Attendance({ navigation }) {
                 <View style={styles.card}>
                     <View style={styles.section}>
                         <Text style={styles.label}>Log In</Text>
-                        <Text style={styles.value}>{attendance?.login || "N/A"}</Text>
+                        <Text style={styles.value}>{checkInCheckout?.checkIn || ""}</Text>
                     </View>
 
                     <View style={styles.divider} />
 
                     <View style={styles.section}>
                         <Text style={styles.label}>Log Out</Text>
-                        <Text style={styles.value}>{attendance?.logout || "N/A"}</Text>
+                        <Text style={styles.value}>{checkInCheckout?.checkOut || ""}</Text>
                     </View>
 
                     <View style={styles.divider} />
@@ -605,6 +592,45 @@ function Attendance({ navigation }) {
                 </View>
 
             </ScrollView>
+
+            <Modal
+                    transparent
+                    animationType="fade"
+                    visible={showLocationModal}
+                    onRequestClose={() => setShowLocationModal(false)}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalBox}>
+                            <Text style={styles.modalTitle}>Enable Location</Text>
+                            <Text style={styles.modalText}>
+                                Unable to fetch location. Please enable your location services.
+                            </Text>
+
+                            <View style={styles.buttonContainer}>
+                                <TouchableOpacity
+                                    onPress={() => setShowLocationModal(false)}
+                                    style={[styles.button, styles.cancelButton]}
+                                >
+                                    <Text style={styles.cancelText}>Cancel</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setShowLocationModal(false);
+                                        if (Platform.OS === 'android') {
+                                            Linking.openURL('android.settings.LOCATION_SOURCE_SETTINGS');
+                                        } else {
+                                            Linking.openURL('app-settings:');
+                                        }
+                                    }}
+                                    style={[styles.button, styles.openButton]}
+                                >
+                                    <Text style={styles.openText} onPress={() => { openSettings() }}>Open Settings</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
 
             {loading && (
                 <View
@@ -636,7 +662,7 @@ const styles = StyleSheet.create({
     //   },
     paddingBottom: {
         paddingBottom: 85
-      },
+    },
     centered: {
         flex: 1,
         justifyContent: 'center',
@@ -687,6 +713,52 @@ const styles = StyleSheet.create({
         color: '#fff',
     },
 
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalBox: {
+        width: '80%',
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 24,
+        elevation: 5,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#0C0D36',
+        marginBottom: 12,
+    },
+    modalText: {
+        fontSize: 14,
+        color: '#444',
+        marginBottom: 24,
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+    },
+    button: {
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        marginLeft: 10,
+    },
+    cancelButton: {
+        backgroundColor: '#ccc',
+    },
+    openButton: {
+        backgroundColor: '#2F81F5',
+    },
+    cancelText: {
+        color: '#333',
+    },
+    openText: {
+        color: '#fff',
+    },
 })
 
 export default Attendance

@@ -19,6 +19,7 @@ import { Vibration } from 'react-native';
 import TaskScreen from '../Task-management/Task-Screen/Task-Screen';
 import { lightTheme } from '../GlobalStyles';
 // import IntentLauncher from 'react-native-intent-launcher';
+import { AppState } from 'react-native';
 
 
 const wait = (timeout) => {
@@ -76,24 +77,30 @@ export default function Home({ navigation }) {
     }, [navigation])
 
 
+
+    useEffect(() => {
+        const subscription = AppState.addEventListener('change', (nextState) => {
+            if (nextState === 'active') {
+                // App came back from background — re-check location
+                getCurrentLocation();
+            }
+        });
+
+        return () => subscription.remove();
+    }, []);
+
     const onRefresh = async () => {
         setRefreshing(true);
         try {
-          // await your data fetching function
-          await getCurrentLocation();
+            // await your data fetching function
+            await getCurrentLocation();
         } catch (error) {
-          console.error(error);
+            console.error(error);
         } finally {
-          setRefreshing(false);
+            setRefreshing(false);
         }
-      };
-      
-    // const onRefresh = useCallback(() => {
-    //     setRefreshing(true);
-    //     getCurrentLocation();
-    //     wait(2000).then(() => setRefreshing(false));
+    };
 
-    // }, []);
 
     useFocusEffect(
         useCallback(() => {
@@ -221,7 +228,7 @@ export default function Home({ navigation }) {
         const hasPermission = await requestLocationPermission();
 
         if (!hasPermission) {
-            showAlertModal('Location permission denied or unavailable.', true);
+            // showAlertModal('Location permission denied or unavailable.', true);
             return;
         }
 
@@ -265,6 +272,8 @@ export default function Home({ navigation }) {
                 longitude: longitude,
             };
 
+            console.log('requesting checkIn or checkOut :', request);
+            // return
             if (!isCheckedIn) {
                 const response = await AuthService.attendanceCheckIn(request);
                 if (response.status == 1) {
@@ -282,9 +291,6 @@ export default function Home({ navigation }) {
                     setCheckInTimeDisplay(formattedTime);
                     setIsCheckedIn(true);
                     startTimer(now);
-                    // startAutoCheckoutTimer(now);
-                    setLatitude(null);
-                    setLongitude(null);
                 } else {
                     showAlertModal('Check-in failed. Please try again.', true);
                 }
@@ -300,8 +306,6 @@ export default function Home({ navigation }) {
                     setCheckInTimeDisplay(null);
                     setWorkingDuration('00:00');
                     clearInterval(timerRef.current);
-                    setLatitude(null);
-                    setLongitude(null);
                 } else {
                     showAlertModal('Check-out failed. Please try again.', true);
                 }
@@ -326,11 +330,11 @@ export default function Home({ navigation }) {
 
     const openSettings = () => {
         if (Platform.OS === 'android') {
-          Linking.openSettings(); // opens app settings
+            Linking.openSettings(); // opens app settings
         } else {
-          Linking.openURL('app-settings:');
+            Linking.openURL('app-settings:');
         }
-      };
+    };
 
     const startTimer = (checkInDate) => {
         clearInterval(timerRef.current);
@@ -394,35 +398,6 @@ export default function Home({ navigation }) {
             </TouchableOpacity>
         )
     };
-
-    // const handleAutoCheckout = async () => {
-    //     const userId = await AsyncStorage.getItem('user_id');
-
-    //     const request = {
-    //         employeeId: userId,
-    //         loginDate: new Date().toISOString().split('T')[0],
-    //         latitude: latitude.toString(),
-    //         longitude: longitude.toString(),
-    //     };
-
-    //     const response = await AuthService.attendanceCheckOut(request);
-    //     if (response.status === 1) {
-    //         Alert.alert("Auto Checked Out", "You have been automatically checked out after 12 hours.");
-    //         await AsyncStorage.removeItem('isCheckedIn');
-    //         await AsyncStorage.removeItem('checkInTime');
-    //         setIsCheckedIn(false);
-    //         setWorkingDuration('00:00');
-    //         clearInterval(timerRef.current);
-    //     }
-    // };
-
-    // const startAutoCheckoutTimer = (checkInDate) => {
-    //     const twelveHoursInMs = 12 * 60 * 60 * 1000;
-
-    //     setTimeout(() => {
-    //         handleAutoCheckout();
-    //     }, twelveHoursInMs - (new Date() - new Date(checkInDate)));
-    // };
 
 
 
@@ -497,7 +472,7 @@ export default function Home({ navigation }) {
 
                 <View style={{ marginTop: 20, backgroundColor: '#ecf2fc', borderWidth: 1, borderColor: '#bdd7fc', borderRadius: 40, paddingHorizontal: 15, paddingTop: 35, paddingBottom: 24, }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25, }}>
-                        <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 14, lineHeight: 15, color: '#3085FE', }}>Attendence Managing {'\n'}Platform</Text>
+                        <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 14, lineHeight: 15, color: '#3085FE', }}>Manage Attendence</Text>
                         {/* <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 12, lineHeight: 14, color: '#0C0D36', }}>Updated {displayTime}</Text> */}
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', }}>
@@ -679,7 +654,7 @@ export default function Home({ navigation }) {
                                     }}
                                     style={[styles.button, styles.openButton]}
                                 >
-                                    <Text style={styles.openText} onPress={() => {openSettings()}}>Open Settings</Text>
+                                    <Text style={styles.openText} onPress={() => { openSettings() }}>Open Settings</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -722,47 +697,47 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
-      },
-      modalBox: {
+    },
+    modalBox: {
         width: '80%',
         backgroundColor: '#fff',
         borderRadius: 16,
         padding: 24,
         elevation: 5,
-      },
-      modalTitle: {
+    },
+    modalTitle: {
         fontSize: 18,
         fontWeight: 'bold',
         color: '#0C0D36',
         marginBottom: 12,
-      },
-      modalText: {
+    },
+    modalText: {
         fontSize: 14,
         color: '#444',
         marginBottom: 24,
-      },
-      buttonContainer: {
+    },
+    buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'flex-end',
-      },
-      button: {
+    },
+    button: {
         paddingVertical: 10,
         paddingHorizontal: 16,
         borderRadius: 8,
         marginLeft: 10,
-      },
-      cancelButton: {
+    },
+    cancelButton: {
         backgroundColor: '#ccc',
-      },
-      openButton: {
+    },
+    openButton: {
         backgroundColor: '#2F81F5',
-      },
-      cancelText: {
+    },
+    cancelText: {
         color: '#333',
-      },
-      openText: {
+    },
+    openText: {
         color: '#fff',
-      },
+    },
 
 
 })

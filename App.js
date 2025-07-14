@@ -250,7 +250,7 @@ export default function App() {
             No Internet Connection
           </Text>
         </Animated.View>
-
+        <StatusBar backgroundColor="#ddd" barStyle="dark-content" />
         <NavigationContainer>
           <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
             {/* Screens without Tab Bar */}
@@ -268,7 +268,7 @@ export default function App() {
             {/* Main Tab Navigator */}
             <Stack.Screen name="MainApp" component={TabNavigator} />
           </Stack.Navigator>
-          <StatusBar backgroundColor="#ddd" barStyle="dark-content" />
+         
           <PushNotifiactionModal ref={notificationRef} />
         </NavigationContainer>
       </AuthProvider>

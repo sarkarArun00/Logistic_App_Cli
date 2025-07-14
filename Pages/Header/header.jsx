@@ -30,9 +30,9 @@ const header = ({ navigation, profileImage }) => {
     const init = () => {
       getUserData();
 
-      // const interval = setInterval(() => {
-      //   checkNewNotifications();
-      // }, 100000);
+      const interval = setInterval(() => {
+        checkNewNotifications();
+      }, 100000);
 
       return () => clearInterval(interval);
     };
@@ -45,18 +45,16 @@ const header = ({ navigation, profileImage }) => {
   }, []);
 
 
-  useFocusEffect(
-  React.useCallback(() => {
-    checkNewNotifications();
-  }, [])
-);
+//   useFocusEffect(
+//   React.useCallback(() => {
+//     console.log("Display focus called!")
+//   }, [])
+// );
 
   const checkNewNotifications = async () => {
-
     const response = await TaskService.getAllGeneralNotifications();
     if (response.status == 1) {
       const notifications = response.data;
-
       const stored = await AsyncStorage.getItem("seenNotificationIds");
       const seenIds = stored ? JSON.parse(stored) : [];
 

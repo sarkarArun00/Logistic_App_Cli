@@ -704,6 +704,12 @@ function Progress({ navigation }) {
                                                 {task?.preferredTime?.start_time?.slice(0, 5)} - {task?.preferredTime?.end_time?.slice(0, 5)}
                                             </Text>
                                         </View>
+                                        <View style={{ position: 'relative', marginBottom: 5 }}>
+                                            <Image style={{ position: 'absolute', left: 0, top: 0, width: 13, height: 13 }} source={require('../../../assets/asicon4.png')} />
+                                            <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
+                                                Assigned By: {task?.assigned?.assigner.employee_name}
+                                            </Text>
+                                        </View>
                                         {(task?.pickUpLocation?.client_name || task?.pickUpLocation?.centreName) && (
                                             <View style={{ position: 'relative' }}>
                                                 <Image
@@ -1014,8 +1020,8 @@ function Progress({ navigation }) {
                                         >
                                             <Picker.Item label="Select Mode" value="" />
                                             <Picker.Item label="Cash" value="Cash" />
-                                            <Picker.Item label="UPI" value="UPI" />
-                                            <Picker.Item label="Net Banking" value="Net Banking" />
+                                            {/* <Picker.Item label="UPI" value="UPI" />
+                                            <Picker.Item label="Net Banking" value="Net Banking" /> */}
                                         </Picker>
                                     </View>
                                 </View>

@@ -134,73 +134,73 @@ function Pending({ navigation }) {
         outputRange: ['#FFBB00', 'transparent'],
     });
 
-    const onSubmitFuelvoucher = async () => {
-        const userId = await AsyncStorage.getItem('user_id');
+    // const onSubmitFuelvoucher = async () => {
+    //     const userId = await AsyncStorage.getItem('user_id');
       
-        if (!selectedVehicle) {
-            Alert.alert('Missing Information', 'Please select a valid vehicle before submitting.');
-            return;
-        }
+    //     if (!selectedVehicle) {
+    //         Alert.alert('Missing Information', 'Please select a valid vehicle before submitting.');
+    //         return;
+    //     }
         
-        setLoading(true)
-        const request = {
-            employeeId: Number(userId),
-            trackingId: Number(selectedVehicle), 
-            amount: Number(amount),
-            paymentMode: selectPaymode,
-            logisticRemarks: remarks,
-        };
+    //     setLoading(true)
+    //     const request = {
+    //         employeeId: Number(userId),
+    //         trackingId: Number(selectedVehicle), 
+    //         amount: Number(amount),
+    //         paymentMode: selectPaymode,
+    //         logisticRemarks: remarks,
+    //     };
         
-        try {
-            const response = await TaskService.saveFuelVoucher(request);
-            await submitFuelVoucherAttachments(response.data?.id);
-            console.log('API Response:', response.data);
-          showAlertModal('Fuel voucher submitted successfully.', false)
-          getAllFuelVoucher();
-          setLoading(false)
-        } catch (err) {
-          console.error('API Error:', err);
-          showAlertModal('Failed to submit fuel voucher.', true)
-          setLoading(false)
+    //     try {
+    //         const response = await TaskService.saveFuelVoucher(request);
+    //         await submitFuelVoucherAttachments(response.data?.id);
+    //         console.log('API Response:', response.data);
+    //       showAlertModal('Fuel voucher submitted successfully.', false)
+    //       getAllFuelVoucher();
+    //       setLoading(false)
+    //     } catch (err) {
+    //       console.error('API Error:', err);
+    //       showAlertModal('Failed to submit fuel voucher.', true)
+    //       setLoading(false)
 
-        }
-      };
+    //     }
+    //   };
       
 
-      const submitFuelVoucherAttachments = async (fuelVoucherId) => {
-        if (!images.length) {
-          console.warn('No image selected');
-          return;
-        }
+    //   const submitFuelVoucherAttachments = async (fuelVoucherId) => {
+    //     if (!images.length) {
+    //       console.warn('No image selected');
+    //       return;
+    //     }
       
-        const file = images[0]; // get the first image
-        setLoading(true)
-        const formData = new FormData();
-        formData.append('fuelVoucherId', fuelVoucherId);
-        formData.append('attachment', {
-          uri: file.uri,
-          type: file.type || 'image/jpeg',
-          name: file.name || `attachment_${Date.now()}.jpg`,
-        });
+    //     const file = images[0]; // get the first image
+    //     setLoading(true)
+    //     const formData = new FormData();
+    //     formData.append('fuelVoucherId', fuelVoucherId);
+    //     formData.append('attachment', {
+    //       uri: file.uri,
+    //       type: file.type || 'image/jpeg',
+    //       name: file.name || `attachment_${Date.now()}.jpg`,
+    //     });
       
-        try {
-          const response = await TaskService.addFuelVoucherAttachment(formData);
-          if(response.status==1) {
-            // showAlertModal(response.data, false);
-            setModalVisible(false)
-            console.log('Upload success:', response);
-            setLoading(false)
-          } else {
-            showAlertModal('Failed to upload attachments', true);
-            setLoading(false)
-          }
-          return 
-        } catch (error) {
-          console.error('Upload error:', error);
-          setLoading(false)
-          throw error;
-        }
-      };
+    //     try {
+    //       const response = await TaskService.addFuelVoucherAttachment(formData);
+    //       if(response.status==1) {
+    //         // showAlertModal(response.data, false);
+    //         setModalVisible(false)
+    //         console.log('Upload success:', response);
+    //         setLoading(false)
+    //       } else {
+    //         showAlertModal('Failed to upload attachments', true);
+    //         setLoading(false)
+    //       }
+    //       return 
+    //     } catch (error) {
+    //       console.error('Upload error:', error);
+    //       setLoading(false)
+    //       throw error;
+    //     }
+    //   };
       
 
 
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
     createBtn: {
         position: 'absolute',
         right: 15,
-        bottom: 120,
+        bottom: 140,
         backgroundColor: '#EBF2FB',
         borderRadius: 28,
         flexDirection: 'row',

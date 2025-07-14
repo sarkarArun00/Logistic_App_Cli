@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
@@ -48,19 +49,13 @@
             android:name="com.google.android.geo.API_KEY" 
             android:value="AIzaSyAeQzuOcT3aIg5Ql2__hJ2bDli20jCA-Bo" />
 
-        <!-- <service
-            android:name="io.invertase.firebase.messaging.ReactNativeFirebaseMessagingService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
-            </intent-filter>
-        </service> -->
-
         <service android:name="io.invertase.firebase.messaging.ReactNativeFirebaseMessagingService">
         <intent-filter>
             <action android:name="com.google.firebase.MESSAGING_EVENT"/>
         </intent-filter>
         </service>
+
+        <uses-library android:name="org.apache.http.legacy" android:required="false"/>
 
     </application>
 

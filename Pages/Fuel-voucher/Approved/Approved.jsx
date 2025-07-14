@@ -8,6 +8,7 @@ import { GlobalStyles, lightTheme } from '../../GlobalStyles';
 import TaskService from '../../Services/task_service';
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
 import FeulVoucherRequest from '../FeulVoucherRequest';
+import NotificationCount from '../../Notifications/NotificationCount';
 
 
 
@@ -185,10 +186,9 @@ function Approved({ navigation }) {
                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Fuel Voucher Request</Text>
                     </TouchableOpacity>
                     <View style={{ position: 'relative', width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
-                        <TouchableOpacity>
-                            <Image style={{ width: 18, height: 18, }} source={require('../../../assets/noti.png')} />
+                    <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
+                            <NotificationCount></NotificationCount>
                         </TouchableOpacity>
-                        <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>2</Text>
                     </View>
                 </View>
 
@@ -209,20 +209,7 @@ function Approved({ navigation }) {
 
                 {/* ScrollView Tab */}
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollContainer}>
-                    {/* <View style={{ flexDirection: 'row', paddingTop: 20, }}>
-                        <TouchableOpacity onPress={() => navigation.navigate('MainApp', { screen: 'Pending' })} style={[styles.tcbtn,]}>
-                            <Text style={[styles.acttext,]}>Pending</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => navigation.navigate('Approved')} style={[styles.tcbtn, styles.active]}>
-                            <Text style={[styles.acttext, styles.testactive]}>Approved</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => navigation.navigate('Processed')} style={[styles.tcbtn,]}>
-                            <Text style={[styles.acttext,]}>Processed</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => navigation.navigate('Rejected')} style={[styles.tcbtn,]}>
-                            <Text style={[styles.acttext,]}>Rejected</Text>
-                        </TouchableOpacity>
-                    </View> */}
+                    
                     <View style={{ flexDirection: 'row', paddingTop: 20, }}>
                         <TouchableOpacity onPress={() => navigation.navigate('FeulStack', { screen: 'Pending' })} style={[styles.tcbtn]}>
                             <Text style={[styles.acttext]}>Pending</Text>
@@ -280,7 +267,7 @@ function Approved({ navigation }) {
                             style={{
                             fontFamily: 'Montserrat_600SemiBold',
                             fontSize: 14,
-                            color: '#FFBB00',
+                            color: 'green',
                             }}
                         >
                             {formatToINR(allVehicles.amount)}
@@ -540,7 +527,7 @@ const styles = StyleSheet.create({
     createBtn: {
         position: 'absolute',
         right: 15,
-        bottom: 120,
+        bottom: 140,
         backgroundColor: '#EBF2FB',
         borderRadius: 28,
         flexDirection: 'row',

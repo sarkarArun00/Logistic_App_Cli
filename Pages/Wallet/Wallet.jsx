@@ -429,6 +429,14 @@ function Wallet({ navigation, progress = 0.5 }) {
       };
       
 
+      const formatToINR = (amount) => {
+        return new Intl.NumberFormat('en-IN', {
+          style: 'currency',
+          currency: 'INR',
+          minimumFractionDigits: 2,
+        }).format(amount || 0);
+      };
+
     return (
         <SafeAreaView style={[
             styles.container,
@@ -531,7 +539,7 @@ function Wallet({ navigation, progress = 0.5 }) {
                                         </View>
                                         <View style={styles.rightBlock}>
                                             <Text style={styles.creditAmnt}>₹{item.billAmount}</Text>
-                                            <Text style={styles.dates}>{dayjs(item.createdAt).format('MMM-DD-YYYY [at] HH:mm')}</Text>
+                                            <Text style={styles.dates}>{dayjs(item.createdAt).format('MMMM D, YYYY h:mm A')}</Text>
                                             {/* {activeTransactionId === item.id && (
                                             <Text style={{ marginTop: 10, fontSize: 8 }}>
                                                 Receipt ID: {item.receiptId}
@@ -782,6 +790,7 @@ function Wallet({ navigation, progress = 0.5 }) {
                                         />
                                     )}
 
+                                    <Text>To Date:</Text>
                                     <TouchableOpacity onPress={showToDatePicker}
                                         style={{
                                             backgroundColor: '#2F81F5',

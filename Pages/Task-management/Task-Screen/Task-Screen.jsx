@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -15,6 +15,10 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Feather';
+import TaskService from '../../Services/task_service';
+
+import { useFocusEffect } from '@react-navigation/native';
+
 
 
 
@@ -27,13 +31,47 @@ const TaskScreen = () => {
   const navigation = useNavigation();
   const STATUS_BAR_HEIGHT = Platform.OS === 'android' ? StatusBar.currentHeight : 0;
 
-  console.log('status bar colour: ', STATUS_BAR_HEIGHT)
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchData = async () => {
+        try {
+          setLoading(true);
+          const response = await TaskService.getAllTaskCount();
+          console.log('API Response:', response.data);
+  
+          // Handle actual data structure
+          if (response && response.data) {
+            setData(response.data);
+            
+          } else if (Array.isArray(response)) {
+            setData(response); // handle if response is already array
+          } else {
+            console.warn('Unexpected response shape:', response);
+            setData([]);
+          }
+        } catch (error) {
+          console.error('Error fetching data:', error);
+          setData([]);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchData();
+    }, [])
+  );
+  
+  
 
   const tasks = [
     {
       id: 1,
       title: 'Assigned',
       screen: 'Assigned',
+      count: String(data.assignedCount || 0).padStart(2, '0'),
       icon: require('../../../assets/task-icn01.png'),
       gradient: ['#0B75FF', '#569FFF'],
       shadowColor: '#0B75FF'
@@ -42,6 +80,7 @@ const TaskScreen = () => {
       id: 2,
       title: 'Accepted',
       screen: 'Accepted',
+      count: String(data.acceptedCount || 0).padStart(2, '0'),
       icon: require('../../../assets/task-icn02.png'),
       gradient: ['#40B8A5', '#1CC5AA'],
       shadowColor: '#40B8A5'
@@ -50,6 +89,7 @@ const TaskScreen = () => {
       id: 3,
       title: 'In Progress',
       screen: 'In Progress',
+      count: String(data.inProgress || 0).padStart(2, '0'),
       icon: require('../../../assets/task-icn03.png'),
       gradient: ['#C8B73C', '#B99400'],
       shadowColor: '#C8B73C'
@@ -58,6 +98,7 @@ const TaskScreen = () => {
       id: 4,
       title: 'Collected',
       screen: 'Collected',
+      count: String(data.collected || 0).padStart(2, '0'),
       icon: require('../../../assets/task-icn04.png'),
       gradient: ['#3CD1E2', '#1C8996'],
       shadowColor: '#3CD1E2'
@@ -66,14 +107,16 @@ const TaskScreen = () => {
       id: 5,
       title: 'Completed',
       screen: 'Completed',
+      count: String(data.completed || 0).padStart(2, '0'),
       icon: require('../../../assets/task-icn05.png'),
       gradient: ['#C77DFF', '#8581FF'],
       shadowColor: '#C77DFF'
     },
     {
       id: 6,
-      title: 'Rejected Task',
+      title: 'Rejected',
       screen: 'RejectedTask',
+      count: String(data.rejected || 0).padStart(2, '0'),
       icon: require('../../../assets/task-icn06.png'),
       gradient: ['#999999', '#B2B2B2'],
       shadowColor: '#999999'
@@ -139,7 +182,10 @@ const TaskScreen = () => {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}>
             <View style={styles.cardContent}>
-              <Image source={item.icon} style={styles.icon} />
+              <View style={{flexDirection:'row', alignItems:'center', gap:10, marginBottom:15, }}>
+                <Image source={item.icon} style={styles.icon} />
+                <Text style={styles.title}>{item.count}</Text>
+              </View>
               <Text style={styles.title}>{item.title}</Text>
               <View style={styles.arrowBackground}>
                 <Icon name="arrow-right" size={20} color="#fff" />
@@ -157,11 +203,11 @@ const TaskScreen = () => {
       styles.container, styles.paddingBottom
     ]}
     >
-      <StatusBar style={{ paddingTop: STATUS_BAR_HEIGHT, backgroundColor: '#5D5FEF', flex: 1 }}  barStyle="light-content" />
+      <StatusBar style={{ paddingTop: STATUS_BAR_HEIGHT, backgroundColor: '#5D5FEF', flex: 1 }}  barStyle="dark-content" />
 
 
       <FlatList
-        data={tasks}
+        data={Array.isArray(tasks) ? tasks : []}
         keyExtractor={item => item.id.toString()}
         numColumns={2}
         contentContainerStyle={styles.listContainer}
@@ -174,7 +220,7 @@ const TaskScreen = () => {
             <Image
               style={{
                 width: '100%',
-                height: 250,
+                height: 220,
                 resizeMode: 'cover',
               }}
               source={require('../../../assets/task-shape.png')}
@@ -195,7 +241,7 @@ const TaskScreen = () => {
 
 const styles = StyleSheet.create({
   paddingBottom: {
-    paddingBottom: 20
+    paddingBottom: 45
   },
   container: {
     flex: 1,
@@ -259,7 +305,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: '#fff',
     letterSpacing: -0.5,
-    paddingTop: 18,
+    paddingTop:0,
   },
   arrowBackground: {
     position: 'absolute',

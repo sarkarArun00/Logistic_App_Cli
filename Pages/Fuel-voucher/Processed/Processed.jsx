@@ -8,6 +8,7 @@ import { lightTheme, GlobalStyles } from '../../GlobalStyles';
 import FeulVoucherRequest from '../FeulVoucherRequest';
 import TaskService from '../../Services/task_service';
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
+import NotificationCount from '../../Notifications/NotificationCount';
 
 
 function Processed({ navigation }) {
@@ -113,10 +114,9 @@ function Processed({ navigation }) {
                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Fuel Voucher Request</Text>
                     </TouchableOpacity>
                     <View style={{ position: 'relative', width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
-                        <TouchableOpacity>
-                            <Image style={{ width: 18, height: 18, }} source={require('../../../assets/noti.png')} />
+                    <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
+                            <NotificationCount></NotificationCount>
                         </TouchableOpacity>
-                        <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>2</Text>
                     </View>
                 </View>
 
@@ -195,7 +195,7 @@ function Processed({ navigation }) {
                             style={{
                             fontFamily: 'Montserrat_600SemiBold',
                             fontSize: 14,
-                            color: '#FFBB00',
+                            color: 'green',
                             }}
                         >
                             {formatToINR(allVehicles.amount)}
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
     createBtn: {
         position: 'absolute',
         right: 15,
-        bottom: 120,
+        bottom: 140,
         backgroundColor: '#EBF2FB',
         borderRadius: 28,
         flexDirection: 'row',

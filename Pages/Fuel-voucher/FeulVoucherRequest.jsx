@@ -4,7 +4,7 @@ import { Picker } from '@react-native-picker/picker';
 import { lightTheme } from '../GlobalStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
-import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
+import { useGlobalAlert } from '../../Context/GlobalAlertContext';
 
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import ImageResizer from 'react-native-image-resizer';
@@ -21,8 +21,10 @@ function FeulVoucherRequest({ visible, onClose }) {
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const bgColor = useRef(new Animated.Value(0)).current;
     const [modalVisible, setModalVisible] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [selectPaymode, setselectPaymode] = useState();
     const [selectVehicle, setVehicle] = useState();
+    const { showAlertModal, hideAlert } = useGlobalAlert();
 
 
 
@@ -35,7 +37,7 @@ function FeulVoucherRequest({ visible, onClose }) {
 
     const vehicleList = async () => {
         const userId =  await AsyncStorage.getItem('user_id')
-        const response = await TaskService.getVehicleByEmpId({employeeId: 209})
+        const response = await TaskService.getVehicleByEmpId({employeeId: userId})
         console.log('ressssss', response)
         if(response.status==1) {
             setVehicles(response.data)
@@ -231,7 +233,6 @@ function FeulVoucherRequest({ visible, onClose }) {
     
         const onSubmitFuelvoucher = async () => {
             const userId = await AsyncStorage.getItem('user_id');
-          
             if (!selectedVehicle) {
                 Alert.alert('Missing Information', 'Please select a valid vehicle before submitting.');
                 return;
@@ -249,7 +250,6 @@ function FeulVoucherRequest({ visible, onClose }) {
             try {
                 const response = await TaskService.saveFuelVoucher(request);
                 await submitFuelVoucherAttachments(response.data?.id);
-                console.log('API Response:', response.data);
               showAlertModal('Fuel voucher submitted successfully.', false)
             //   getAllFuelVoucher();
               setLoading(false)

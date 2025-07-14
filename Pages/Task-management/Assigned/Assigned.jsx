@@ -89,7 +89,7 @@ function Assigned({ navigation }) {
                     hideAlert();
                 }, 3000)
 
-                sentNotification(task_Id);
+                // sentNotification(task_Id);
                 navigation.navigate('Accepted')
                 setLoading(false);
             } else {
@@ -313,20 +313,20 @@ function Assigned({ navigation }) {
         setImages(updatedImages);
     };
 
-    const sentNotification = async (taskId) => {
-        const userId = await AsyncStorage.getItem('user_id');
-        const userName = await AsyncStorage.getItem('user_name');
-        let request = {
-            "message": `Task ID: ${taskId} has been accepted by ${userName}.`,
-            "srcEmp": userId,
-            "tgtEmp": null,
-            "pageId": 0,
-            "module": "Operation"
-        }
+    // const sentNotification = async (taskId) => {
+    //     const userId = await AsyncStorage.getItem('user_id');
+    //     const userName = await AsyncStorage.getItem('user_name');
+    //     let request = {
+    //         "message": `Task ID: ${taskId} has been accepted by ${userName}.`,
+    //         "srcEmp": userId,
+    //         "tgtEmp": null,
+    //         "pageId": 0,
+    //         "module": "Operation"
+    //     }
 
-        const response = await TaskService.generateNotification(request);
-        console.log("Notification response:", response.data);
-    }
+    //     const response = await TaskService.generateNotification(request);
+    //     console.log("Notification response:", response.data);
+    // }
     // if (!fontsLoaded) {
     //     return null;
     // }
@@ -419,6 +419,12 @@ function Assigned({ navigation }) {
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 13, height: 13 }} source={require('../../../assets/asicon3.png')} />
                                             <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
                                                 {task?.preferredTime?.start_time?.slice(0, 5)} - {task?.preferredTime?.end_time?.slice(0, 5)}
+                                            </Text>
+                                        </View>
+                                        <View style={{ position: 'relative', marginBottom: 5 }}>
+                                            <Image style={{ position: 'absolute', left: 0, top: 0, width: 13, height: 13 }} source={require('../../../assets/asicon4.png')} />
+                                            <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
+                                                Assigned By: {task?.assigned?.assigner.employee_name}
                                             </Text>
                                         </View>
                                         {/* {

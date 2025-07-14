@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // import { Ionicons } from '@expo/vector-icons';
@@ -13,17 +13,17 @@ import dayjs from 'dayjs';
 
 
 function Notification({ navigation }) {
-    const [selectedTab, setSelectedTab] = useState('All');
+    const [selectedTab, setSelectedTab] = useState('General');
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [approvals, setApprovals] = useState([]);
-
+    const viewedIdsRef = useRef(new Set());
+    const timeoutRef = useRef(null);
 
     useFocusEffect(
         React.useCallback(() => {
             const markAllAsSeen = async () => {
                 const response = await TaskService.getAllGeneralNotifications();
-                console.log('Response seenNotificationIds:', response);
                 if (response.status == 1) {
                     const ids = response.data.map(n => n.id);
                     await AsyncStorage.setItem("seenNotificationIds", JSON.stringify(ids));
@@ -33,6 +33,7 @@ function Notification({ navigation }) {
             const fetchData = async () => {
                 try {
                     const response = await TaskService.getAllGeneralNotifications();
+                    console.log('Response seenNotificationIds:', response);
                     if (response.status == 1) {
                         const allNotifications = response.data;
                         setNotifications(allNotifications);
@@ -48,10 +49,10 @@ function Notification({ navigation }) {
 
             const fetchEmployeeApprovals = async () => {
                 try {
-                    const response = await TaskService.getEmployeeApprovals();
+                    const response = await TaskService.getEmployeeApprovals({ module: 'Logistic' });
                     if (response.status == 1) {
-                        console.log('Response:', response);
-                        setApprovals(response.data);
+                        console.log('Response getEmployeeApprovals 11111111111:', response);
+                        setApprovals(response.data.pending);
                     } else {
                         console.log('Response: No data found');
                     }
@@ -67,9 +68,33 @@ function Notification({ navigation }) {
     );
 
 
+
+    const onViewableItemsChanged = useRef(({ viewableItems }) => {
+        const visibleIds = viewableItems.map(v => v.item.id);
+
+        // Add newly visible IDs to the Set
+        visibleIds.forEach(id => viewedIdsRef.current.add(id));
+
+        // Clear previous timeout if any
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+
+        // Set a delay before console logging
+        timeoutRef.current = setTimeout(() => {
+            console.log('IDs to be marked as seen:', [...viewedIdsRef.current]);
+        }, 2000); // adjust delay (in ms) as needed
+
+    }).current;
+
+    const viewabilityConfig = {
+        itemVisiblePercentThreshold: 50,
+    };
+
+
     const handleApprove = async (id) => {
         try {
-            const response = await TaskService.approveApproval({notifId: id});
+            const response = await TaskService.approveApproval({ notifId: id });
             if (response.status == 1) {
                 console.log('Approval successful:', response);
                 setApprovals(prev => prev.filter(item => item.id !== id));
@@ -81,9 +106,10 @@ function Notification({ navigation }) {
         }
     }
 
+
     const handleDecline = async (id) => {
         try {
-            const response = await TaskService.declineApproval({notifId: id});
+            const response = await TaskService.declineApproval({ notifId: id });
             if (response.status == 1) {
                 console.log('Decline successful:', response);
                 setApprovals(prev => prev.filter(item => item.id !== id));
@@ -100,12 +126,12 @@ function Notification({ navigation }) {
     };
 
     const NotificationItem = ({ item }) => (
-        <View style={{flexDirection:'row', paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: '#E0E0E0'}}>
+        <View style={{ flexDirection: 'row', paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: '#E0E0E0' }}>
             <Ionicons name={item.status == '1' ? "mail-outline" : "mail-outline"} size={32}
                 color={item.status == '1' ? "#64748B" : "#1E40AF"} style={styles.icon} />
             <View style={styles.textContainer}>
                 <Text style={styles.name}>{item.name} <Text style={styles.message}>{item.message}</Text></Text>
-                <Text style={styles.time}>{dayjs(item.createdAt).format('DD-MM-YY HH:mm')}</Text>
+                <Text style={styles.time}>{dayjs(item.createdAt).format('MMMM D, YYYY h:mm A')}</Text>
             </View>
         </View>
     );
@@ -129,8 +155,8 @@ function Notification({ navigation }) {
             </View>
 
             <View style={styles.tabs}>
-                <View style={styles.borderLine}></View>
-                {['All', 'Approval'].map((tab) => (
+                <View style={styles.borderLine} />
+                {['General', 'Approval'].map((tab) => (
                     <TouchableOpacity
                         key={tab}
                         style={[
@@ -147,60 +173,71 @@ function Notification({ navigation }) {
             </View>
 
             {/* Separate FlatLists based on tab */}
-            {selectedTab === 'All' ? (
+            {selectedTab === 'General' ? (
                 <FlatList
                     data={notifications}
                     renderItem={({ item }) => <NotificationItem item={item} />}
                     keyExtractor={item => item.id.toString()}
+
+                    onViewableItemsChanged={onViewableItemsChanged}
+                    viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
                 />
             ) : (
                 <FlatList
-                    data={approvals}
-                    renderItem={({ item }) => (
-                        <View style={styles.notificationContainer}>
-                            {/* Notification Content */}
-                            <View style={styles.textContainer}>
-                                <Text style={styles.name}>
-                                    {item.name} <Text style={styles.message}>{item.message}</Text>
-                                </Text>
-                            </View>
-
-                            {/* Buttons */}
-                            <View style={styles.buttonRow}>
-                                <View>
-                                    <Text style={styles.time}>{item.time} {dayjs(item.createdAt).format('DD-MM-YY HH:mm')}</Text>
+                    data={selectedTab === 'General' ? notifications : approvals}
+                    renderItem={({ item }) =>
+                        selectedTab === 'General' ? (
+                            <NotificationItem item={item} />
+                        ) : (
+                            <View style={styles.notificationContainer}>
+                                
+                                <View style={styles.textContainer}>
+                                    <Text style={styles.name}>
+                                        {item.name}{' '}
+                                        <Text style={styles.message}>{item.message}</Text>
+                                    </Text>
                                 </View>
-                                <View style={{flexDirection:'row', alignItems:'center', gap:5, }}>
-                                    <TouchableOpacity
-                                        style={[styles.button, { backgroundColor: '#10B981' }]} // Green
-                                        onPress={() => handleApprove(item.id)}
-                                    >
-                                        <Text style={styles.buttonText}>Approve</Text>
-                                    </TouchableOpacity>
 
-                                    <TouchableOpacity
-                                        style={[styles.button, { backgroundColor: '#EF4444' }]} // Red
-                                        onPress={() => handleDecline(item.id)}
-                                    >
-                                        <Text style={styles.buttonText}>Decline</Text>
-                                    </TouchableOpacity>
+                               
+                                <View style={styles.buttonRow}>
+                                    <View>
+                                        <Text style={styles.time}>
+                                            {item.time}{' '}
+                                            {dayjs(item.createdAt).format('MMMM D, YYYY h:mm A')}
+                                        </Text>
+                                    </View>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                                        <TouchableOpacity
+                                            style={[styles.button, { backgroundColor: '#10B981' }]}
+                                            onPress={() => handleApprove(item.id)}
+                                        >
+                                            <Text style={styles.buttonText}>Approve</Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            style={[styles.button, { backgroundColor: '#EF4444' }]}
+                                            onPress={() => handleDecline(item.id)}
+                                        >
+                                            <Text style={styles.buttonText}>Decline</Text>
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
                             </View>
-                        </View>
-                    )}
+                        )
+                    }
                     keyExtractor={item => item.id.toString()}
-                    ListEmptyComponent={() => (
-                        <Text style={{ textAlign: 'center', marginTop: 350, color: '#999' }}>
-                            No approval notifications.
-                        </Text>
-                    )}
+                    onViewableItemsChanged={onViewableItemsChanged}
+                    viewabilityConfig={viewabilityConfig}
+                    ListEmptyComponent={() =>
+                        selectedTab === 'Approval' ? (
+                            <Text style={{ textAlign: 'center', marginTop: 350, color: '#999' }}>
+                                No approval notifications.
+                            </Text>
+                        ) : null
+                    }
                     contentContainerStyle={styles.flatListContent}
                 />
-
-
             )}
-
-
         </SafeAreaView>
     )
 }
@@ -277,16 +314,16 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         gap: 10,
-        marginTop:5,
+        marginTop: 5,
     },
     button: {
-        height:40,
+        height: 40,
         paddingHorizontal: 14,
         paddingVertical: 0,
         borderRadius: 6,
-        flexDirection:'row',
-        alignItems:'center',
-        justifyContent:'center',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     buttonText: {
         color: '#fff',

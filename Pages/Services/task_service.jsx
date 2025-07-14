@@ -234,9 +234,9 @@ const TaskService = {
     }
   },
 
-  getMyReceipts: async () => {
+  getMyReceipts: async (data) => {
     try {
-      const response = await apiClient.get('/operation/logistics/getMyReceipts');
+      const response = await apiClient.post('/operation/logistics/getMyReceipts', data);
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -334,15 +334,16 @@ const TaskService = {
     }
   },
 
-  getEmployeeApprovals: async () => {
+  getEmployeeApprovals: async (data) => {
     try {
-      const response = await apiClient.get('/notification/getEmployeeApprovals');
+      const response = await apiClient.post('/notification/getEmployeeApprovals',data);
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
+
   changeProfilePicture: async (data) => {
     try {
       const response = await apiClient.post('/operation/logistics/changeProfilePicture', data, {headers: {
@@ -406,6 +407,7 @@ const TaskService = {
       throw error;
     }
   },
+  
   getAllFuelVouchers: async () => {
     try {
       const response = await apiClient.get('/operation/logistics/fuel-voucher/getAllFuelVouchers');
@@ -442,6 +444,25 @@ const TaskService = {
   getAllAttachmentsById: async (data) => {
     try {
       const response = await apiClient.post('/operation/logistics/fuel-voucher/getAllAttachments',data);
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+  getAllTaskCount: async () => {
+    try {
+      const response = await apiClient.get('/operation/logistics/taskCount');
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  getClientListByLogistic: async () => {
+    try {
+      const response = await apiClient.get('/operation/logistics/getClientListByLogistic');
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
