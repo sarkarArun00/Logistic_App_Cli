@@ -29,6 +29,7 @@ function Receiptview({ navigation, route }) {
       try {
 
         const response = await TaskService.getReceiptById({ receiptId });
+        console.log("status query",response.data)
         if (response.status == 1) {
           setReceiptData(response.data);
         } else {
@@ -280,10 +281,10 @@ body{ font-family: "Montserrat", sans-serif; background:#f0f4f8; padding:20px;  
     }
   };
 
-  const getStatusColor = (authorizeStatus, generateStatus) => {
-    if (authorizeStatus == 0 || generateStatus == 0) {
+  const getStatusColor = (authoriseStatus, generateStatus) => {
+    if (authoriseStatus == 0 || generateStatus == 0) {
         return '#DC3545'; // Rejected - Red
-    } else if (authorizeStatus == 1) {
+    } else if (authoriseStatus == 1) {
         return '#28A745'; // Settled - Blue
     } else if (generateStatus == 1) {
         return '#007BFF'; // Approved - Green
@@ -293,17 +294,21 @@ body{ font-family: "Montserrat", sans-serif; background:#f0f4f8; padding:20px;  
 };
 
 
-const getStatusLabel = (authorizeStatus, generateStatus) => {
-    if (authorizeStatus == 0 || generateStatus == 0) {
-        return 'Rejected';
-    } else if (authorizeStatus == 1) {
-        return 'Authorized';
-    } else if (generateStatus == 1) {
-        return 'Unauthorized';
-    } else {
-        return 'Interim';
-    }
+const getStatusLabel = (authoriseStatus, generateStatus) => {
+  console.log( 'status check', authoriseStatus, generateStatus)
+  if (authoriseStatus == 1 && generateStatus == 1) {
+      return 'Authorized';  
+  } else if (authoriseStatus == 0 || generateStatus == 0) {
+      return 'Rejected';
+  } else if (generateStatus == 1 && authoriseStatus == null) {
+      return 'Unauthorized';
+  } else if (generateStatus == 1 && authoriseStatus == 0) {
+      return 'Rejected';
+  } else {
+      return 'Interim';
+  }
 };
+
 
 const formatDateTime2 = (dateString) => {
   if (!dateString) return '';
@@ -400,14 +405,14 @@ const formatDateTime2 = (dateString) => {
               <Text style={styles.sndSubTitle}>
                 <View style={{
                   alignSelf: 'flex-start',
-                  backgroundColor: getStatusColor(receiptData?.authorizeStatus, receiptData?.generateStatus),
+                  backgroundColor: getStatusColor(receiptData?.authoriseStatus, receiptData?.generateStatus),
                   paddingVertical: 2,
                   paddingHorizontal: 8,
                   borderRadius: 12,
                   // marginBottom: 4,
                 }}>
                   <Text style={{ fontSize: 11, color: '#fff', fontFamily: 'Montserrat_500Medium' }}>
-                    {getStatusLabel(receiptData?.authorizeStatus, receiptData?.generateStatus)}
+                    {getStatusLabel(receiptData?.authoriseStatus, receiptData?.generateStatus)}
                   </Text>
                 </View>
               </Text>

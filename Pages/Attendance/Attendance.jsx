@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Text, ActivityIndicator, Image, ScrollView, TextInput, Modal, RefreshControl, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, ActivityIndicator, Image, ScrollView, TextInput, Modal, RefreshControl, TouchableOpacity, Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'
 // import { useFonts, Montserrat_700Bold, Montserrat_400Regular, Montserrat_500Medium } from '@expo-google-fonts/montserrat'
 import RNSwipeVerify from 'react-native-swipe-verify';
@@ -25,6 +25,7 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import moment from 'moment';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -63,7 +64,7 @@ function Attendance({ navigation }) {
     const [userInfo, setUserInfo] = useState(null);
     const [checkInCheckout, setCheckInCheckOut] = useState([]);
     const [showLocationModal, setShowLocationModal] = useState(false);
-
+    const [showBlinkDot, setShowBlinkDot] = useState(true);
 
     const fetchProfilePicture = async () => {
         try {
@@ -168,6 +169,15 @@ function Attendance({ navigation }) {
         fetchAttendanceData(selectedMonthDate);
     };
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setShowBlinkDot(prev => !prev);
+        }, 500);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    const today = moment().format('YYYY-MM-DD');
     const fetchAttendanceData = async (monthDate) => {
         try {
             const userId = await AsyncStorage.getItem("user_id");
@@ -179,7 +189,6 @@ function Attendance({ navigation }) {
                 monthDate,
             });
 
-            console.log('sssssss', response)
             if (response?.data?.data && Array.isArray(response.data.data)) {
                 const rawData = response.data.data;
                 const formatDateForCalendar = (dateStr) => {
@@ -191,11 +200,11 @@ function Attendance({ navigation }) {
                     if (shiftType === 'WD') {
                         if (isPresent === true) return '#4CAF50'; // Green - Present
                         if (isPresent === false) return '#FF5252'; // Red - Absent
-                        return '#3085FE'; // Blue - Working day, no status
+                        return '#8fadf7'; // Blue - Working day, no status
                     } else if (shiftType === 'WO') {
                         return '#F9C74F'; // Yellow - Weekly Off
                     } else if (shiftType === 'HO') {
-                        return '#b624f0'; // Red - Holiday
+                        return '#9544f2'; // Red - Holiday
                     }
                     return '#C4C4C4'; // Default grey
                 };
@@ -205,6 +214,8 @@ function Attendance({ navigation }) {
                 rawData.forEach(item => {
                     const formattedDate = formatDateForCalendar(item.weekDate);
                     const bgColor = getColor(item.shiftType, item.isPresent);
+
+                    const isToday = formattedDate === today;
 
                     dateMarks[formattedDate] = {
                         customStyles: {
@@ -217,6 +228,9 @@ function Attendance({ navigation }) {
                                 fontWeight: 'bold',
                             },
                         },
+                        ...(isToday && showBlinkDot
+                            ? { dots: [{ key: 'blink', color: '#FFFFFF' }] }
+                            : {}),
                     };
                 });
 
@@ -261,14 +275,12 @@ function Attendance({ navigation }) {
         const response = await TaskService.getLoginByDate(request);
         const format = 'D/M/YYYY, h:mm:ss a';
 
-        
+
         if (response.status == 1) {
             const loginTime = dayjs.tz(response.data.login, format, 'Asia/Kolkata').format('hh:mm A');
             const logoutTime = dayjs.tz(response.data.logout, format, 'Asia/Kolkata').format('hh:mm A');
-            // console.log('jdfhdjfhjdfhjdfjdjfdjfdjfjdfh', loginTime, logoutTime)
-            setCheckInCheckOut({checkIn: loginTime, checkOut: logoutTime})
+            setCheckInCheckOut({ checkIn: loginTime, checkOut: logoutTime })
             setAttendance(response.data);
-            console.log('jdfhdjfhjdfhjdfjdjfdjfdjfjdfh', checkInCheckout)
         } else {
             showAlertModal(response.message || 'Failed to fetch attendance details for the selected date.', true);
             setAttendance([]);
@@ -553,10 +565,64 @@ function Attendance({ navigation }) {
                 <View style={styles.container}>
                     {loading && <ActivityIndicator size="large" color="#3085FE" />}
                     <Calendar
-                        markedDates={markedDates}
                         markingType="custom"
+                        markedDates={markedDates}
                         onMonthChange={handleMonthChange}
                         onDayPress={handleDayPress}
+                        dayComponent={({ date, state }) => {
+                            const today = moment().format('YYYY-MM-DD');
+                            const isToday = date.dateString === today;
+                            const animatedValue = useRef(new Animated.Value(1)).current;
+
+                            useEffect(() => {
+                                if (isToday) {
+                                  Animated.loop(
+                                    Animated.sequence([
+                                      Animated.timing(animatedValue, {
+                                        toValue: 1.05,          // small scale (not too jumpy)
+                                        duration: 800,
+                                        easing: Easing.inOut(Easing.ease),
+                                        useNativeDriver: true,
+                                      }),
+                                      Animated.timing(animatedValue, {
+                                        toValue: 1,
+                                        duration: 800,
+                                        easing: Easing.inOut(Easing.ease),
+                                        useNativeDriver: true,
+                                      }),
+                                    ])
+                                  ).start();
+                                }
+                              }, [isToday]);
+                              
+
+                            const style = markedDates[date.dateString]?.customStyles?.container || {};
+                            const textStyle = markedDates[date.dateString]?.customStyles?.text || {};
+
+                            const AnimatedWrapper = isToday ? Animated.View : View;
+
+                            return (
+                                <AnimatedWrapper
+                                    style={{
+                                        ...style,
+                                        transform: isToday ? [{ scale: animatedValue }] : [],
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        width: 36,
+                                        height: 36,
+                                    }}
+                                >
+                                    <Text
+                                        style={{
+                                            ...textStyle,
+                                            opacity: state === 'disabled' ? 0.4 : 1,
+                                        }}
+                                    >
+                                        {date.day}
+                                    </Text>
+                                </AnimatedWrapper>
+                            );
+                        }}
                         theme={{
                             todayTextColor: '#3085FE',
                             arrowColor: '#3085FE',
@@ -566,6 +632,7 @@ function Attendance({ navigation }) {
                             textDayHeaderFontWeight: '500',
                         }}
                     />
+
                 </View>
 
 
@@ -594,43 +661,43 @@ function Attendance({ navigation }) {
             </ScrollView>
 
             <Modal
-                    transparent
-                    animationType="fade"
-                    visible={showLocationModal}
-                    onRequestClose={() => setShowLocationModal(false)}
-                >
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalBox}>
-                            <Text style={styles.modalTitle}>Enable Location</Text>
-                            <Text style={styles.modalText}>
-                                Unable to fetch location. Please enable your location services.
-                            </Text>
+                transparent
+                animationType="fade"
+                visible={showLocationModal}
+                onRequestClose={() => setShowLocationModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalBox}>
+                        <Text style={styles.modalTitle}>Enable Location</Text>
+                        <Text style={styles.modalText}>
+                            Unable to fetch location. Please enable your location services.
+                        </Text>
 
-                            <View style={styles.buttonContainer}>
-                                <TouchableOpacity
-                                    onPress={() => setShowLocationModal(false)}
-                                    style={[styles.button, styles.cancelButton]}
-                                >
-                                    <Text style={styles.cancelText}>Cancel</Text>
-                                </TouchableOpacity>
+                        <View style={styles.buttonContainer}>
+                            <TouchableOpacity
+                                onPress={() => setShowLocationModal(false)}
+                                style={[styles.button, styles.cancelButton]}
+                            >
+                                <Text style={styles.cancelText}>Cancel</Text>
+                            </TouchableOpacity>
 
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        setShowLocationModal(false);
-                                        if (Platform.OS === 'android') {
-                                            Linking.openURL('android.settings.LOCATION_SOURCE_SETTINGS');
-                                        } else {
-                                            Linking.openURL('app-settings:');
-                                        }
-                                    }}
-                                    style={[styles.button, styles.openButton]}
-                                >
-                                    <Text style={styles.openText} onPress={() => { openSettings() }}>Open Settings</Text>
-                                </TouchableOpacity>
-                            </View>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setShowLocationModal(false);
+                                    if (Platform.OS === 'android') {
+                                        Linking.openURL('android.settings.LOCATION_SOURCE_SETTINGS');
+                                    } else {
+                                        Linking.openURL('app-settings:');
+                                    }
+                                }}
+                                style={[styles.button, styles.openButton]}
+                            >
+                                <Text style={styles.openText} onPress={() => { openSettings() }}>Open Settings</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
-                </Modal>
+                </View>
+            </Modal>
 
             {loading && (
                 <View

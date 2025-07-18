@@ -23,6 +23,8 @@ import { readFile } from 'react-native-fs'; // For base64
 
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
 import { lightTheme } from '../../GlobalStyles';
+import { useSearch } from '../../../hooks/userSearch1';
+
 
 
 function Progress({ navigation }) {
@@ -36,7 +38,13 @@ function Progress({ navigation }) {
     const [itemCashData, setItemCashData] = useState(false);
     // const [isExpanded, setIsExpanded] = useState(false);
     const [allTasksData, setAllTasksData] = useState([]);
-    const [visibleTasks, setVisibleTasks] = useState([]);
+    // const [visibleTasks, setVisibleTasks] = useState([]);
+    const [visibleCount, setVisibleCount] = useState(5);
+    const { searchQuery, filteredData, search } = useSearch(allTasksData);
+    const visibleTasks = searchQuery
+        ? filteredData           
+        : filteredData.slice(0, visibleCount); 
+
     const [images, setImages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedTask, setSelectedTask] = useState([]);
@@ -72,7 +80,7 @@ function Progress({ navigation }) {
 
         if (itemInfo.length > 0) {
             setChecked(itemIds.length === itemInfo.length);
-          }
+        }
 
         if (collectModalVisible2) {
             // Clear images on every open
@@ -97,28 +105,40 @@ function Progress({ navigation }) {
     }, [collectModalVisible3]);
 
     const fetchData = async () => {
+        setLoading(true);
         try {
             const response = await TaskService.getMyInProgressTasks();
+            console.log('newwwwwwwwwwwww',response)
             setAllTasksData(response.data || []);
-            setVisibleTasks(response.data?.slice(0, 5) || []);
+            // setVisibleTasks(response.data?.slice(0, 5) || []);
+            search('', response.data); //
+            setLoading(false);
 
         } catch (error) {
             console.error('Error fetching tasks:', error);
+            search('', []);
         } finally {
             setLoading(false);
         }
-
     };
 
+    // const handleLoadMore = () => {
+    //     setLoadingMore(true);
+    //     setTimeout(() => {
+    //         setVisibleCount(prev => prev + 5);
+    //         setLoadingMore(false);
+    //     }, 500);
+    // };
 
 
-    const getClientsAll = () => {
+    const getClientsAll = async () => {
         try {
-            TaskService.getAllClients().then((response) => {
-                if (response.status == 1) {
-                    setClients(response.data || []);
-                }
-            });
+            const response = await TaskService.getClientListByLogistic();
+            if (response.status == 1) {
+                setClients(response.data || []);
+            } else {
+                setClients([]);
+            }
         } catch (error) {
             console.error('Error fetching tasks:', error);
         } finally {
@@ -222,33 +242,6 @@ function Progress({ navigation }) {
     };
 
 
-    // const openCamera = async () => {
-    //     const hasPermission = await requestPermission('camera');
-
-    //     if (!hasPermission) {
-    //         showAlertModal('Camera access is needed to take pictures.', true);
-    //         return;
-    //     }
-
-    //     const result = await ImagePicker.launchCameraAsync({
-    //         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    //         allowsEditing: true,
-    //         quality: 1,  // Start with high quality to get the original image
-    //         base64: true,  // Required for base64 upload
-    //     });
-
-    //     if (!result.canceled && result.assets?.length > 0) {
-    //         const image = result.assets[0];
-
-    //         // Compress the image to under 50KB
-    //         const compressedImage = await compressImage(image.uri);
-
-    //         // Update state with the compressed image
-    //         setImages([compressedImage]);
-    //         console.log("Compressed image:", compressedImage);
-    //     }
-    // };
-
     const openCamera = async () => {
         const hasPermission = await requestPermission('camera');
 
@@ -265,7 +258,6 @@ function Progress({ navigation }) {
         };
 
         launchCamera(options, async (response) => {
-            console.log('Camera response:', response);
             if (response.didCancel) {
                 console.log('User cancelled camera');
             } else if (response.errorCode) {
@@ -281,30 +273,7 @@ function Progress({ navigation }) {
         });
     };
 
-    // const openGallery = async () => {
-    //     const hasPermission = await requestPermission('gallery');
-    //     if (!hasPermission) {
-    //         Alert.alert('Permission Required', 'Gallery access is needed to select images.');
-    //         return;
-    //     }
 
-    //     const result = await ImagePicker.launchImageLibraryAsync({
-    //         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    //         allowsEditing: true,
-    //         quality: 1,  
-    //         base64: true,  
-    //     });
-
-    //     if (!result.canceled && result.assets?.length > 0) {
-    //         const image = result.assets[0];
-
-    //         // Compress the image to under 50KB
-    //         const compressedImage = await compressImage(image.uri);
-
-    //         // Update state with the compressed image
-    //         setImages([compressedImage]);
-    //     }
-    // };
 
     const compressImage = async (uri) => {
         let currentUri = uri;
@@ -437,7 +406,6 @@ function Progress({ navigation }) {
 
 
     const handleSubmit = async () => {
-        // Validation
         if (!selectedClientId) {
             showAlertModal('Please select a client.', true);
             return;
@@ -469,6 +437,7 @@ function Progress({ navigation }) {
                 setAmount('');
                 setRemarks('');
                 setpayMdlVisible(false);
+                fetchData()
             } else {
                 showAlertModal('Failed to submit payment details.', true);
             }
@@ -489,10 +458,9 @@ function Progress({ navigation }) {
             setItemConsignemtData(task.items)
         }
         else if (task.taskType.taskType == 'Cash Collection') {
-            setItemCashData(task.items)
-
-            setSelectedClientId(task.clientId || null)
             getClientsAll();
+            setItemCashData(task?.receipts == 0 ? false : true)
+            setSelectedClientId(task.clientId || null)
             setItemTaskId(task.id);
             setpayMdlVisible(true);
         }
@@ -594,37 +562,26 @@ function Progress({ navigation }) {
         const response = await TaskService.generateNotification(request);
     }
 
-    // Fonts  
-    // const [fontsLoaded] = useFonts({
-    //     Montserrat_600SemiBold,
-    //     Montserrat_500Medium,
-    //     Montserrat_400Regular
-    // });
-
-    // if (!fontsLoaded) {
-    //     return null;
-    // }
-
 
     const toggleItemChecked = (id) => {
         if (itemIds.some(item => item.id === id)) {
-          setItemIds(itemIds.filter(item => item.id !== id));
+            setItemIds(itemIds.filter(item => item.id !== id));
         } else {
-          setItemIds([...itemIds, { id }]);
+            setItemIds([...itemIds, { id }]);
         }
-      };
+    };
 
-      const handleSelectAll = () => {
+    const handleSelectAll = () => {
         if (checked) {
-          setItemIds([]); // Unselect all
+            setItemIds([]); // Unselect all
         } else {
-          const allIds = itemInfo.map((info) => ({ id: info.item.id }));
-          setItemIds(allIds); // Select all
+            const allIds = itemInfo.map((info) => ({ id: info.item.id }));
+            setItemIds(allIds); // Select all
         }
         setChecked(!checked);
-      };
-      
-      
+    };
+
+
     // Call Button
     const makeCall = (call) => {
         Linking.openURL(`tel:${call}`);
@@ -653,6 +610,8 @@ function Progress({ navigation }) {
                         style={{ fontSize: 14, fontFamily: 'Montserrat_500Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
                         placeholder="Search"
                         placeholderTextColor="#0C0D36"
+                        value={searchQuery}
+                        onChangeText={(text) => search(text, allTasksData)}
                     />
                     <Image style={{ position: 'absolute', top: 16, right: 20, width: 20, height: 20, }} source={require('../../../assets/search.png')} />
                 </View>
@@ -1050,14 +1009,19 @@ function Progress({ navigation }) {
                                 </View>
 
                                 <View>
-                                    <TouchableOpacity disabled={!itemCashData?.generateReceipt}
-                                        onPress={handleSubmit}
+                                    <TouchableOpacity disabled={itemCashData}
+
+                                        onPress={() => {
+                                            if (itemCashData == false) {
+                                                handleSubmit();
+                                            }
+                                        }}
                                         style={{
-                                            backgroundColor: itemCashData?.generateReceipt ? '#2F81F5' : '#B0C4DE',
+                                            backgroundColor: !itemCashData ? '#2F81F5' : '#B0C4DE',
                                             borderRadius: 28,
                                             paddingVertical: 16,
                                             paddingHorizontal: 10,
-                                            opacity: itemCashData?.generateReceipt ? 1 : 0.6,
+                                            opacity: itemCashData ? 1.6 : 1,
                                         }}
                                     >
                                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 16, color: 'white', textAlign: 'center' }}>
@@ -1307,7 +1271,7 @@ function Progress({ navigation }) {
                                 </View>
 
 
-                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, color: '#0C0D36', paddingBottom: 18, marginTop:5 }}>Item Details</Text>
+                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, color: '#0C0D36', paddingBottom: 18, marginTop: 5 }}>Item Details</Text>
 
                                 {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                                 <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, color: '#0C0D36' }}>Select All</Text>
@@ -1562,6 +1526,25 @@ function Progress({ navigation }) {
                 </Modal>
 
             </ScrollView>
+
+            {loading && (
+                <View
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 9999,
+                    }}
+                >
+                    <ActivityIndicator size="large" color="#FFFFFF" />
+                    <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
+                </View>
+            )}
         </SafeAreaView>
     )
 }

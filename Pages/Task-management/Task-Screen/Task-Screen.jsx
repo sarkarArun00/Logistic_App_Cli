@@ -198,7 +198,9 @@ const TaskScreen = () => {
   };
 
 
+
   return (
+    
     <SafeAreaView style={[
       styles.container, styles.paddingBottom
     ]}

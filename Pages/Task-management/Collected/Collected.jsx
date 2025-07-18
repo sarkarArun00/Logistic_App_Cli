@@ -17,6 +17,7 @@ import { Vibration } from 'react-native';
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
 import {BASE_API_URL} from '../../Services/API';
 import { lightTheme } from '../../GlobalStyles';
+import { useSearch } from '../../../hooks/userSearch1';
 
 
 
@@ -24,7 +25,7 @@ function Collected({ navigation }) {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedValue, setSelectedValue] = useState(null);
     const [allTasksData, setAllTasksData] = useState([]);
-    const [visibleTasks, setVisibleTasks] = useState([])
+    // const [visibleTasks, setVisibleTasks] = useState([])
     const [selectedTask, setSelectedTask] = useState([]);
     const [selectedItem, setSelectedTaskDesc] = useState('');
     const [operations, setOperationList] = useState([]);
@@ -38,6 +39,12 @@ function Collected({ navigation }) {
     const [modalVisible2, setModalVisible2] = useState(false);
 
         const { showAlertModal, hideAlert } = useGlobalAlert();
+        const [visibleCount, setVisibleCount] = useState(5);
+    const { searchQuery, filteredData, search } = useSearch(allTasksData);
+    const visibleTasks = searchQuery
+        ? filteredData           // Show all if searching
+        : filteredData.slice(0, visibleCount); // Show limited if not
+
 
     // const [fontsLoaded] = useFonts({
     //     Montserrat_600SemiBold,
@@ -54,10 +61,12 @@ function Collected({ navigation }) {
             const response = await TaskService.getMyCollectedTasks();
             if (response.status == 1) {
                 setAllTasksData(response.data || []);
-                setVisibleTasks(response.data?.slice(0, 5) || []);
+                // setVisibleTasks(response.data?.slice(0, 5) || []);
+                search('',response.data)
             } else {
                 setAllTasksData([]);
-                setVisibleTasks([]);
+                // setVisibleTasks([]);
+                search('',[])
             }
         } catch (error) {
             // console.error('Error fetching tasks:', error);
@@ -65,6 +74,16 @@ function Collected({ navigation }) {
             setLoading(false);
         }
     };
+
+
+    // const handleLoadMore = () => {
+    //     setLoadingMore(true);
+    //     setTimeout(() => {
+    //         setVisibleCount(prev => prev + 5);
+    //         setLoadingMore(false);
+    //     }, 500);
+    // };
+
 
     const sendComment = async () => {
         if (!commentText.trim()) return;
@@ -140,7 +159,7 @@ function Collected({ navigation }) {
         const locationString = task?.pickUpLocation?.coordinates;
 
         console.log('droppppppppppppppppppppppppp', task)
-        return
+        
         if (!locationString) {
             showAlertModal('Location not available', true);
             return;
@@ -305,6 +324,8 @@ function Collected({ navigation }) {
                         style={{ fontSize: 14, fontFamily: 'Montserrat_500Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
                         placeholder="Search"
                         placeholderTextColor="#0C0D36"
+                        value={searchQuery}
+                        onChangeText={(text)=> search(text,allTasksData)}
                     />
                     <Image style={{ position: 'absolute', top: 16, right: 20, width: 20, height: 20, }} source={require('../../../assets/search.png')} />
                 </View>

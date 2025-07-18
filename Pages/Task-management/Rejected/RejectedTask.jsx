@@ -13,6 +13,7 @@ import NotificationCount from '../../Notifications/NotificationCount';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import GlobalStyles from '../../GlobalStyles';
 import { Vibration } from 'react-native';
+import { useSearch } from '../../../hooks/userSearch1';
 
 
 
@@ -26,8 +27,6 @@ function RejectedTask({ navigation }) {
     const [collectModalVisible, setCollectModalVisible] = useState(false);
     const [checked, setChecked] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
-    const [allTasksData, setAllTasksData] = useState([]);
-    const [visibleTasks, setVisibleTasks] = useState([]);
     const [images, setImages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedTask, setSelectedTask] = useState([]);
@@ -35,6 +34,13 @@ function RejectedTask({ navigation }) {
     const [commentText, setCommentText] = useState('');
     const [collectCommentText, setCollectCommentText] = useState('');
     const [selectedTaskId, setTaskId] = useState('');
+    const [allTasksData, setAllTasksData] = useState([]);
+    // const [visibleTasks, setVisibleTasks] = useState([]);
+    const [visibleCount, setVisibleCount] = useState(5);
+    const { searchQuery, filteredData, search } = useSearch(allTasksData);
+    const visibleTasks = searchQuery
+        ? filteredData           // Show all if searching
+        : filteredData.slice(0, visibleCount); // Show limited if not
 
 
     const formatDateTime = (isoString) => {
@@ -60,10 +66,12 @@ function RejectedTask({ navigation }) {
             const response = await TaskService.getMyRejectedTasks();
             if (response.status == 1) {
                 setAllTasksData(response.data || []);
-                setVisibleTasks(response.data?.slice(0, 5) || []);
+                // setVisibleTasks(response.data?.slice(0, 5) || []);
+                search('',response.data)
             } else {
                 setAllTasksData([]);
-                setVisibleTasks([]);
+                // setVisibleTasks([]);
+                search('',[])
             }
         } catch (error) {
             // console.error('Error fetching tasks:', error);
@@ -219,6 +227,8 @@ function RejectedTask({ navigation }) {
                         style={{ fontSize: 14, fontFamily: 'Montserrat_500Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
                         placeholder="Search"
                         placeholderTextColor="#0C0D36"
+                        value={searchQuery}
+                        onChangeText={(text)=> search(text, allTasksData)}
                     />
                     <Image style={{ position: 'absolute', top: 16, right: 20, width: 20, height: 20, }} source={require('../../../assets/search.png')} />
                 </View>

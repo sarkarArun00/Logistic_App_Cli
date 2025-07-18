@@ -160,9 +160,9 @@ const TaskService = {
     }
   },
 
-  getMyCompletedTasks: async () => {
+  getMyCompletedTasks: async (data) => {
     try {
-      const response = await apiClient.get('/operation/logistics/task/getMyCompletedTasks');
+      const response = await apiClient.post('/operation/logistics/task/getMyCompletedTasks',data);
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);

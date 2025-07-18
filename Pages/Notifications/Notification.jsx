@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, FlatList } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ActivityIndicator, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // import { Ionicons } from '@expo/vector-icons';
 // import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium } from '@expo-google-fonts/montserrat';
@@ -32,6 +32,7 @@ function Notification({ navigation }) {
 
             const fetchData = async () => {
                 try {
+                    setLoading(true)
                     const response = await TaskService.getAllGeneralNotifications();
                     console.log('Response seenNotificationIds:', response);
                     if (response.status == 1) {
@@ -39,6 +40,7 @@ function Notification({ navigation }) {
                         setNotifications(allNotifications);
                         const seenIds = allNotifications.map(n => n.id);
                         await AsyncStorage.setItem("seenNotificationIds", JSON.stringify(seenIds));
+                        setLoading(false)
                     }
                 } catch (error) {
                     console.error('Error fetching notifications:', error);
@@ -50,8 +52,9 @@ function Notification({ navigation }) {
             const fetchEmployeeApprovals = async () => {
                 try {
                     const response = await TaskService.getEmployeeApprovals({ module: 'Logistic' });
+                    console.log('Response: getEmployeeApprovals', response);
+
                     if (response.status == 1) {
-                        console.log('Response getEmployeeApprovals 11111111111:', response);
                         setApprovals(response.data.pending);
                     } else {
                         console.log('Response: No data found');
@@ -95,6 +98,7 @@ function Notification({ navigation }) {
     const handleApprove = async (id) => {
         try {
             const response = await TaskService.approveApproval({ notifId: id });
+            console.log('response:',response)
             if (response.status == 1) {
                 console.log('Approval successful:', response);
                 setApprovals(prev => prev.filter(item => item.id !== id));
@@ -190,7 +194,7 @@ function Notification({ navigation }) {
                             <NotificationItem item={item} />
                         ) : (
                             <View style={styles.notificationContainer}>
-                                
+
                                 <View style={styles.textContainer}>
                                     <Text style={styles.name}>
                                         {item.name}{' '}
@@ -198,7 +202,7 @@ function Notification({ navigation }) {
                                     </Text>
                                 </View>
 
-                               
+
                                 <View style={styles.buttonRow}>
                                     <View>
                                         <Text style={styles.time}>
@@ -237,6 +241,25 @@ function Notification({ navigation }) {
                     }
                     contentContainerStyle={styles.flatListContent}
                 />
+            )}
+
+            {loading && (
+                <View
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 9999,
+                    }}
+                >
+                    <ActivityIndicator size="large" color="#FFFFFF" />
+                    <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
+                </View>
             )}
         </SafeAreaView>
     )

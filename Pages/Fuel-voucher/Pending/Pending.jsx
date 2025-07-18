@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, ActivityIndicator, PermissionsAndroid,Platform, TextInput, Modal, Animated, FlatList, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, ActivityIndicator, PermissionsAndroid,Platform, 
+    TextInput, Modal, Animated, FlatList, Alert ,RefreshControl} from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { lightTheme } from '../../GlobalStyles';
 import GlobalStyles from '../../GlobalStyles';
@@ -15,6 +16,9 @@ import { readFile } from 'react-native-fs';
 import FeulVoucherRequest from '../FeulVoucherRequest';
 import NotificationCount from '../../Notifications/NotificationCount';
 
+const wait = (timeout) => {
+    return new Promise(resolve => setTimeout(resolve, timeout));
+};
 
 
 function Pending({ navigation }) {
@@ -35,6 +39,7 @@ function Pending({ navigation }) {
     const [loading, setLoading] = useState(false)
     const [activeMenuId, setActiveMenuId] = useState(null);
     const { showAlertModal, hideAlert } = useGlobalAlert();
+    const [refreshing, setRefreshing] = useState(false);
 
       
 
@@ -44,10 +49,15 @@ function Pending({ navigation }) {
         setImages([])
       }, [])
 
+      useFocusEffect(
+        useCallback(() => {
+          getAllFuelVoucher(); // refresh when coming back from Submit page
+        }, [])
+      );
     const vehicleList = async () => {
         try {
             const userId =  await AsyncStorage.getItem('user_id')
-            const response = await TaskService.getVehicleByEmpId({employeeId: 209})
+            const response = await TaskService.getVehicleByEmpId({employeeId: userId})
             console.log('ressssss', response)
             if(response.status==1) {
                 setVehicles(response.data)
@@ -110,6 +120,11 @@ function Pending({ navigation }) {
         }
       };
 
+      const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        getAllFuelVoucher()
+        wait(2000).then(() => setRefreshing(false));
+    }, []);
 
 
     useEffect(() => {
@@ -212,7 +227,10 @@ function Pending({ navigation }) {
           ]}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                showsHorizontalScrollIndicator={false}>
+                showsHorizontalScrollIndicator={false}
+                    refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }>
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={{ flexDirection: 'row', alignItems: 'center', }}>
@@ -423,7 +441,12 @@ function Pending({ navigation }) {
                 </View>
             </TouchableOpacity>
 
-            <FeulVoucherRequest visible={modalVisible} onClose={() => setModalVisible(false)} />
+            <FeulVoucherRequest visible={modalVisible} onClose={() => setModalVisible(false)}
+            onSuccess={() => {
+                setModalVisible(false);
+                getAllFuelVoucher(); 
+                
+              }} />
             {/* Request Modal */}
             
 

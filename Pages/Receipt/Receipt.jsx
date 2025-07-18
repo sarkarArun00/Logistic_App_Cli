@@ -591,30 +591,31 @@ function Receipt({ navigation }) {
     };
 
 
-    const getStatusColor = (authorizeStatus, generateStatus) => {
-        if (authorizeStatus == 0 || generateStatus == 0) {
+    const getStatusColor = (authoriseStatus, generateStatus) => {
+        if (authoriseStatus == 0 || generateStatus == 0) {
             return '#DC3545'; // Rejected - Red
-        } else if (authorizeStatus == 1) {
-            return '#28A745'; // Settled - Blue
+        } else if (authoriseStatus == 1 && generateStatus == 1) {
+            return '#28A745'; 
         } else if (generateStatus == 1) {
-            return '#007BFF'; // Approved - Green
+            return '#007BFF'; 
         } else {
             return '#6C757D'; // Interim - gray (default fallback)
         }
     };
 
 
-    const getStatusLabel = (authorizeStatus, generateStatus) => {
-        if (authorizeStatus == 0 || generateStatus == 0) {
+    const getStatusLabel = (authoriseStatus, generateStatus) => {
+        console.log( 'status check', authoriseStatus, generateStatus)
+        if (authoriseStatus == 1 && generateStatus == 1) {
+            return 'Authorized';  
+        } else if (authoriseStatus == 0 || generateStatus == 0) {
             return 'Rejected';
-        } else if (authorizeStatus == 1) {
-            return 'Authorized';
-        } else if (generateStatus == 1) {
-            return '';
+        } else if (generateStatus == 1 && authoriseStatus == null) {
+            return 'Unauthorized';
         } else {
             return 'Interim';
         }
-    };
+      };
 
     const applyFilter = async () => {
         setLoading(true);
@@ -731,14 +732,14 @@ function Receipt({ navigation }) {
                                                                         {typeof item !== 'undefined' && (
                                                                             <View style={{
                                                                                 alignSelf: 'flex-start',
-                                                                                backgroundColor: getStatusColor(item.authorizeStatus, item.generateStatus),
+                                                                                backgroundColor: getStatusColor(item.authoriseStatus, item.generateStatus),
                                                                                 paddingVertical: 2,
                                                                                 paddingHorizontal: 8,
                                                                                 borderRadius: 12,
                                                                                 // marginBottom: 4,
                                                                             }}>
                                                                                 <Text style={{ fontSize: 11, color: '#fff', fontFamily: 'Montserrat_500Medium' }}>
-                                                                                    {getStatusLabel(item.authorizeStatus, item.generateStatus)}
+                                                                                    {getStatusLabel(item.authoriseStatus, item.generateStatus)}
                                                                                 </Text>
                                                                             </View>
                                                                         )}

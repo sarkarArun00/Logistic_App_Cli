@@ -160,7 +160,9 @@ function Wallet({ navigation, progress = 0.5 }) {
                 "client": "",
                 "limit": 10
             }
+
             TaskService.getMyTransactions(requestData).then((res) => {
+                console.log("wallet trans",res.data)
                 if (res.status == 1) {
                     setTransactions(res.data)
                     return
@@ -315,7 +317,7 @@ function Wallet({ navigation, progress = 0.5 }) {
         showAlertModal('Payment Successful!', false);
 
         const orgPayload = {
-            // centreId: Number(selectCenter),
+            centreId: Number(selectCenter) || null,
             paymentMode: selectPaymode,
             amount: Number(amount),
             remarks,
@@ -554,7 +556,7 @@ function Wallet({ navigation, progress = 0.5 }) {
                                     <View style={{ marginTop:10, fontSize:8, borderTopWidth:1, borderTopColor:'#d8dbe0', paddingTop:10, }}>
                                         <View style={styles.transactionDtl}>
                                             <Text style={styles.tranIdd}>Receipt ID:</Text>
-                                            <Text style={styles.tranRec}>{item.receiptId}</Text>
+                                            <Text style={styles.tranRec}>{item.receipt?.receiptId}</Text>
                                         </View>
                                         {item.paymentMode && (
                                         <View style={styles.transactionDtl}>

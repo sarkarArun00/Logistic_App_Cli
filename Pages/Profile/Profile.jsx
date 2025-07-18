@@ -244,6 +244,15 @@ function Profile({ navigation }) {
         return compressedImage;
     };
 
+    const navigatePage = async () => {
+        navigation.navigate('MainApp', {
+            screen: 'TaskStack',
+            params: {
+              screen: 'TaskScreen',
+            },
+          });          
+    }
+
 
     return (
         <SafeAreaView style={styles.container}>
@@ -274,7 +283,7 @@ function Profile({ navigation }) {
                 </View>
 
                 <View>
-                    <TouchableOpacity onPress={() => navigation.navigate("TaskStack", { screen: "TaskScreen" })} style={styles.tskmain}>
+                    <TouchableOpacity onPress={() => navigatePage()} style={styles.tskmain}>
                         <View style={styles.taskbox}>
                             <View style={styles.tskimg}><Image style={{ width: 58, height: 58, }} source={require('../../assets/pficon1.png')} /></View>
                             <Text style={styles.tsktext}>My Task</Text>

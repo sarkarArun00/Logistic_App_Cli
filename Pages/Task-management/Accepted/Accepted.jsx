@@ -9,6 +9,7 @@ import TaskStatusTabs from '../TaskStatusTabs'
 import NotificationCount from '../../Notifications/NotificationCount';
 import GlobalStyles from '../../GlobalStyles';
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
+import { useSearch } from '../../../hooks/userSearch1';
 
 
 
@@ -22,14 +23,21 @@ function Accepted({ navigation }) {
     const [modalVisible, setModalVisible] = useState(false);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [visibleTasks, setVisibleTasks] = useState([]);
     const [selectedTask, setSelectedTask] = useState([]);
     const [selectedItem, setSelectedTaskDesc] = useState('');
-    const [visibleCount, setVisibleCount] = useState(5);
-    const [allTasksData, setAllTasksData] = useState([]);
+    // const [visibleCount, setVisibleCount] = useState(5);
+    // const [visibleTasks, setVisibleTasks] = useState([]);
+    
     const [loadingMore, setLoadingMore] = useState(false);
-
+    
     const { showAlertModal, hideAlert } = useGlobalAlert();
+    const [allTasksData, setAllTasksData] = useState([]);
+    const [visibleCount, setVisibleCount] = useState(5);
+    const { searchQuery, filteredData, search } = useSearch(allTasksData);
+    const visibleTasks = searchQuery
+        ? filteredData           // Show all if searching
+        : filteredData.slice(0, visibleCount); // Show limited if not
+
 
     // const [fontsLoaded] = useFonts({
     //     Montserrat_600SemiBold,
@@ -54,10 +62,12 @@ function Accepted({ navigation }) {
             if (response.status == 1) {
 
                 setAllTasksData(response.data || []);
-                setVisibleTasks(response.data?.slice(0, 5) || []);
+                // setVisibleTasks(response.data?.slice(0, 5) || []);
+                search('',response.data)
             } else {
                 setAllTasksData([]);
-                setVisibleTasks([]);
+                // setVisibleTasks([]);
+                search('',[])
             }
         } catch (error) {
             // console.error('Error fetching tasks:', error);
@@ -66,6 +76,7 @@ function Accepted({ navigation }) {
         }
     };
 
+    
     const startTask = async (task_Id) => {
         try {
             setLoading(true)
@@ -101,12 +112,20 @@ function Accepted({ navigation }) {
         console.log("Notification response:", response.data);
     }
 
+    // const handleLoadMore = () => {
+    //     setLoadingMore(true);
+    //     setTimeout(() => {
+    //         const newCount = visibleCount + 5;
+    //         setVisibleCount(newCount);
+    //         setVisibleTasks(allTasksData.slice(0, newCount));
+    //         setLoadingMore(false);
+    //     }, 500);
+    // };
+
     const handleLoadMore = () => {
         setLoadingMore(true);
         setTimeout(() => {
-            const newCount = visibleCount + 5;
-            setVisibleCount(newCount);
-            setVisibleTasks(allTasksData.slice(0, newCount));
+            setVisibleCount(prev => prev + 5);
             setLoadingMore(false);
         }, 500);
     };
@@ -183,6 +202,8 @@ function Accepted({ navigation }) {
                         style={{ fontSize: 14, fontFamily: 'Montserrat_500Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
                         placeholder="Search"
                         placeholderTextColor="#0C0D36"
+                        value={searchQuery}
+                        onChangeText={(text)=> search(text,allTasksData)}
                     />
                     <Image style={{ position: 'absolute', top: 16, right: 20, width: 20, height: 20, }} source={require('../../../assets/search.png')} />
                 </View>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, Linking, TextInput, Modal, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, Linking, TextInput, Modal, ActivityIndicator } from 'react-native';
 // import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium } from '@expo-google-fonts/montserrat';
 import { Picker } from '@react-native-picker/picker';
 import TaskStatusTabs from '../TaskStatusTabs';
@@ -8,8 +8,11 @@ import TaskService from '../../Services/task_service';
 import NotificationCount from '../../Notifications/NotificationCount';
 
 import GlobalStyles from '../../GlobalStyles';
+import { useSearch } from '../../../hooks/userSearch1';
+import { Platform } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker'; // install if not already
 
-
+// import { useSearch } from '../../../hooks/useSearch';
 
 function Completed({ navigation }) {
     const [filter, setFilter] = useState(false);
@@ -18,7 +21,42 @@ function Completed({ navigation }) {
     const [selectPriority, setSelectPriority] = useState();
     const [loading, setLoading] = useState(true);
     const [completedTasks, setCompletedTasks] = useState([]);
+    const [visibleCount, setVisibleCount] = useState(5);
+    const { searchQuery, filteredData, search } = useSearch(completedTasks);
+    const visibleTasks = searchQuery
+        ? filteredData           // Show all if searching
+        : filteredData.slice(0, visibleCount); // Show limited if not
 
+    const [clients, setClients] = useState([]);
+    const [fromDate, setFromDate] = useState(null);
+    const [toDate, setToDate] = useState(null);
+
+    const [showFromDatePicker, setShowFromDatePicker] = useState(false);
+    const [showToDatePicker, setShowToDatePicker] = useState(false);
+
+    
+    const formatDate = (date) => {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${year}-${month}-${day}`; // ✅ Format: 2025-07-19
+    };
+    
+
+    const handleFromDateChange = (event, selectedDate) => {
+        setShowFromDatePicker(false);
+        if (selectedDate) {
+            setFromDate(formatDate(selectedDate));
+        }
+    };
+    
+    const handleToDateChange = (event, selectedDate) => {
+        setShowToDatePicker(false);
+        if (selectedDate) {
+            setToDate(formatDate(selectedDate));
+        }
+    };
+    
 
 
     const formatDateTime = (isoString) => {
@@ -38,14 +76,46 @@ function Completed({ navigation }) {
     useEffect(() => {
         fetchData();
     }, []);
+    useEffect(() => {
+        fetchClients(); // New call for clients
+    }, []);
 
-    const fetchData = async () => {
+
+    const fetchClients = async () => {
         try {
-            const response = await TaskService.getMyCompletedTasks();
+            const response = await TaskService.getClientListByLogistic();
+            console.log("Get All clients:", response.data)
+            if (response?.status == 1) {
+                setClients(response.data);
+                if (response.data.length > 0) {
+                    setSelectClient(response.data[0].id);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching clients:', error);
+        }
+    };
+    const fetchData = async () => {
+        setLoading(true)
+        try {
+            const payload =
+            {
+                "fromDate": null,
+                "toDate": null,
+                "clientId": null,
+                "taskType": null,
+                "priority": null
+            }
+            const response = await TaskService.getMyCompletedTasks(payload);
+            console.log('response newwwwwwwwwwwwwwwwwwwwwww', response)
             if (response.status == 1) {
                 setCompletedTasks(response.data);
+                search('', response.data); // initialize filtered data
+                va(false)
             } else {
                 setCompletedTasks([]);
+                search('', []); // empty list if error
+                setLoading(false)
             }
         } catch (error) {
             // console.error('Error fetching tasks:', error);
@@ -53,6 +123,45 @@ function Completed({ navigation }) {
             setLoading(false);
         }
     };
+    const applyFilters = async () => {
+        setLoading(true);
+        try {
+            const payload = {
+                fromDate: fromDate || null,
+                toDate: toDate || null,
+                clientId: selectClient || null,
+                taskType: selectTask || null,
+                priority: selectPriority === 'true' ? true : (selectPriority === 'false' ? false : null)
+            };
+    
+            console.log('Payload:', payload); 
+            return
+            const response = await TaskService.getMyCompletedTasks(payload);
+    
+            if (response.status === 1) {
+                setCompletedTasks(response.data);
+                search('', response.data);
+                setFilter(false);
+            } else {
+                setCompletedTasks([]);
+                search('', []);
+            }
+        } catch (error) {
+            console.error('Filter apply failed:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+
+
+    // const handleLoadMore = () => {
+    //     setLoadingMore(true);
+    //     setTimeout(() => {
+    //         setVisibleCount(prev => prev + 5);
+    //         setLoadingMore(false);
+    //     }, 500);
+    // };
 
 
 
@@ -102,6 +211,9 @@ function Completed({ navigation }) {
                             style={{ fontSize: 14, fontFamily: 'Montserrat_500Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
                             placeholder="Search"
                             placeholderTextColor="#0C0D36"
+                            value={searchQuery}
+                            onChangeText={(text) => search(text, completedTasks)}
+
                         />
                         <Image style={{ position: 'absolute', top: 16, right: 20, width: 20, height: 20, }} source={require('../../../assets/search.png')} />
                     </View>
@@ -116,8 +228,8 @@ function Completed({ navigation }) {
                 </ScrollView> */}
 
                 <View style={{ paddingHorizontal: 3, }}>
-                    {completedTasks && completedTasks.length > 0 ? (
-                        completedTasks.map((task, index) => (
+                    {visibleTasks && visibleTasks.length > 0 ? (
+                        visibleTasks.map((task, index) => (
                             <View style={styles.mainbox} key={task.id || index}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, }}>
                                     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', }}>
@@ -149,6 +261,7 @@ function Completed({ navigation }) {
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 13, height: 13 }} source={require('../../../assets/asicon4.png')} />
                                             <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
                                                 Assigned By: {task?.assigned?.assigner.employee_name}
+                                                {/* Assigned By:  */}
                                             </Text>
                                         </View>
                                         {/* <View style={{ position: 'relative', }}>
@@ -237,89 +350,168 @@ function Completed({ navigation }) {
                                 No Data Found
                             </Text> */}
                             <Image style={{ width: 200, height: 200, marginTop: -50 }}
-                                    source={require('../../../assets/empty.png')} 
-                                    resizeMode="contain"
-                                  />
+                                source={require('../../../assets/empty.png')}
+                                resizeMode="contain"
+                            />
                         </View>
                     )}
 
                 </View>
-
-                {/* Filter Modal */}
+              
                 <Modal
                     animationType="slide"
                     transparent={true}
                     visible={filter}
-                    onRequestClose={() => setFilter(false)}>
+                    onRequestClose={() => setFilter(false)}
+                >
                     <View style={styles.modalBackground}>
                         <View style={styles.modalContainer}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
+
+                            {/* Header */}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0' }}>
                                 <Text style={styles.modalText}>Filter by:</Text>
                                 <TouchableOpacity onPress={() => setFilter(false)}>
                                     <Image style={{ width: 18, height: 18 }} source={require('../../../assets/mdlclose.png')} />
                                 </TouchableOpacity>
                             </View>
-                            <View style={{ padding: 15, }}>
-                                <View>
-                                    <Text style={styles.label}>Date Range</Text>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', }}>
-                                        <View></View>
-                                        <View></View>
-                                    </View>
+
+                            {/* Body */}
+                            <View style={{ padding: 15 }}>
+
+                                {/* Date Range */}
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+                                    <TouchableOpacity style={styles.dateInput} onPress={() => setShowFromDatePicker(true)}>
+                                        <Text>{fromDate || 'From Date'}</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={styles.dateInput} onPress={() => setShowToDatePicker(true)}>
+                                        <Text>{toDate || 'To Date'}</Text>
+                                    </TouchableOpacity>
                                 </View>
+
+                                {showFromDatePicker && (
+                                    <DateTimePicker
+                                        value={new Date()}
+                                        mode="date"
+                                        display="default"
+                                        onChange={handleFromDateChange}
+                                    />
+                                )}
+
+                                {showToDatePicker && (
+                                    <DateTimePicker
+                                        value={new Date()}
+                                        mode="date"
+                                        display="default"
+                                        onChange={handleToDateChange}
+                                    />
+                                )}
+
+
+                                {/* Client Picker */}
                                 <View>
                                     <Text style={styles.label}>Client</Text>
                                     <View style={styles.pickerContainer}>
                                         <Picker
                                             selectedValue={selectClient}
-                                            onValueChange={(itemValue, itemIndex) =>
-                                                setSelectClient(itemValue)
-                                            }>
-                                            <Picker.Item label="Akash Kundu" value="Akash Kundu" />
-                                            <Picker.Item label="Arijit Ghosal" value="Arijit Ghosal" />
+                                            onValueChange={(itemValue) => setSelectClient(itemValue)}
+                                        >
+                                            {clients.length > 0 ? (
+                                                clients.map(client => (
+                                                    <Picker.Item
+                                                        key={client.id}
+                                                        label={client.client_name}
+                                                        value={client.id}
+                                                    />
+                                                ))
+                                            ) : (
+                                                <Picker.Item label="No Clients Found" value="" />
+                                            )}
                                         </Picker>
                                     </View>
                                 </View>
+
+                                {/* Task Type */}
                                 <View>
                                     <Text style={styles.label}>Task Type</Text>
                                     <View style={styles.pickerContainer}>
                                         <Picker
                                             selectedValue={selectTask}
-                                            onValueChange={(itemValue, itemIndex) =>
-                                                setSelectTask(itemValue)
-                                            }>
-                                            <Picker.Item label="Akash Kundu" value="Akash Kundu" />
-                                            <Picker.Item label="Arijit Ghosal" value="Arijit Ghosal" />
+                                            onValueChange={(itemValue) => setSelectTask(itemValue)}
+                                        >
+                                            <Picker.Item label="All Tasks" value="" />
+                                            <Picker.Item label="Pickup" value="pickup" />
+                                            <Picker.Item label="Delivery" value="delivery" />
                                         </Picker>
                                     </View>
                                 </View>
+
+                                {/* Priority */}
                                 <View>
                                     <Text style={styles.label}>Priority</Text>
                                     <View style={styles.pickerContainer}>
                                         <Picker
                                             selectedValue={selectPriority}
-                                            onValueChange={(itemValue, itemIndex) =>
-                                                setSelectPriority(itemValue)
-                                            }>
-                                            <Picker.Item label="Akash Kundu" value="Akash Kundu" />
-                                            <Picker.Item label="Arijit Ghosal" value="Arijit Ghosal" />
+                                            onValueChange={(itemValue) => setSelectPriority(itemValue)}
+                                        >
+                                          
+                                            <Picker.Item label="Normal" value="false" />
+                                            <Picker.Item label="Urgent" value="true" />
                                         </Picker>
                                     </View>
                                 </View>
-                                <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', paddingVertical: 25, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between', }}>
-                                    <TouchableOpacity style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12, }}>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#2F81F5', textAlign: 'center', }}>Reset All</Text>
+
+                                {/* Footer Buttons */}
+                                <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', paddingVertical: 25, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between' }}>
+                                    <TouchableOpacity
+                                        style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12 }}
+                                        onPress={() => {
+                                            setFromDate(null);
+                                            setToDate(null);
+                                            setSelectClient(null);
+                                            setSelectTask(null);
+                                            setSelectPriority(null);
+                                            fetchData(); // reset API
+                                        }}
+                                    >
+                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#2F81F5', textAlign: 'center' }}>Reset All</Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12, }}>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#fff', textAlign: 'center', }}>Apply Filters (3)</Text>
+
+                                    <TouchableOpacity
+                                        style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12 }}
+                                        onPress={applyFilters}
+                                    >
+                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#fff', textAlign: 'center' }}>
+                                            Apply Filters
+                                        </Text>
                                     </TouchableOpacity>
+
                                 </View>
                             </View>
                         </View>
                     </View>
                 </Modal>
 
+
             </ScrollView>
+            {loading && (
+                <View
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 9999,
+                    }}
+                >
+                    <ActivityIndicator size="large" color="#FFFFFF" />
+                    <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
+                </View>
+            )}
+
         </SafeAreaView>
     )
 }
