@@ -239,7 +239,9 @@ function Pending({ navigation }) {
                     </TouchableOpacity>
                     <View style={{ position: 'relative', width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
                     <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
-                            <NotificationCount></NotificationCount>
+                    <View pointerEvents="none">
+                                <NotificationCount />
+                            </View>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -398,22 +400,11 @@ function Pending({ navigation }) {
                                     <Text style={styles.label}>Date Range</Text>
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', }}>
                                         <View>
-
+                                        <Text>From Date</Text>
                                         </View>
-                                        <View></View>
-                                    </View>
-                                </View>
-                                <View>
-                                    <Text style={styles.label}>Status</Text>
-                                    <View style={styles.pickerContainer}>
-                                        <Picker
-                                            selectedValue={selectStatus}
-                                            onValueChange={(itemValue, itemIndex) =>
-                                                setselectStatus(itemValue)
-                                            }>
-                                            <Picker.Item label="Pending" value="Pending" />
-                                            <Picker.Item label="Approve" value="Approve" />
-                                        </Picker>
+                                        <View>
+                                            <Text>To Date</Text>
+                                        </View>
                                     </View>
                                 </View>
                                 <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', paddingVertical: 25, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between', }}>

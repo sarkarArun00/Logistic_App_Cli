@@ -26,6 +26,11 @@ function FeulVoucherRequest({ visible, onClose, onSuccess }) {
     const [selectVehicle, setVehicle] = useState();
     const { showAlertModal, hideAlert } = useGlobalAlert();
 
+    const [fromDate, setFromDate] = useState(null);
+    const [toDate, setToDate] = useState(null);
+
+    const [pickerMode, setPickerMode] = useState(null); // 'from' or 'to'
+    const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
 
 
@@ -346,7 +351,7 @@ function FeulVoucherRequest({ visible, onClose, onSuccess }) {
 
                                 </View>
                             </View>
-                            <View>
+                            {/* <View>
                                 <Text style={styles.label}>Payment Mode</Text>
                                 <View style={styles.pickerContainer}>
                                     <Picker
@@ -361,7 +366,7 @@ function FeulVoucherRequest({ visible, onClose, onSuccess }) {
                                         <Picker.Item key={'Net Banking'} label="Net Banking" value="Net Banking" />
                                     </Picker>
                                 </View>
-                            </View>
+                            </View> */}
                             <View>
                                 <Text style={styles.label}>Enter Amount</Text>
                                 <TextInput

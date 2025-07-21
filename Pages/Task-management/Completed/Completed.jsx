@@ -34,14 +34,14 @@ function Completed({ navigation }) {
     const [showFromDatePicker, setShowFromDatePicker] = useState(false);
     const [showToDatePicker, setShowToDatePicker] = useState(false);
 
-    
+
     const formatDate = (date) => {
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
         return `${year}-${month}-${day}`; // ✅ Format: 2025-07-19
     };
-    
+
 
     const handleFromDateChange = (event, selectedDate) => {
         setShowFromDatePicker(false);
@@ -49,14 +49,14 @@ function Completed({ navigation }) {
             setFromDate(formatDate(selectedDate));
         }
     };
-    
+
     const handleToDateChange = (event, selectedDate) => {
         setShowToDatePicker(false);
         if (selectedDate) {
             setToDate(formatDate(selectedDate));
         }
     };
-    
+
 
 
     const formatDateTime = (isoString) => {
@@ -133,11 +133,10 @@ function Completed({ navigation }) {
                 taskType: selectTask || null,
                 priority: selectPriority === 'true' ? true : (selectPriority === 'false' ? false : null)
             };
-    
-            console.log('Payload:', payload); 
-            return
+
+
             const response = await TaskService.getMyCompletedTasks(payload);
-    
+
             if (response.status === 1) {
                 setCompletedTasks(response.data);
                 search('', response.data);
@@ -152,7 +151,7 @@ function Completed({ navigation }) {
             setLoading(false);
         }
     };
-    
+
 
 
     // const handleLoadMore = () => {
@@ -192,7 +191,9 @@ function Completed({ navigation }) {
                     </TouchableOpacity>
                     <View >
                         <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
-                            <NotificationCount></NotificationCount>
+                        <View pointerEvents="none">
+                                <NotificationCount />
+                            </View>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -357,7 +358,7 @@ function Completed({ navigation }) {
                     )}
 
                 </View>
-              
+
                 <Modal
                     animationType="slide"
                     transparent={true}
@@ -380,13 +381,21 @@ function Completed({ navigation }) {
 
                                 {/* Date Range */}
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+                                    {/* From Date */}
                                     <TouchableOpacity style={styles.dateInput} onPress={() => setShowFromDatePicker(true)}>
-                                        <Text>{fromDate || 'From Date'}</Text>
+                                        <Text style={fromDate ? styles.dateText : styles.placeholderText}>
+                                            {fromDate || 'From Date'}
+                                        </Text>
                                     </TouchableOpacity>
+
+                                    {/* To Date */}
                                     <TouchableOpacity style={styles.dateInput} onPress={() => setShowToDatePicker(true)}>
-                                        <Text>{toDate || 'To Date'}</Text>
+                                        <Text style={toDate ? styles.dateText : styles.placeholderText}>
+                                            {toDate || 'To Date'}
+                                        </Text>
                                     </TouchableOpacity>
                                 </View>
+
 
                                 {showFromDatePicker && (
                                     <DateTimePicker
@@ -453,7 +462,7 @@ function Completed({ navigation }) {
                                             selectedValue={selectPriority}
                                             onValueChange={(itemValue) => setSelectPriority(itemValue)}
                                         >
-                                          
+
                                             <Picker.Item label="Normal" value="false" />
                                             <Picker.Item label="Urgent" value="true" />
                                         </Picker>
@@ -617,6 +626,33 @@ const styles = StyleSheet.create({
     //   
 
 
+    label: {
+        fontSize: 13,
+        fontFamily: 'Montserrat_500Medium',
+        color: '#0C0D36',
+        marginBottom: 5,
+      },
+    dateInput: {
+        flex: 1,
+        height: 50,
+        backgroundColor: '#F6FAFF',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        justifyContent: 'center',
+        paddingHorizontal: 12,
+        marginHorizontal: 5,  // spacing between from & to date
+      },
+      dateText: {
+        fontSize: 14,
+        fontFamily: 'Montserrat_500Medium',
+        color: '#0C0D36',
+      },
+      placeholderText: {
+        fontSize: 14,
+        fontFamily: 'Montserrat_400Regular',
+        color: '#999',
+      }
 
 })
 

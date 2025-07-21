@@ -469,6 +469,15 @@ const TaskService = {
       throw error;
     }
   },
+  searchReceipt: async (data) => {
+    try {
+      const response = await apiClient.post('/operation/logistics/searchReceipt',data);
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
 
   handleReceiptDownload: async (url) => {
     const { showAlertModal, hideAlert } = useGlobalAlert();

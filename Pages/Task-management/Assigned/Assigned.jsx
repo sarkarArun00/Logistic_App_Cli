@@ -375,7 +375,9 @@ function Assigned({ navigation }) {
                     </TouchableOpacity>
                     <View >
                         <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
-                            <NotificationCount></NotificationCount>
+                        <View pointerEvents="none">
+                                <NotificationCount />
+                            </View>
                         </TouchableOpacity>
 
                     </View>

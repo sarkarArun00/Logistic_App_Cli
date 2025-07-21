@@ -45,11 +45,11 @@ const header = ({ navigation, profileImage }) => {
   }, []);
 
 
-//   useFocusEffect(
-//   React.useCallback(() => {
-//     console.log("Display focus called!")
-//   }, [])
-// );
+  //   useFocusEffect(
+  //   React.useCallback(() => {
+  //     console.log("Display focus called!")
+  //   }, [])
+  // );
 
   const checkNewNotifications = async () => {
     const response = await TaskService.getAllGeneralNotifications();
@@ -77,44 +77,58 @@ const header = ({ navigation, profileImage }) => {
           </TouchableOpacity>
           <Text numberOfLines={1} ellipsizeMode="tail" style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 19, color: '#3085FE', paddingLeft: 8, width: 180, }}>Hi {userName} !</Text>
         </View>
-        <View style={{
-          position: 'relative',
-          width: 50,
-          height: 50,
-          borderRadius: 50,
-          backgroundColor: '#F6FAFF',
-          flexDirection: 'row',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
-          <Pressable onPress={() => navigation.navigate('Notification')}>
-            <Image
-              style={{ width: 18, height: 18 }}
-              source={require('../../assets/noti.png')}
-            />
-          </Pressable>
+        <Pressable
+          onPress={() => navigation.navigate('Notification')}
+          hitSlop={10}
+          style={({ pressed }) => [
+            {
+              position: 'relative',
+              width: 50,
+              height: 50,
+              borderRadius: 25,
+              backgroundColor: '#F6FAFF',
+              justifyContent: 'center',
+              alignItems: 'center',
+            },
+            pressed && { opacity: 0.7 },
+          ]}
+        >
+          <Image
+            style={{ width: 18, height: 18 }}
+            source={require('../../assets/noti.png')}
+          />
 
           {notificationCount > 0 && (
-            <Text style={{
-              position: 'absolute',
-              fontFamily: 'Montserrat_400Regular',
-              fontSize: 10,
-              lineHeight: 13,
-              color: '#fff',
-              right: -2,
-              top: -2,
-              minWidth: 15,
-              height: 15,
-              paddingHorizontal: 2,
-              backgroundColor: '#F43232',
-              borderRadius: 8,
-              textAlign: 'center',
-              textAlignVertical: 'center',
-            }}>
-              {notificationCount > 99 ? '99+' : notificationCount}
-            </Text>
+            <View
+              pointerEvents="none"   // <-- let taps fall through to Pressable
+              style={{
+                position: 'absolute',
+                right: -2,
+                top: -2,
+                minWidth: 15,
+                height: 15,
+                paddingHorizontal: 2,
+                backgroundColor: '#F43232',
+                borderRadius: 8,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: 'Montserrat_400Regular',
+                  fontSize: 10,
+                  lineHeight: 13,
+                  color: '#fff',
+                  textAlign: 'center',
+                }}
+              >
+                {notificationCount > 99 ? '99+' : notificationCount}
+              </Text>
+            </View>
           )}
-        </View>
+        </Pressable>
+
       </View>
     </View>
   )

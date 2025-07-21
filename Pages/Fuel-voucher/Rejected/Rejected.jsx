@@ -118,7 +118,9 @@ function Rejected({ navigation }) {
                     </TouchableOpacity>
                     <View style={{ position: 'relative', width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
                     <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
-                            <NotificationCount></NotificationCount>
+                    <View pointerEvents="none">
+                                <NotificationCount />
+                            </View>
                         </TouchableOpacity>
                     </View>
                 </View>

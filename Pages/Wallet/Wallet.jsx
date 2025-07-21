@@ -162,14 +162,14 @@ function Wallet({ navigation, progress = 0.5 }) {
             }
 
             TaskService.getMyTransactions(requestData).then((res) => {
-                console.log("wallet trans",res.data)
+                console.log("wallet trans", res.data)
                 if (res.status == 1) {
                     setTransactions(res.data)
                     return
                 } else {
                     setTransactions([])
                 }
-                
+
             });
 
         } catch (error) {
@@ -197,7 +197,7 @@ function Wallet({ navigation, progress = 0.5 }) {
     const getUserId = async () => {
         const userId = await AsyncStorage.getItem('user_id');
         setUserId(userId)
-      };
+    };
 
     const handleEmployeeTransfer = async () => {
         try {
@@ -216,8 +216,8 @@ function Wallet({ navigation, progress = 0.5 }) {
             } else if (amount > details.walletBalance) {
                 showAlertModal("You don't have sufficient balance.", true)
                 return;
-            } 
-            else if(selectEmployee == userId) {
+            }
+            else if (selectEmployee == userId) {
                 showAlertModal("You cannot send money to your own account.", true)
                 return;
             }
@@ -428,23 +428,23 @@ function Wallet({ navigation, progress = 0.5 }) {
 
     const isActiveTrans = (id) => {
         setActiveTransactionId(prevId => (prevId === id ? null : id)); // toggle
-      };
-      
+    };
 
-      const formatToINR = (amount) => {
+
+    const formatToINR = (amount) => {
         return new Intl.NumberFormat('en-IN', {
-          style: 'currency',
-          currency: 'INR',
-          minimumFractionDigits: 2,
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: 2,
         }).format(amount || 0);
-      };
+    };
 
     return (
         <SafeAreaView style={[
             styles.container,
             GlobalStyles.SafeAreaView,
             { paddingBottom: lightTheme.paddingBottomNew }
-          ]}>
+        ]}>
             <ScrollView showsVerticalScrollIndicator={false}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.scrollView}
@@ -458,9 +458,11 @@ function Wallet({ navigation, progress = 0.5 }) {
                         <Image style={{ width: 14, height: 14, }} source={require('../../assets/leftarrow.png')} />
                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Wallet</Text>
                     </TouchableOpacity>
-                    <View style={{ position: 'relative', width: 50, height: 50, marginTop:5, marginRight:2, borderRadius: 25, backgroundColor: '#F6FAFF', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
-                    <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
-                            <NotificationCount></NotificationCount>
+                    <View style={{ position: 'relative', width: 50, height: 50, marginTop: 5, marginRight: 2, borderRadius: 25, backgroundColor: '#F6FAFF', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
+                        <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
+                            <View pointerEvents="none">
+                                <NotificationCount />
+                            </View>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -514,75 +516,75 @@ function Wallet({ navigation, progress = 0.5 }) {
                     <View style={{ backgroundColor: '#F6FAFF', borderRadius: 20, padding: 15, marginTop: 10 }}>
                         {
                             transactions.map((item) => (
-                            <TouchableWithoutFeedback key={item.id} onPress={() => isActiveTrans(item.id)}>
-                                <View style={styles.amtBox}>
-                                    <View style={styles.amtInnbox}>
-                                        <View style={styles.flexBox}>
-                                            <View style={styles.arrowBtn}>
-                                            {
-                                                item.transactionType === 'debit' ? (
-                                                <Image style={{ width: 18, height: 18 }} source={require('../../assets/dibitedarrow.png')} />
-                                                ) : (
-                                                <Image style={{ width: 18, height: 18 }} source={require('../../assets/creditarrow.png')} />
-                                                )
-                                            }
+                                <TouchableWithoutFeedback key={item.id} onPress={() => isActiveTrans(item.id)}>
+                                    <View style={styles.amtBox}>
+                                        <View style={styles.amtInnbox}>
+                                            <View style={styles.flexBox}>
+                                                <View style={styles.arrowBtn}>
+                                                    {
+                                                        item.transactionType === 'debit' ? (
+                                                            <Image style={{ width: 18, height: 18 }} source={require('../../assets/dibitedarrow.png')} />
+                                                        ) : (
+                                                            <Image style={{ width: 18, height: 18 }} source={require('../../assets/creditarrow.png')} />
+                                                        )
+                                                    }
+                                                </View>
+                                                <View style={styles.flexText}>
+                                                    <Text
+                                                        style={[
+                                                            styles.recAmnt,
+                                                            { color: item.transactionType === 'debit' ? 'red' : '#3085FE' }
+                                                        ]}
+                                                    >
+                                                        {item.transactionType === 'debit' ? 'Transfer Amount' : 'Received Amount'}
+                                                    </Text>
+                                                    <Text style={styles.clientName}>{item.remarks}</Text>
+                                                </View>
                                             </View>
-                                            <View style={styles.flexText}>
-                                            <Text
-                                                style={[
-                                                styles.recAmnt,
-                                                { color: item.transactionType === 'debit' ? 'red' : '#3085FE' }
-                                                ]}
-                                            >
-                                                {item.transactionType === 'debit' ? 'Transfer Amount' : 'Received Amount'}
-                                            </Text>
-                                            <Text style={styles.clientName}>{item.remarks}</Text>
-                                            </View>
-                                        </View>
-                                        <View style={styles.rightBlock}>
-                                            <Text style={styles.creditAmnt}>₹{item.billAmount}</Text>
-                                            <Text style={styles.dates}>{dayjs(item.createdAt).format('MMMM D, YYYY h:mm A')}</Text>
-                                            {/* {activeTransactionId === item.id && (
+                                            <View style={styles.rightBlock}>
+                                                <Text style={styles.creditAmnt}>₹{item.billAmount}</Text>
+                                                <Text style={styles.dates}>{dayjs(item.createdAt).format('MMMM D, YYYY h:mm A')}</Text>
+                                                {/* {activeTransactionId === item.id && (
                                             <Text style={{ marginTop: 10, fontSize: 8 }}>
                                                 Receipt ID: {item.receiptId}
                                                 Payment Mode: .....
                                                 Transaction ID: {item.transactionId}
                                             </Text>
                                             )} */}
+                                            </View>
                                         </View>
-                                    </View>
-                                    <View>
-                                    {activeTransactionId === item.id && (
-                                    <View style={{ marginTop:10, fontSize:8, borderTopWidth:1, borderTopColor:'#d8dbe0', paddingTop:10, }}>
-                                        <View style={styles.transactionDtl}>
-                                            <Text style={styles.tranIdd}>Receipt ID:</Text>
-                                            <Text style={styles.tranRec}>{item.receipt?.receiptId}</Text>
-                                        </View>
-                                        {item.paymentMode && (
-                                        <View style={styles.transactionDtl}>
-                                            <Text style={styles.tranIdd}>Payment Mode:</Text>
-                                            <Text style={styles.tranRec}>{item.paymentMode}</Text>
-                                        </View>
-                                        )}
+                                        <View>
+                                            {activeTransactionId === item.id && (
+                                                <View style={{ marginTop: 10, fontSize: 8, borderTopWidth: 1, borderTopColor: '#d8dbe0', paddingTop: 10, }}>
+                                                    <View style={styles.transactionDtl}>
+                                                        <Text style={styles.tranIdd}>Receipt ID:</Text>
+                                                        <Text style={styles.tranRec}>{item.receipt?.receiptId}</Text>
+                                                    </View>
+                                                    {item.paymentMode && (
+                                                        <View style={styles.transactionDtl}>
+                                                            <Text style={styles.tranIdd}>Payment Mode:</Text>
+                                                            <Text style={styles.tranRec}>{item.paymentMode}</Text>
+                                                        </View>
+                                                    )}
 
-                                        {item.transactionId && (
-                                        <View style={styles.transactionDtl}>
-                                            <Text style={styles.tranIdd}>Transaction ID:</Text>
-                                            <Text style={styles.tranRec}>{item.transactionId}</Text>
+                                                    {item.transactionId && (
+                                                        <View style={styles.transactionDtl}>
+                                                            <Text style={styles.tranIdd}>Transaction ID:</Text>
+                                                            <Text style={styles.tranRec}>{item.transactionId}</Text>
+                                                        </View>
+                                                    )}
+                                                </View>
+                                            )}
                                         </View>
-                                        )}
                                     </View>
-                                    )}
-                                    </View>
-                                </View>
-                            </TouchableWithoutFeedback>
+                                </TouchableWithoutFeedback>
                             ))
                         }
-                        </View>
+                    </View>
 
                 </View>
 
-                
+
 
                 {/* Wallet Modal */}
                 <Modal
@@ -891,8 +893,8 @@ function Wallet({ navigation, progress = 0.5 }) {
 }
 
 const styles = StyleSheet.create({
-    ScrollView:{
-        paddingBottom:185,
+    ScrollView: {
+        paddingBottom: 185,
     },
     label: {
         fontSize: 16,
@@ -1032,30 +1034,30 @@ const styles = StyleSheet.create({
         padding: 15,
         marginBottom: 12,
     },
-    amtInnbox:{
+    amtInnbox: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
     },
-    transactionDtl:{
+    transactionDtl: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom:5,
+        marginBottom: 5,
     },
-    tranIdd:{
+    tranIdd: {
         fontFamily: 'Montserrat-Medium',
-        fontSize:12,
-        color:"#000000",
-        width:115,
+        fontSize: 12,
+        color: "#000000",
+        width: 115,
     },
-    tranRec:{
-        flex:1,
+    tranRec: {
+        flex: 1,
         fontFamily: 'Montserrat-Medium',
-        fontSize:12,
+        fontSize: 12,
         color: '#3085FE',
         flexWrap: 'wrap',
         overflow: 'hidden',
-       includeFontPadding: false,
+        includeFontPadding: false,
     },
     flexBox: {
         flexDirection: 'row',

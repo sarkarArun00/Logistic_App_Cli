@@ -1,7 +1,7 @@
 import { useRoute } from '@react-navigation/native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet, View, Alert, Text, TouchableOpacity, Pressable, Image, Linking, ActivityIndicator, ScrollView, TouchableWithoutFeedback, TextInput, Modal, PermissionsAndroid, Platform } from 'react-native';
+import { StyleSheet, View, Alert, Text, TouchableOpacity, Pressable, Image, RefreshControl, ActivityIndicator, ScrollView, TouchableWithoutFeedback, TextInput, Modal, PermissionsAndroid, Platform } from 'react-native';
 // import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium } from '@expo-google-fonts/montserrat';
 import { Picker } from '@react-native-picker/picker';
 // import Menu from '../Menu-bar/Menu'
@@ -17,7 +17,13 @@ import RNFS from 'react-native-fs';
 import { GlobalStyle, lightTheme } from '../GlobalStyles';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { imageBase64, logoBase64 } from './base64image'
+import _ from 'lodash';
 
+
+
+const wait = (timeout) => {
+    return new Promise(resolve => setTimeout(resolve, timeout));
+};
 
 function Receipt({ navigation }) {
     const [showMenu, setShowMenu] = useState(false);
@@ -41,6 +47,9 @@ function Receipt({ navigation }) {
 
     const { showAlertModal, hideAlert } = useGlobalAlert();
 
+    const [query, setQuery] = useState('');
+    const [refreshing, setRefreshing] = useState(false);
+
 
 
     const route = useRoute();
@@ -56,32 +65,32 @@ function Receipt({ navigation }) {
     const showDatePicker = (mode) => {
         setPickerMode(mode);
         setDatePickerVisibility(true);
-      };
-    
-      const hideDatePicker = () => {
+    };
+
+    const hideDatePicker = () => {
         setDatePickerVisibility(false);
         setPickerMode(null);
-      };
-    
-      const handleConfirm = (date) => {
+    };
+
+    const handleConfirm = (date) => {
         if (pickerMode === 'from') {
-          setFromDate(date);
+            setFromDate(date);
         } else {
-          setToDate(date);
+            setToDate(date);
         }
         hideDatePicker();
-      };
-    
-      const formatDate = (date) => {
+    };
+
+    const formatDate = (date) => {
         if (!date) return '';
         const year = date.getFullYear();
         const month = `${date.getMonth() + 1}`.padStart(2, '0'); // Months are 0-indexed
         const day = `${date.getDate()}`.padStart(2, '0');
         return `${year}-${month}-${day}`;
-      };
-      
+    };
 
-        
+
+
 
     useEffect(() => {
         if (page === 'home') {
@@ -106,6 +115,7 @@ function Receipt({ navigation }) {
                 "toDate": null
             }
             const response = await TaskService.getMyReceipts(request);
+            console.log('fetching all data')
             if (response.status == 1) {
                 setReceiptData(response.data);
             }
@@ -595,9 +605,9 @@ function Receipt({ navigation }) {
         if (authoriseStatus == 0 || generateStatus == 0) {
             return '#DC3545'; // Rejected - Red
         } else if (authoriseStatus == 1 && generateStatus == 1) {
-            return '#28A745'; 
+            return '#28A745';
         } else if (generateStatus == 1) {
-            return '#007BFF'; 
+            return '#007BFF';
         } else {
             return '#6C757D'; // Interim - gray (default fallback)
         }
@@ -605,9 +615,9 @@ function Receipt({ navigation }) {
 
 
     const getStatusLabel = (authoriseStatus, generateStatus) => {
-        console.log( 'status check', authoriseStatus, generateStatus)
+        console.log('status check', authoriseStatus, generateStatus)
         if (authoriseStatus == 1 && generateStatus == 1) {
-            return 'Authorized';  
+            return 'Authorized';
         } else if (authoriseStatus == 0 || generateStatus == 0) {
             return 'Rejected';
         } else if (generateStatus == 1 && authoriseStatus == null) {
@@ -615,7 +625,7 @@ function Receipt({ navigation }) {
         } else {
             return 'Interim';
         }
-      };
+    };
 
     const applyFilter = async () => {
         setLoading(true);
@@ -641,16 +651,59 @@ function Receipt({ navigation }) {
         }
     }
 
-    const resetFilter =  async () => {
+    const resetFilter = async () => {
         getAllReceipts();
         setFilter(false)
     }
+
+
+    const debouncedSearch = useCallback(
+        _.debounce(async (text) => {
+            try {
+                const response = await TaskService.searchReceipt({ searchKey: text });
+                if (response.status == 1) {
+                    setReceiptData(response.data);
+                    console.log('Search response:', response.data);
+                } else {
+                    setReceiptData([]);
+                }
+                // You can update state here, e.g., setSearchResults(response.data);
+                return
+            } catch (error) {
+                console.log('Search error:', error);
+            }
+        }, 1000),
+        []
+    );
+
+
+
+    const handleSearch = (text) => {
+        setQuery(text);
+        if (text.trim() === '') {
+            setTimeout(() => {
+                getAllReceipts();
+            }, 1200);
+        } else {
+            debouncedSearch(text);
+        }
+    };
+
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        getAllReceipts();
+        wait(2000).then(() => setRefreshing(false));
+    }, []);
 
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                showsHorizontalScrollIndicator={false}>
+                showsHorizontalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
+                >
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={{ flexDirection: 'row', alignItems: 'center', }}>
@@ -671,6 +724,7 @@ function Receipt({ navigation }) {
                             style={{ fontSize: 14, fontFamily: 'Montserrat_500Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
                             placeholder="Search"
                             placeholderTextColor="#0C0D36"
+                            value={query} onChangeText={handleSearch}
                         />
                         <Image style={{ position: 'absolute', top: 16, right: 20, width: 20, height: 20, }} source={require('../../assets/search.png')} />
                     </View>
@@ -681,144 +735,140 @@ function Receipt({ navigation }) {
                 </View>
 
                 <View>
-                    {Object.entries(receiptData).map(([dateKey, receipts]) => {
-                        return (
-                            <View key={dateKey}>
-                                <Text style={styles.title}>{dateKey}</Text>
-                                {
-                                    receipts.length > 0 ? (
 
-                                        receipts.map((item, index) => {
-                                            const dateObj = new Date(item.createdAt);
-                                            const formattedTime = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        
-                                            return (
-                                                <View key={item.id} style={{ marginBottom: 15 }}>
-                                                    <View style={{
-                                                        flexDirection: 'row',
-                                                        justifyContent: 'space-between',
-                                                        alignItems: 'center',
-                                                    }}>
-                                                        <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
-                                                            <Image style={{ width: 23, height: 30 }} source={require('../../assets/pdf.png')} />
-        
-                                                            <View style={{ paddingLeft: 12, flex: 1, paddingRight: 10, }}>
-                                                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
-                                                                    <View>
-                                                                        <Text
-                                                                            numberOfLines={1}
-                                                                            ellipsizeMode="tail"
-                                                                            style={{
-                                                                                width: 180,
-                                                                                fontFamily: 'Montserrat_500Medium',
-                                                                                fontSize: 16,
-                                                                                color: '#0C0D36',
-                                                                                paddingBottom: 3,
-                                                                            }}>
-                                                                            {item.receiptId || `Receipt Copy ${index + 1}`}
-                                                                        </Text>
-                                                                        <Text style={{
+                    {!receiptData || Object.keys(receiptData).length === 0 ? (
+                        <Text style={{ textAlign: 'center', marginTop: 360, fontFamily: 'Montserrat_500Medium', fontSize: 14, color: '#0C0D36' }}>
+                            No data found!
+                        </Text>
+                    ) : (
+                        Object.entries(receiptData).map(([dateKey, receipts]) => (
+                            <View key={dateKey} style={{ marginBottom: 20 }}>
+                                {/* Date Title */}
+                                <Text style={styles.title}>{dateKey}</Text>
+
+                                {receipts.length > 0 ? (
+                                    receipts.map((item, index) => {
+                                        const dateObj = new Date(item.createdAt);
+                                        const formattedTime = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                                        return (
+                                            <View key={item.id} style={{ marginBottom: 15 }}>
+                                                <View style={{
+                                                    flexDirection: 'row',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                }}>
+                                                    <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
+                                                        {/* PDF Icon */}
+                                                        <Image style={{ width: 23, height: 30 }} source={require('../../assets/pdf.png')} />
+
+                                                        <View style={{ paddingLeft: 12, flex: 1, paddingRight: 10 }}>
+                                                            {/* Receipt Info */}
+                                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                <View>
+                                                                    <Text
+                                                                        numberOfLines={1}
+                                                                        ellipsizeMode="tail"
+                                                                        style={{
+                                                                            width: 180,
                                                                             fontFamily: 'Montserrat_500Medium',
-                                                                            fontSize: 12,
+                                                                            fontSize: 16,
                                                                             color: '#0C0D36',
+                                                                            paddingBottom: 3,
+                                                                        }}
+                                                                    >
+                                                                        {item.receiptId || `Receipt Copy ${index + 1}`}
+                                                                    </Text>
+                                                                    <Text style={{
+                                                                        fontFamily: 'Montserrat_500Medium',
+                                                                        fontSize: 12,
+                                                                        color: '#0C0D36',
+                                                                    }}>
+                                                                        Created at {formattedTime}
+                                                                    </Text>
+                                                                </View>
+                                                                <View>
+                                                                    {/* ✅ Status Badge */}
+                                                                    {typeof item !== 'undefined' && (
+                                                                        <View style={{
+                                                                            alignSelf: 'flex-start',
+                                                                            backgroundColor: getStatusColor(item.authoriseStatus, item.generateStatus),
+                                                                            paddingVertical: 2,
+                                                                            paddingHorizontal: 8,
+                                                                            borderRadius: 12,
                                                                         }}>
-                                                                            Created at {formattedTime}
-        
-                                                                        </Text>
-                                                                    </View>
-                                                                    <View>
-                                                                        {/* ✅ Status Badge */}
-                                                                        {typeof item !== 'undefined' && (
-                                                                            <View style={{
-                                                                                alignSelf: 'flex-start',
-                                                                                backgroundColor: getStatusColor(item.authoriseStatus, item.generateStatus),
-                                                                                paddingVertical: 2,
-                                                                                paddingHorizontal: 8,
-                                                                                borderRadius: 12,
-                                                                                // marginBottom: 4,
-                                                                            }}>
-                                                                                <Text style={{ fontSize: 11, color: '#fff', fontFamily: 'Montserrat_500Medium' }}>
-                                                                                    {getStatusLabel(item.authoriseStatus, item.generateStatus)}
-                                                                                </Text>
-                                                                            </View>
-                                                                        )}
-                                                                    </View>
+                                                                            <Text style={{ fontSize: 11, color: '#fff', fontFamily: 'Montserrat_500Medium' }}>
+                                                                                {getStatusLabel(item.authoriseStatus, item.generateStatus)}
+                                                                            </Text>
+                                                                        </View>
+                                                                    )}
                                                                 </View>
                                                             </View>
                                                         </View>
-        
-                                                        <TouchableWithoutFeedback onPress={() => setActiveMenuIndex(null)}>
-                                                            <View>
-                                                                <Pressable
-                                                                    style={[styles.touchBtn, { paddingHorizontal: 4 }]}
-                                                                    onPress={(e) => {
-                                                                        e.stopPropagation();
-                                                                        setActiveMenuIndex(activeMenuIndex === `${dateKey}_${index}` ? null : `${dateKey}_${index}`);
-                                                                    }}>
-                                                                    <Image style={{ width: 4, height: 23 }} source={require('../../assets/dotimg1.png')} />
-                                                                </Pressable>
-        
-                                                                {activeMenuIndex === `${dateKey}_${index}` && (
-                                                                    <View style={styles.viewBx}>
-                                                                        <TouchableOpacity
-                                                                            style={styles.viewText}
-                                                                            onPress={() => {
-                                                                                navigation.navigate('Receiptview', { receiptId: item.id, status: item.generateStatus });
-                                                                                setActiveMenuIndex(null);
-                                                                            }}>
-                                                                            <Text style={styles.downloadText}>View</Text>
-                                                                        </TouchableOpacity>
-                                                                        <TouchableOpacity
-                                                                            style={[
-                                                                                styles.viewText,
-                                                                                item.generateStatus == null && { opacity: 0.5 }
-                                                                            ]}
-                                                                            onPress={() => {
-                                                                                if (item.generateStatus != null) {
-                                                                                    generateAndDownloadPDF(item);
-                                                                                }
-                                                                            }}
-                                                                            disabled={item.generateStatus == null}
-                                                                        >
-                                                                            <Text style={styles.downloadText}>Download</Text>
-                                                                        </TouchableOpacity>
-        
-                                                                        <TouchableOpacity
-                                                                            style={[
-                                                                                styles.viewText,
-                                                                                item.generateStatus == null && { opacity: 0.5 }
-                                                                            ]}
-                                                                            onPress={() => {
-                                                                                if (item.generateStatus != null) {
-                                                                                    generateAndSharePDF(item);
-                                                                                }
-                                                                            }}
-                                                                            disabled={item.generateStatus == null}
-                                                                        >
-                                                                            <Text style={styles.downloadText}>Share</Text>
-                                                                        </TouchableOpacity>
-        
-        
-        
-                                                                    </View>
-                                                                )}
-                                                            </View>
-                                                        </TouchableWithoutFeedback>
                                                     </View>
-                                                </View>
-                                            );
-                                        })
-                                    ) : (
 
-                                        <Text >No data found!</Text>
-                                       
-                                    )
-                                }
-                                
+                                                    {/* 3-Dot Menu */}
+                                                    <TouchableWithoutFeedback onPress={() => setActiveMenuIndex(null)}>
+                                                        <View>
+                                                            <Pressable
+                                                                style={[styles.touchBtn, { paddingHorizontal: 4 }]}
+                                                                onPress={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setActiveMenuIndex(activeMenuIndex === `${dateKey}_${index}` ? null : `${dateKey}_${index}`);
+                                                                }}
+                                                            >
+                                                                <Image style={{ width: 4, height: 23 }} source={require('../../assets/dotimg1.png')} />
+                                                            </Pressable>
+
+                                                            {activeMenuIndex === `${dateKey}_${index}` && (
+                                                                <View style={styles.viewBx}>
+                                                                    <TouchableOpacity
+                                                                        style={styles.viewText}
+                                                                        onPress={() => {
+                                                                            navigation.navigate('Receiptview', { receiptId: item.id, status: item.generateStatus });
+                                                                            setActiveMenuIndex(null);
+                                                                        }}
+                                                                    >
+                                                                        <Text style={styles.downloadText}>View</Text>
+                                                                    </TouchableOpacity>
+                                                                    <TouchableOpacity
+                                                                        style={[styles.viewText, item.generateStatus == null && { opacity: 0.5 }]}
+                                                                        onPress={() => {
+                                                                            if (item.generateStatus != null) {
+                                                                                generateAndDownloadPDF(item);
+                                                                            }
+                                                                        }}
+                                                                        disabled={item.generateStatus == null}
+                                                                    >
+                                                                        <Text style={styles.downloadText}>Download</Text>
+                                                                    </TouchableOpacity>
+
+                                                                    <TouchableOpacity
+                                                                        style={[styles.viewText, item.generateStatus == null && { opacity: 0.5 }]}
+                                                                        onPress={() => {
+                                                                            if (item.generateStatus != null) {
+                                                                                generateAndSharePDF(item);
+                                                                            }
+                                                                        }}
+                                                                        disabled={item.generateStatus == null}
+                                                                    >
+                                                                        <Text style={styles.downloadText}>Share</Text>
+                                                                    </TouchableOpacity>
+                                                                </View>
+                                                            )}
+                                                        </View>
+                                                    </TouchableWithoutFeedback>
+                                                </View>
+                                            </View>
+                                        );
+                                    })
+                                ) : (
+                                    <Text style={{ textAlign: 'center', marginVertical: 10 }}>No data found!</Text>
+                                )}
                             </View>
-                        );
-                    })}
+                        ))
+                    )}
+
                 </View>
 
 
@@ -857,7 +907,7 @@ function Receipt({ navigation }) {
                                     />
                                 </View>
 
-                                <View style={{marginTop: 10}}>
+                                <View style={{ marginTop: 10 }}>
                                     <Text style={styles.label}>Client</Text>
                                     <View style={styles.pickerContainer}>
                                         <Picker
@@ -877,10 +927,10 @@ function Receipt({ navigation }) {
                                     </View>
                                 </View>
                                 <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', paddingVertical: 25, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between', }}>
-                                    <TouchableOpacity onPress={() => {resetFilter()}} style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12, }}>
+                                    <TouchableOpacity onPress={() => { resetFilter() }} style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12, }}>
                                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#2F81F5', textAlign: 'center', }}>Reset</Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => {applyFilter()}} style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12, }}>
+                                    <TouchableOpacity onPress={() => { applyFilter() }} style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12, }}>
                                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#fff', textAlign: 'center', }}>Apply Filter</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -1014,7 +1064,7 @@ function Receipt({ navigation }) {
                     }}
                 >
                     <ActivityIndicator size="large" color="#FFFFFF" />
-                    <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
+                    <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Loading...</Text>
                 </View>
             )}
         </SafeAreaView>
@@ -1022,22 +1072,22 @@ function Receipt({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-      row2: {
+    row2: {
         flexDirection: 'row',
         gap: 10,
-      },
-      inputBox: {
+    },
+    inputBox: {
         flex: 1,
         borderWidth: 1,
         borderColor: '#ccc',
         borderRadius: 8,
         padding: 12,
         backgroundColor: '#fff',
-      },
-      inputText: {
+    },
+    inputText: {
         fontSize: 14,
         color: '#111',
-      },
+    },
 
     label: {
         fontSize: 16,
