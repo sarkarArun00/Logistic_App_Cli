@@ -227,6 +227,14 @@ const TaskScreen = () => {
               }}
               source={require('../../../assets/task-shape.png')}
             />
+            <View style={{ position: 'absolute', left:16, top:40, }}>
+              <TouchableOpacity  onPress={() => navigation.navigate('MainApp', { screen: 'Home' })}>
+                <View style={{ flexDirection:'row', alignItems:'center', gap:15, }}>
+                  <Image style={{ width: 23, height: 15, tintColor: 'white' }} source={require('../../../assets/locate-back.png')} />
+                  <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 16, color: '#ffffff', }}>Tasks</Text>
+              </View>
+              </TouchableOpacity>
+            </View>
             <View style={{ position: 'absolute', left: 16, bottom: 76 }}>
               <Text style={styles.header}>My Tasks</Text>
               <Text style={styles.headerSubtitle}>View and manage your task</Text>
@@ -320,6 +328,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     transform: [{ rotate: '-50deg' }],
+  },
+  icon: {
+    width:35,
+    height:35,
+    objectFit: 'contain',
   },
 });
 

@@ -270,7 +270,10 @@ function Profile({ navigation }) {
                 showsHorizontalScrollIndicator={false}>
 
                 <TouchableOpacity onPress={() => navigation.navigate('MainApp', { screen: 'Home' })} style={{ marginBottom: 20, }}>
-                    <Image style={{ width: 23, height: 15, }} source={require('../../assets/locate-back.png')} />
+                    <View style={{ flexDirection:'row', alignItems:'center', gap:15, }}>
+                        <Image style={{ width: 23, height: 15, }} source={require('../../assets/locate-back.png')} />
+                        <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 16, color: '#0C0D36' }}>Profile</Text>
+                    </View>
                 </TouchableOpacity>
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
