@@ -262,7 +262,7 @@ function Attendance({ navigation }) {
                 }
             }
         }));
-
+        console.log('day press ........', day)
         // try {
         const userId = await AsyncStorage.getItem("user_id");
         if (!userId) return showAlertModal("User ID not found", true);
@@ -275,7 +275,7 @@ function Attendance({ navigation }) {
         const response = await TaskService.getLoginByDate(request);
         const format = 'D/M/YYYY, h:mm:ss a';
 
-
+        console.log('resssssssss', response)
         if (response.status == 1) {
             const loginTime = dayjs.tz(response.data.login, format, 'Asia/Kolkata').format('hh:mm A');
             const logoutTime = dayjs.tz(response.data.logout, format, 'Asia/Kolkata').format('hh:mm A');
@@ -565,73 +565,74 @@ function Attendance({ navigation }) {
                 <View style={styles.container}>
                     {loading && <ActivityIndicator size="large" color="#3085FE" />}
                     <Calendar
-                        markingType="custom"
-                        markedDates={markedDates}
-                        onMonthChange={handleMonthChange}
-                        onDayPress={handleDayPress}
-                        dayComponent={({ date, state }) => {
-                            const today = moment().format('YYYY-MM-DD');
-                            const isToday = date.dateString === today;
-                            const animatedValue = useRef(new Animated.Value(1)).current;
+  markingType="custom"
+  markedDates={markedDates}
+  onMonthChange={handleMonthChange}
+  onDayPress={handleDayPress}  // this is your callback
+  dayComponent={({ date, state }) => {
+    const today = moment().format('YYYY-MM-DD');
+    const isToday = date.dateString === today;
+    const animatedValue = useRef(new Animated.Value(1)).current;
 
-                            useEffect(() => {
-                                if (isToday) {
-                                  Animated.loop(
-                                    Animated.sequence([
-                                      Animated.timing(animatedValue, {
-                                        toValue: 1.05,          // small scale (not too jumpy)
-                                        duration: 800,
-                                        easing: Easing.inOut(Easing.ease),
-                                        useNativeDriver: true,
-                                      }),
-                                      Animated.timing(animatedValue, {
-                                        toValue: 1,
-                                        duration: 800,
-                                        easing: Easing.inOut(Easing.ease),
-                                        useNativeDriver: true,
-                                      }),
-                                    ])
-                                  ).start();
-                                }
-                              }, [isToday]);
-                              
+    useEffect(() => {
+      if (isToday) {
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(animatedValue, {
+              toValue: 1.05,
+              duration: 800,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: true,
+            }),
+            Animated.timing(animatedValue, {
+              toValue: 1,
+              duration: 800,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: true,
+            }),
+          ])
+        ).start();
+      }
+    }, [isToday]);
 
-                            const style = markedDates[date.dateString]?.customStyles?.container || {};
-                            const textStyle = markedDates[date.dateString]?.customStyles?.text || {};
+    const style = markedDates[date.dateString]?.customStyles?.container || {};
+    const textStyle = markedDates[date.dateString]?.customStyles?.text || {};
+    const AnimatedWrapper = isToday ? Animated.View : View;
 
-                            const AnimatedWrapper = isToday ? Animated.View : View;
+    return (
+      <TouchableOpacity onPress={() => handleDayPress(date)}>
+        <AnimatedWrapper
+          style={{
+            ...style,
+            transform: isToday ? [{ scale: animatedValue }] : [],
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: 36,
+            height: 36,
+          }}
+        >
+          <Text
+            style={{
+              ...textStyle,
+              opacity: state === 'disabled' ? 0.4 : 1,
+            }}
+          >
+            {date.day}
+          </Text>
+        </AnimatedWrapper>
+      </TouchableOpacity>
+    );
+  }}
+  theme={{
+    todayTextColor: '#3085FE',
+    arrowColor: '#3085FE',
+    monthTextColor: '#000',
+    textDayFontWeight: '500',
+    textMonthFontWeight: 'bold',
+    textDayHeaderFontWeight: '500',
+  }}
+/>
 
-                            return (
-                                <AnimatedWrapper
-                                    style={{
-                                        ...style,
-                                        transform: isToday ? [{ scale: animatedValue }] : [],
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        width: 36,
-                                        height: 36,
-                                    }}
-                                >
-                                    <Text
-                                        style={{
-                                            ...textStyle,
-                                            opacity: state === 'disabled' ? 0.4 : 1,
-                                        }}
-                                    >
-                                        {date.day}
-                                    </Text>
-                                </AnimatedWrapper>
-                            );
-                        }}
-                        theme={{
-                            todayTextColor: '#3085FE',
-                            arrowColor: '#3085FE',
-                            monthTextColor: '#000',
-                            textDayFontWeight: '500',
-                            textMonthFontWeight: 'bold',
-                            textDayHeaderFontWeight: '500',
-                        }}
-                    />
 
                 </View>
 
@@ -714,7 +715,7 @@ function Attendance({ navigation }) {
                     }}
                 >
                     <ActivityIndicator size="large" color="#FFFFFF" />
-                    <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
+                    <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Loading...</Text>
                 </View>
             )}
         </SafeAreaView>
