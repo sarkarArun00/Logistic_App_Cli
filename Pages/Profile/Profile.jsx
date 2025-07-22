@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, Modal, Alert, PermissionsAndroid, Platform } from 'react-native'
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, Modal, Alert, PermissionsAndroid, Platform, Pressable } from 'react-native'
 import { AuthContext } from "../../Context/AuthContext";
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 
@@ -20,6 +20,8 @@ import { Vibration } from 'react-native';
 //   Montserrat_700Bold,
 // } from '@expo-google-fonts/montserrat';
 
+
+
 function Profile({ navigation }) {
     const [modalVisible, setModalVisible] = useState(false);
     const { logout } = useContext(AuthContext);
@@ -27,6 +29,7 @@ function Profile({ navigation }) {
     const [userInfo, setUserInfo] = useState(null);
 
     const { showAlertModal, hideAlert } = useGlobalAlert();
+    const [viewerVisible, setViewerVisible] = useState(false);
 
     // const [fontsLoaded] = useFonts({
     //     Montserrat_700Bold,
@@ -62,6 +65,12 @@ function Profile({ navigation }) {
     //         fetchProfilePicture();
     //     }, [])
     // );
+
+
+    const avatarSource =
+        userInfo?.employeePhoto
+            ? { uri: BASE_API_URL + userInfo.employeePhoto }
+            : require('../../assets/user.jpg');
 
 
     const handleLogout = async () => {
@@ -248,9 +257,9 @@ function Profile({ navigation }) {
         navigation.navigate('MainApp', {
             screen: 'TaskStack',
             params: {
-              screen: 'TaskScreen',
+                screen: 'TaskScreen',
             },
-          });          
+        });
     }
 
 
@@ -265,20 +274,72 @@ function Profile({ navigation }) {
                 </TouchableOpacity>
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
-                    <View style={{ width: 70, height: 70, borderRadius: '50%', overflow: 'hidden', }}>
-                        <Image style={{ width: '100%', height: '100%', objectFit: 'cover', }} source={
-                            userInfo?.employeePhoto
-                                ? { uri: BASE_API_URL + userInfo.employeePhoto }
-                                : require('../../assets/user.jpg') // fallback image
-                        } />
-                    </View>
+                    <>
+                        <TouchableOpacity
+                            activeOpacity={0.8}
+                            onPress={() => setViewerVisible(true)}
+                            accessibilityRole="imagebutton"
+                            accessibilityLabel="View profile photo"
+                        >
+                            <View
+                                style={{
+                                    width: 70,
+                                    height: 70,
+                                    borderRadius: 35,            // half of width/height
+                                    overflow: 'hidden',
+                                    backgroundColor: '#F6FAFF',
+                                }}
+                            >
+                                <Image
+                                    source={avatarSource}
+                                    style={{ width: '100%', height: '100%' }}
+                                    resizeMode="cover"
+                                />
+                            </View>
+                        </TouchableOpacity>
+
+                        {/* Fullscreen viewer */}
+                        <Modal
+                            visible={viewerVisible}
+                            transparent
+                            animationType="fade"
+                            onRequestClose={() => setViewerVisible(false)}
+                        >
+                            <Pressable
+                                style={{
+                                    flex: 1,
+                                    backgroundColor: 'rgba(0,0,0,0.7)',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                }}
+                                onPress={() => setViewerVisible(false)}
+                            >
+                                <View
+                                    style={{
+                                        width: 400,
+                                        height: 400,
+                                        borderRadius: 200, // Large round shape
+                                        overflow: 'hidden',
+                                        borderWidth: 3,
+                                        borderColor: '#fff', // White border for highlight
+                                    }}
+                                >
+                                    <Image
+                                        source={avatarSource}
+                                        style={{ width: '100%', height: '100%' }}
+                                        resizeMode="cover"
+                                    />
+                                </View>
+                            </Pressable>
+                        </Modal>
+                    </>
                     <View style={{ flex: 1, paddingLeft: 20, }}>
                         <Text style={{ fontFamily: 'Montserrat_700Bold', fontSize: 16, color: '#0F0F0F', paddingBottom: 2, }}>{userInfo?.employee_name}
                             <TouchableOpacity onPress={() => setModalVisible(true)} style={{ paddingLeft: 5, }}>
                                 <Image style={{ width: 20, height: 20, }} source={require('../../assets/edit.png')} />
                             </TouchableOpacity>
                         </Text>
-                        <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 14, color: '#A0A7BA', }}>ID:22369874</Text>
+                        <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 14, color: '#A0A7BA', }}>ID: {userInfo?.id}</Text>
                     </View>
                 </View>
 
@@ -319,7 +380,7 @@ function Profile({ navigation }) {
                             <Image style={{ width: 8, height: 14, }} source={require('../../assets/rightarrow2.png')} />
                         </View>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('MainApp', {screen: 'FeulStack', params: {screen: 'Pending'}})} style={styles.tskmain}>
+                    <TouchableOpacity onPress={() => navigation.navigate('MainApp', { screen: 'FeulStack', params: { screen: 'Pending' } })} style={styles.tskmain}>
                         <View style={styles.taskbox}>
                             <View style={styles.tskimg}><Image style={{ width: 58, height: 58, }} source={require('../../assets/pficon5.png')} /></View>
                             <Text style={styles.tsktext}>Fuel Voucher</Text>
@@ -377,6 +438,9 @@ function Profile({ navigation }) {
                         </View>
                     </View>
                 </Modal>
+
+
+
 
             </ScrollView>
 
