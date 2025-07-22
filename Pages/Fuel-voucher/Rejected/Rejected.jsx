@@ -63,8 +63,7 @@ function Rejected({ navigation }) {
       const getAllFuelVoucher = async () => {
         try {
           setLoading(true);
-          const response = await TaskService.getAllFuelVouchers();
-          console.log('getAllFuelVoucher response:', response.data.filter((item) => item.opStatus=="rejected" || item.acStatus=="rejected"))
+          const response = await TaskService.getAllFuelVouchers({  fromDate: null,  toDate: null});
             
           if (response?.status) {
             setFuelVoucherList(response.data.filter((item) => item.opStatus=="rejected " || item.acStatus=="rejected"));

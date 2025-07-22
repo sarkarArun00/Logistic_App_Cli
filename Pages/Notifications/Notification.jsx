@@ -37,7 +37,7 @@ function Notification({ navigation }) {
                     console.log('Response seenNotificationIds:', response);
                     if (response.status == 1) {
                         const allNotifications = response.data;
-                        setNotifications(allNotifications);
+                        setNotifications(allNotifications); 
                         const seenIds = allNotifications.map(n => n.id);
                         await AsyncStorage.setItem("seenNotificationIds", JSON.stringify(seenIds));
                         setLoading(false)
@@ -98,7 +98,7 @@ function Notification({ navigation }) {
     const handleApprove = async (id) => {
         try {
             const response = await TaskService.approveApproval({ notifId: id });
-            console.log('response:',response)
+            console.log('response:', response)
             if (response.status == 1) {
                 console.log('Approval successful:', response);
                 setApprovals(prev => prev.filter(item => item.id !== id));
@@ -138,6 +138,7 @@ function Notification({ navigation }) {
                 <Text style={styles.time}>{dayjs(item.createdAt).format('MMMM D, YYYY h:mm A')}</Text>
             </View>
         </View>
+
     );
 
 
@@ -182,9 +183,24 @@ function Notification({ navigation }) {
                     data={notifications}
                     renderItem={({ item }) => <NotificationItem item={item} />}
                     keyExtractor={item => item.id.toString()}
-
                     onViewableItemsChanged={onViewableItemsChanged}
                     viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
+
+                    // Show "No Notification Found!" when the list is empty
+                    ListEmptyComponent={
+                        <View style={{ padding: 20, alignItems: 'center' }}>
+                            <Text style={{ fontSize: 16, color: '#64748B', fontFamily: 'Montserrat_500Medium' }}>
+                                No notifications found
+                            </Text>
+                        </View>
+                    }
+
+                    // Center empty message when no data
+                    contentContainerStyle={
+                        notifications.length === 0
+                            ? { flexGrow: 1, justifyContent: 'center', alignItems: 'center' }
+                            : null
+                    }
                 />
             ) : (
                 <FlatList

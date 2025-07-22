@@ -408,9 +408,9 @@ const TaskService = {
     }
   },
   
-  getAllFuelVouchers: async () => {
+  getAllFuelVouchers: async (data) => {
     try {
-      const response = await apiClient.get('/operation/logistics/fuel-voucher/getAllFuelVouchers');
+      const response = await apiClient.post('/operation/logistics/fuel-voucher/getAllFuelVouchers', data);
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
