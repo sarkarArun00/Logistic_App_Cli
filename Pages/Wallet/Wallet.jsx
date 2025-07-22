@@ -508,9 +508,9 @@ function Wallet({ navigation, progress = 0.5 }) {
                         <View style={{ flex: 1, position: 'relative', }}>
                             <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, color: '#3085FE', }}>Transaction History</Text>
                         </View>
-                        <TouchableOpacity onPress={() => setFilter(true)} style={{ width: 50, height: 50, borderRadius: '25', backgroundColor: '#F6FAFF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginLeft: 14, }}>
+                        <TouchableOpacity onPress={() => setFilter(true)} style={{ width: 50, height: 50, borderRadius: 25, backgroundColor: '#F6FAFF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginLeft: 14, }}>
                             <Image style={{ width: 25, height: 25, }} source={require('../../assets/filter.png')} />
-                            <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>2</Text>
+                            {/* <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>2</Text> */}
                         </TouchableOpacity>
                     </View>
                     <View style={{ backgroundColor: '#F6FAFF', borderRadius: 20, padding: 15, marginTop: 10 }}>
