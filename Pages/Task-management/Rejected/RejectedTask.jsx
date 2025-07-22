@@ -11,7 +11,7 @@ import TaskStatusTabs from '../TaskStatusTabs'
 import TaskService from '../../Services/task_service';
 import NotificationCount from '../../Notifications/NotificationCount';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import GlobalStyles from '../../GlobalStyles';
+import {GlobalStyles} from '../../GlobalStyles';
 import { Vibration } from 'react-native';
 import { useSearch } from '../../../hooks/userSearch1';
 
@@ -267,7 +267,7 @@ function RejectedTask({ navigation }) {
                                         <View style={{ position: 'relative', marginBottom: 5 }}>
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 12, height: 12 }} source={require('../../../assets/asicon1.png')} />
                                             <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
-                                                Task ID: {task?.id ?? 'NA'}
+                                                Task ID: {task?.displayId ?? 'NA'}
                                             </Text>
                                         </View>
                                         <View style={{ position: 'relative', marginBottom: 5 }}>

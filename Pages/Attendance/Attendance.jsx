@@ -7,7 +7,7 @@ import RNSwipeVerify from 'react-native-swipe-verify';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from '@react-navigation/native';
 import Header from '../Header/header'
-import GlobalStyles from '../GlobalStyles';
+import {GlobalStyles} from '../GlobalStyles';
 
 // import * as Location from 'expo-location';
 import AuthService from '../Services/auth_service';

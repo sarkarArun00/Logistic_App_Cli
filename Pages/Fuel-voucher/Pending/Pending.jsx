@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, ActivityIndicator, PermissionsAndroid,Platform, 
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, ActivityIndicator, Platform, 
     TextInput, Modal, Animated, FlatList, Alert ,RefreshControl} from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { GlobalStyles } from '../../GlobalStyles';
 import { lightTheme } from '../../GlobalStyles';
-import GlobalStyles from '../../GlobalStyles';
 import TaskService from '../../Services/task_service';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
@@ -15,6 +15,10 @@ import ImageResizer from 'react-native-image-resizer';
 import { readFile } from 'react-native-fs';
 import FeulVoucherRequest from '../FeulVoucherRequest';
 import NotificationCount from '../../Notifications/NotificationCount';
+import DateTimePicker from '@react-native-community/datetimepicker';
+
+
+
 
 const wait = (timeout) => {
     return new Promise(resolve => setTimeout(resolve, timeout));
@@ -40,6 +44,11 @@ function Pending({ navigation }) {
     const [activeMenuId, setActiveMenuId] = useState(null);
     const { showAlertModal, hideAlert } = useGlobalAlert();
     const [refreshing, setRefreshing] = useState(false);
+
+    const [fromDate, setFromDate] = useState(new Date());
+    const [toDate, setToDate] = useState(new Date());
+    const [showFromPicker, setShowFromPicker] = useState(false);
+    const [showToPicker, setShowToPicker] = useState(false);
 
       
 
@@ -73,6 +82,13 @@ function Pending({ navigation }) {
         }
     }
 
+    const showFromDatePicker = () => {
+        setShowFromPicker(true);
+    };
+
+    const showToDatePicker = () => {
+        setShowToPicker(true);
+    };
     const formatDateTime = (dateString) => {
         if (!dateString) return '';
       
@@ -125,6 +141,38 @@ function Pending({ navigation }) {
         wait(2000).then(() => setRefreshing(false));
     }, []);
 
+    const onFromChange = (event, selectedDate) => {
+        if (Platform.OS === 'android') {
+            setShowFromPicker(false); // Always hide manually on Android
+        }
+
+        if (event?.type === 'set' || Platform.OS === 'ios') {
+            if (selectedDate) {
+                setFromDate(selectedDate);
+
+                if (selectedDate > toDate) {
+                    setToDate(selectedDate);
+                    showAlertModal('To Date auto-updated to match From Date: ' + selectedDate.toDateString(), true);
+                }
+            }
+        }
+    };
+
+        const onToChange = (event, selectedDate) => {
+            if (Platform.OS === 'android') {
+                setShowToPicker(false); // Always hide manually on Android
+            }
+    
+            if (event?.type === 'set' || Platform.OS === 'ios') {
+                if (selectedDate) {
+                    if (selectedDate >= fromDate) {
+                        setToDate(selectedDate);
+                    } else {
+                        showAlertModal('To date cannot be before From date', true);
+                    }
+                }
+            }
+        };
 
     useEffect(() => {
         Animated.loop(
@@ -256,7 +304,7 @@ function Pending({ navigation }) {
                     </View>
                     <TouchableOpacity onPress={() => setFilter(true)} style={{ width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginLeft: 14, }}>
                         <Image style={{ width: 25, height: 25, }} source={require('../../../assets/filter.png')} />
-                        <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>2</Text>
+                        {/* <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>2</Text> */}
                     </TouchableOpacity>
                 </View>
 
@@ -396,15 +444,67 @@ function Pending({ navigation }) {
                             </View>
                             <View style={{ padding: 15, }}>
                                 <View>
-                                    <Text style={styles.label}>Date Range</Text>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', }}>
-                                        <View>
-                                        <Text>From Date</Text>
-                                        </View>
-                                        <View>
-                                            <Text>To Date</Text>
-                                        </View>
+                                    {/* <Text style={styles.label}>Date Range</Text> */}
+                                      <View style={{ padding: 0, flexDirection:'row', justifyContent:'space-between', gap:12, }}>
+                                    <View style={{flex:1,}}>
+                                        <Text style={styles.label}>From Date:</Text>
+                                        <TouchableOpacity
+                                            onPress={showFromDatePicker}
+                                            style={{
+                                                borderWidth:1,
+                                                borderColor:'#ECEDF0',
+                                                backgroundColor: '#FAFAFA',
+                                                paddingHorizontal: 12,
+                                                borderRadius: 5,
+                                                height:50,
+                                                flexDirection:'row',
+                                                alignItems:'center',
+                                                marginBottom:10,
+                                            }}>
+                                            <Text style={{ color: '#0C0D36', fontSize: 14, fontWeight: '500' }}>
+                                                {fromDate.toDateString()}
+                                            </Text>
+                                        </TouchableOpacity>
+
+                                        {showFromPicker && (
+                                            <DateTimePicker
+                                                value={fromDate}
+                                                mode="date"
+                                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                                onChange={onFromChange}
+                                                maximumDate={new Date(2100, 11, 31)}
+                                            />
+                                        )}
                                     </View>
+                                    <View style={{flex:1,}}>
+                                        <Text style={styles.label}>To Date:</Text>
+                                        <TouchableOpacity onPress={showToDatePicker}
+                                            style={{
+                                                borderWidth:1,
+                                                borderColor:'#ECEDF0',
+                                                backgroundColor: '#FAFAFA',
+                                                paddingHorizontal: 12,
+                                                borderRadius: 5,
+                                                height:50,
+                                                flexDirection:'row',
+                                                alignItems:'center',
+                                                marginBottom:10,
+                                            }}>
+                                            <Text style={{ color: '#0C0D36', fontSize: 14, fontWeight: '500' }}>{toDate.toDateString()}</Text>
+                                        </TouchableOpacity>
+
+                                        {showToPicker && (
+                                            <DateTimePicker
+                                                value={toDate}
+                                                mode="date"
+                                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                                onChange={onToChange}
+                                                minimumDate={fromDate}
+                                                maximumDate={new Date(2100, 11, 31)}
+                                            />
+                                        )}
+                                    </View>
+                                </View>
                                 </View>
                                 <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', paddingVertical: 25, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between', }}>
                                     <TouchableOpacity style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12, }}>

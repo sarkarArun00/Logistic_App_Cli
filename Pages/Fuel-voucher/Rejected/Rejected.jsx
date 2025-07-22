@@ -4,11 +4,13 @@ import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, ActivityIn
 // import { useFonts, Montserrat_600SemiBold, Montserrat_400Regular, Montserrat_500Medium } from '@expo-google-fonts/montserrat'
 import { Picker } from '@react-native-picker/picker';
 // import * as ImagePicker from 'expo-image-picker';
-import { lightTheme, GlobalStyles } from '../../GlobalStyles';
+import { GlobalStyles } from '../../GlobalStyles';
+import { lightTheme } from '../../GlobalStyles';
 import TaskService from '../../Services/task_service';
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
 import FeulVoucherRequest from '../FeulVoucherRequest';
 import NotificationCount from '../../Notifications/NotificationCount';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 
 
@@ -29,56 +31,100 @@ function Rejected({ navigation }) {
     const [activeMenuId, setActiveMenuId] = useState(null);
     const { showAlertModal, hideAlert } = useGlobalAlert();
 
+    const [fromDate, setFromDate] = useState(new Date());
+    const [toDate, setToDate] = useState(new Date());
+    const [showFromPicker, setShowFromPicker] = useState(false);
+    const [showToPicker, setShowToPicker] = useState(false);
 
     useEffect(() => {
         getAllFuelVoucher();
-      }, [])
+    }, [])
 
     const formatDateTime = (dateString) => {
         if (!dateString) return '';
-      
+
         const date = new Date(dateString);
-      
+
         return date
-          .toLocaleString('en-IN', {
-            timeZone: 'Asia/Kolkata',
-            month: 'short',       // "Feb"
-            day: '2-digit',       // "20"
-            year: 'numeric',      // "2025"
-            hour: 'numeric',      // "4"
-            minute: '2-digit',    // "01"
-            hour12: true          // "PM"
-          })
-          .replace(',', ''); // Optional: Remove comma between date and time
-      };
+            .toLocaleString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                month: 'short',       // "Feb"
+                day: '2-digit',       // "20"
+                year: 'numeric',      // "2025"
+                hour: 'numeric',      // "4"
+                minute: '2-digit',    // "01"
+                hour12: true          // "PM"
+            })
+            .replace(',', ''); // Optional: Remove comma between date and time
+    };
 
     const formatToINR = (amount) => {
         return new Intl.NumberFormat('en-IN', {
-          style: 'currency',
-          currency: 'INR',
-          minimumFractionDigits: 2,
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: 2,
         }).format(amount || 0);
-      };
+    };
 
-      const getAllFuelVoucher = async () => {
+    const getAllFuelVoucher = async () => {
         try {
-          setLoading(true);
-          const response = await TaskService.getAllFuelVouchers({  fromDate: null,  toDate: null});
-            
-          if (response?.status) {
-            setFuelVoucherList(response.data.filter((item) => item.opStatus=="rejected " || item.acStatus=="rejected"));
-          } else {
-            setFuelVoucherList([]);
-          }
+            setLoading(true);
+            const response = await TaskService.getAllFuelVouchers({ fromDate: null, toDate: null });
+
+            if (response?.status) {
+                setFuelVoucherList(response.data.filter((item) => item.opStatus == "rejected " || item.acStatus == "rejected"));
+            } else {
+                setFuelVoucherList([]);
+            }
         } catch (error) {
-          console.error('Error fetching fuel vouchers:', error);
-          setFuelVoucherList([]);
+            console.error('Error fetching fuel vouchers:', error);
+            setFuelVoucherList([]);
         } finally {
-          setLoading(false);
+            setLoading(false);
         }
-      };
+    };
+
+    const showFromDatePicker = () => {
+        setShowFromPicker(true);
+    };
+
+    const showToDatePicker = () => {
+        setShowToPicker(true);
+    };
 
 
+    const onFromChange = (event, selectedDate) => {
+        if (Platform.OS === 'android') {
+            setShowFromPicker(false); // Always hide manually on Android
+        }
+
+        if (event?.type === 'set' || Platform.OS === 'ios') {
+            if (selectedDate) {
+                setFromDate(selectedDate);
+
+                if (selectedDate > toDate) {
+                    setToDate(selectedDate);
+                    showAlertModal('To Date auto-updated to match From Date: ' + selectedDate.toDateString(), true);
+                }
+            }
+        }
+    };
+
+    const onToChange = (event, selectedDate) => {
+        if (Platform.OS === 'android') {
+            setShowToPicker(false); // Always hide manually on Android
+        }
+
+        if (event?.type === 'set' || Platform.OS === 'ios') {
+            if (selectedDate) {
+                if (selectedDate >= fromDate) {
+                    setToDate(selectedDate);
+                } else {
+                    showAlertModal('To date cannot be before From date', true);
+                }
+            }
+        }
+    };
 
     useEffect(() => {
         Animated.loop(
@@ -105,7 +151,11 @@ function Rejected({ navigation }) {
 
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[
+                    styles.container,
+                    GlobalStyles.SafeAreaView,
+                    { paddingBottom: lightTheme.paddingBottomNew }
+                ]}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 showsHorizontalScrollIndicator={false}>
@@ -116,8 +166,8 @@ function Rejected({ navigation }) {
                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Fuel Voucher Request</Text>
                     </TouchableOpacity>
                     <View style={{ position: 'relative', width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
-                    <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
-                    <View pointerEvents="none">
+                        <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
+                            <View pointerEvents="none">
                                 <NotificationCount />
                             </View>
                         </TouchableOpacity>
@@ -135,15 +185,15 @@ function Rejected({ navigation }) {
                     </View>
                     <TouchableOpacity onPress={() => setFilter(true)} style={{ width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginLeft: 14, }}>
                         <Image style={{ width: 25, height: 25, }} source={require('../../../assets/filter.png')} />
-                        <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>2</Text>
+                        {/* <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>2</Text> */}
                     </TouchableOpacity>
                 </View>
 
                 {/* ScrollView Tab */}
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollContainer}>
-                <View style={{ flexDirection: 'row', paddingTop: 20, }}>
+                    <View style={{ flexDirection: 'row', paddingTop: 20, }}>
                         <TouchableOpacity onPress={() => navigation.navigate('FeulStack', { screen: 'Pending' })} style={[styles.tcbtn]}>
-                            <Text style={[styles.acttext, ]}>Pending</Text>
+                            <Text style={[styles.acttext,]}>Pending</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => navigation.navigate('FeulStack', { screen: 'Approved' })} style={[styles.tcbtn,]}>
                             <Text style={[styles.acttext,]}>Approved</Text>
@@ -158,76 +208,76 @@ function Rejected({ navigation }) {
                 </ScrollView>
 
                 {fuelVoucherList.map((allVehicles) => (
-                <View key={allVehicles.id}>
-                    <Text style={styles.title}>{formatDateTime(allVehicles.createdAt)}</Text>
+                    <View key={allVehicles.id}>
+                        <Text style={styles.title}>{formatDateTime(allVehicles.createdAt)}</Text>
 
-                    <View
-                    style={{
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: 15,
-                    }}
-                    >
-                    <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
-                        <Image
-                        style={{ width: 28, height: 20 }}
-                        source={require('../../../assets/voucher.png')}
-                        />
-                        <View style={{ paddingLeft: 6 }}>
-                        <Text
+                        <View
                             style={{
-                            fontFamily: 'Montserrat_500Medium',
-                            fontSize: 16,
-                            color: '#0C0D36',
-                            paddingBottom: 2,
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: 15,
                             }}
                         >
-                            {allVehicles?.fuelVoucherNo}
-                        </Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', }}>
-                                    <View style={styles.bgborder}><Animated.View style={[styles.animatebg, { backgroundColor }]} /></View>
-                                    <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 11, color: '#0C0D36', }}>Payment Approved</Text>
+                            <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
+                                <Image
+                                    style={{ width: 28, height: 20 }}
+                                    source={require('../../../assets/voucher.png')}
+                                />
+                                <View style={{ paddingLeft: 6 }}>
+                                    <Text
+                                        style={{
+                                            fontFamily: 'Montserrat_500Medium',
+                                            fontSize: 16,
+                                            color: '#0C0D36',
+                                            paddingBottom: 2,
+                                        }}
+                                    >
+                                        {allVehicles?.fuelVoucherNo}
+                                    </Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', }}>
+                                        <View style={styles.bgborder}><Animated.View style={[styles.animatebg, { backgroundColor }]} /></View>
+                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 11, color: '#0C0D36', }}>Payment Approved</Text>
+                                    </View>
                                 </View>
-                        </View>
-                    </View>
+                            </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <View style={{ paddingRight: 15 }}>
-                        <Text
-                            style={{
-                            fontFamily: 'Montserrat_600SemiBold',
-                            fontSize: 14,
-                            color: 'red',
-                            }}
-                        >
-                            {formatToINR(allVehicles.amount)}
-                        </Text>
-                        </View>
-                        <TouchableOpacity
-                        style={[styles.touchBtn, { paddingHorizontal: 4 }]}
-                        onPress={() =>
-                            setActiveMenuId(
-                            activeMenuId === allVehicles.id ? null : allVehicles.id
-                            )
-                        }
-                        >
-                        <Image
-                            style={{ width: 4, height: 23 }}
-                            source={require('../../../assets/dotimg1.png')}
-                        />
-                        </TouchableOpacity>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <View style={{ paddingRight: 15 }}>
+                                    <Text
+                                        style={{
+                                            fontFamily: 'Montserrat_600SemiBold',
+                                            fontSize: 14,
+                                            color: 'red',
+                                        }}
+                                    >
+                                        {formatToINR(allVehicles.amount)}
+                                    </Text>
+                                </View>
+                                <TouchableOpacity
+                                    style={[styles.touchBtn, { paddingHorizontal: 4 }]}
+                                    onPress={() =>
+                                        setActiveMenuId(
+                                            activeMenuId === allVehicles.id ? null : allVehicles.id
+                                        )
+                                    }
+                                >
+                                    <Image
+                                        style={{ width: 4, height: 23 }}
+                                        source={require('../../../assets/dotimg1.png')}
+                                    />
+                                </TouchableOpacity>
 
-                        {activeMenuId === allVehicles.id && (
-                        <View style={styles.viewBx}>
-                            <TouchableOpacity
-                            style={styles.viewText}
-                            
-                            onPress={() => navigation.navigate("VoucherDetails", { fuelVoucherId: allVehicles.id }, {type: "failed"})}
-                            >
-                            <Text style={styles.downloadText}>View</Text>
-                            </TouchableOpacity>
-                            {/* <TouchableOpacity
+                                {activeMenuId === allVehicles.id && (
+                                    <View style={styles.viewBx}>
+                                        <TouchableOpacity
+                                            style={styles.viewText}
+
+                                            onPress={() => navigation.navigate("VoucherDetails", { fuelVoucherId: allVehicles.id }, { type: "failed" })}
+                                        >
+                                            <Text style={styles.downloadText}>View</Text>
+                                        </TouchableOpacity>
+                                        {/* <TouchableOpacity
                             style={styles.viewText}
                             onPress={() => setActiveMenuId(null)}
                             >
@@ -239,11 +289,11 @@ function Rejected({ navigation }) {
                             >
                             <Text style={styles.downloadText}>Share</Text>
                             </TouchableOpacity> */}
+                                    </View>
+                                )}
+                            </View>
                         </View>
-                        )}
                     </View>
-                    </View>
-                </View>
                 ))}
 
                 {/* Filter Modal */}
@@ -261,13 +311,64 @@ function Rejected({ navigation }) {
                                 </TouchableOpacity>
                             </View>
                             <View style={{ padding: 15, }}>
-                                <View>
-                                    <Text style={styles.label}>Date Range</Text>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', }}>
-                                        <View>
+                                <View style={{ padding: 0, flexDirection: 'row', justifyContent: 'space-between', gap: 12, }}>
+                                    <View style={{ flex: 1, }}>
+                                        <Text style={styles.label}>From Date:</Text>
+                                        <TouchableOpacity
+                                            onPress={showFromDatePicker}
+                                            style={{
+                                                borderWidth: 1,
+                                                borderColor: '#ECEDF0',
+                                                backgroundColor: '#FAFAFA',
+                                                paddingHorizontal: 12,
+                                                borderRadius: 5,
+                                                height: 50,
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                marginBottom: 10,
+                                            }}>
+                                            <Text style={{ color: '#0C0D36', fontSize: 14, fontWeight: '500' }}>
+                                                {fromDate.toDateString()}
+                                            </Text>
+                                        </TouchableOpacity>
 
-                                        </View>
-                                        <View></View>
+                                        {showFromPicker && (
+                                            <DateTimePicker
+                                                value={fromDate}
+                                                mode="date"
+                                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                                onChange={onFromChange}
+                                                maximumDate={new Date(2100, 11, 31)}
+                                            />
+                                        )}
+                                    </View>
+                                    <View style={{ flex: 1, }}>
+                                        <Text style={styles.label}>To Date:</Text>
+                                        <TouchableOpacity onPress={showToDatePicker}
+                                            style={{
+                                                borderWidth: 1,
+                                                borderColor: '#ECEDF0',
+                                                backgroundColor: '#FAFAFA',
+                                                paddingHorizontal: 12,
+                                                borderRadius: 5,
+                                                height: 50,
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                marginBottom: 10,
+                                            }}>
+                                            <Text style={{ color: '#0C0D36', fontSize: 14, fontWeight: '500' }}>{toDate.toDateString()}</Text>
+                                        </TouchableOpacity>
+
+                                        {showToPicker && (
+                                            <DateTimePicker
+                                                value={toDate}
+                                                mode="date"
+                                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                                onChange={onToChange}
+                                                minimumDate={fromDate}
+                                                maximumDate={new Date(2100, 11, 31)}
+                                            />
+                                        )}
                                     </View>
                                 </View>
                                 <View>
@@ -334,8 +435,8 @@ function Rejected({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    ScrollView:{
-        paddingBottom:185,
+    ScrollView: {
+        paddingBottom: 185,
     },
     label: {
         fontSize: 16,
@@ -453,8 +554,8 @@ const styles = StyleSheet.create({
         borderTopEndRadius: 20,
         borderTopLeftRadius: 20,
     },
-    scrlablModalContainer:{
-        height:'75%',
+    scrlablModalContainer: {
+        height: '75%',
     },
     modalText: {
         fontFamily: 'Montserrat_500Medium',
@@ -551,7 +652,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FAFAFA',
         borderColor: '#E5E5E5',
         padding: 12,
-        marginBottom:10,
+        marginBottom: 10,
     },
     noImgSelected: {
         fontFamily: 'Montserrat_600SemiBold',
@@ -564,7 +665,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FAFAFA',
         borderColor: '#E5E5E5',
         padding: 12,
-        marginBottom:10,
+        marginBottom: 10,
     },
 
 

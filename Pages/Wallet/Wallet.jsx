@@ -4,7 +4,7 @@ import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, Animated, 
 // import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium, Montserrat_400Regular } from '@expo-google-fonts/montserrat';
 import { Picker } from '@react-native-picker/picker';
 import DatePicker from 'react-native-date-picker'
-import GlobalStyles from '../GlobalStyles';
+import {GlobalStyles} from '../GlobalStyles';
 import TaskService from '../Services/task_service';
 import { useGlobalAlert } from '../../Context/GlobalAlertContext';
 import RazorpayCheckout from 'react-native-razorpay';
@@ -443,7 +443,7 @@ function Wallet({ navigation, progress = 0.5 }) {
         <SafeAreaView style={[
             styles.container,
             GlobalStyles.SafeAreaView,
-            { paddingBottom: lightTheme.paddingBottomNew }
+            // { paddingBottom: lightTheme.paddingBottomNew }
         ]}>
             <ScrollView showsVerticalScrollIndicator={false}
                 showsHorizontalScrollIndicator={false}
@@ -767,56 +767,65 @@ function Wallet({ navigation, progress = 0.5 }) {
                                 </TouchableOpacity>
                             </View>
                             <View style={{ padding: 15, }}>
-                                <View style={{ padding: 0 }}>
-                                    <Text>From Date:</Text>
-                                    <TouchableOpacity
-                                        onPress={showFromDatePicker}
-                                        style={{
-                                            backgroundColor: '#2F81F5',
-                                            paddingVertical: 12,
-                                            paddingHorizontal: 16,
-                                            borderRadius: 8,
-                                            alignItems: 'center',
-                                            marginVertical: 8,
-                                        }}>
-                                        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
-                                            {fromDate.toDateString()}
-                                        </Text>
-                                    </TouchableOpacity>
+                                <View style={{ padding: 0, flexDirection:'row', justifyContent:'space-between', gap:12, }}>
+                                    <View style={{flex:1,}}>
+                                        <Text style={styles.label}>From Date:</Text>
+                                        <TouchableOpacity
+                                            onPress={showFromDatePicker}
+                                            style={{
+                                                borderWidth:1,
+                                                borderColor:'#ECEDF0',
+                                                backgroundColor: '#FAFAFA',
+                                                paddingHorizontal: 12,
+                                                borderRadius: 5,
+                                                height:50,
+                                                flexDirection:'row',
+                                                alignItems:'center',
+                                                marginBottom:10,
+                                            }}>
+                                            <Text style={{ color: '#0C0D36', fontSize: 14, fontWeight: '500' }}>
+                                                {fromDate.toDateString()}
+                                            </Text>
+                                        </TouchableOpacity>
 
-                                    {showFromPicker && (
-                                        <DateTimePicker
-                                            value={fromDate}
-                                            mode="date"
-                                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                            onChange={onFromChange}
-                                            maximumDate={new Date(2100, 11, 31)}
-                                        />
-                                    )}
+                                        {showFromPicker && (
+                                            <DateTimePicker
+                                                value={fromDate}
+                                                mode="date"
+                                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                                onChange={onFromChange}
+                                                maximumDate={new Date(2100, 11, 31)}
+                                            />
+                                        )}
+                                    </View>
+                                    <View style={{flex:1,}}>
+                                        <Text style={styles.label}>To Date:</Text>
+                                        <TouchableOpacity onPress={showToDatePicker}
+                                            style={{
+                                                borderWidth:1,
+                                                borderColor:'#ECEDF0',
+                                                backgroundColor: '#FAFAFA',
+                                                paddingHorizontal: 12,
+                                                borderRadius: 5,
+                                                height:50,
+                                                flexDirection:'row',
+                                                alignItems:'center',
+                                                marginBottom:10,
+                                            }}>
+                                            <Text style={{ color: '#0C0D36', fontSize: 14, fontWeight: '500' }}>{toDate.toDateString()}</Text>
+                                        </TouchableOpacity>
 
-                                    <Text>To Date:</Text>
-                                    <TouchableOpacity onPress={showToDatePicker}
-                                        style={{
-                                            backgroundColor: '#2F81F5',
-                                            paddingVertical: 12,
-                                            paddingHorizontal: 16,
-                                            borderRadius: 8,
-                                            alignItems: 'center',
-                                            marginVertical: 8,
-                                        }}>
-                                        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>{toDate.toDateString()}</Text>
-                                    </TouchableOpacity>
-
-                                    {showToPicker && (
-                                        <DateTimePicker
-                                            value={toDate}
-                                            mode="date"
-                                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                            onChange={onToChange}
-                                            minimumDate={fromDate}
-                                            maximumDate={new Date(2100, 11, 31)}
-                                        />
-                                    )}
+                                        {showToPicker && (
+                                            <DateTimePicker
+                                                value={toDate}
+                                                mode="date"
+                                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                                onChange={onToChange}
+                                                minimumDate={fromDate}
+                                                maximumDate={new Date(2100, 11, 31)}
+                                            />
+                                        )}
+                                    </View>
                                 </View>
                                 <View>
                                     <Text style={styles.label}>Transaction Type</Text>
@@ -894,7 +903,7 @@ function Wallet({ navigation, progress = 0.5 }) {
 
 const styles = StyleSheet.create({
     ScrollView: {
-        paddingBottom: 185,
+        flex:1,
     },
     label: {
         fontSize: 16,

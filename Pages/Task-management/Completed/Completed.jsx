@@ -7,7 +7,7 @@ import TaskStatusTabs from '../TaskStatusTabs';
 import TaskService from '../../Services/task_service';
 import NotificationCount from '../../Notifications/NotificationCount';
 
-import GlobalStyles from '../../GlobalStyles';
+import {GlobalStyles} from '../../GlobalStyles';
 import { useSearch } from '../../../hooks/userSearch1';
 import { Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker'; // install if not already
@@ -248,7 +248,7 @@ function Completed({ navigation }) {
                                     <View style={{ flex: 1, }}>
                                         <View style={{ position: 'relative', marginBottom: 5, }}>
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 12, height: 12, }} source={require('../../../assets/asicon1.png')} />
-                                            <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20, }}>Task ID: {task?.id ?? 'NA'}</Text>
+                                            <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20, }}>Task ID: {task?.displayId ?? 'NA'}</Text>
                                         </View>
                                         <View style={{ position: 'relative', marginBottom: 5, }}>
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 11, height: 13, }} source={require('../../../assets/asicon2.png')} />

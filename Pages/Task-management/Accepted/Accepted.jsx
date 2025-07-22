@@ -7,7 +7,7 @@ import {
 import TaskService from '../../Services/task_service';
 import TaskStatusTabs from '../TaskStatusTabs'
 import NotificationCount from '../../Notifications/NotificationCount';
-import GlobalStyles from '../../GlobalStyles';
+import {GlobalStyles} from '../../GlobalStyles';
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
 import { useSearch } from '../../../hooks/userSearch1';
 
@@ -215,7 +215,7 @@ function Accepted({ navigation }) {
                     <TaskStatusTabs activeTab="Accepted" />
                 </ScrollView> */}
 
-                <View style={{ paddingHorizontal: 3}}>
+                <View style={[{ paddingHorizontal: 3, paddingBottom:10, },]}>
 
                     {visibleTasks && visibleTasks.length > 0 ? (
                         visibleTasks.map((task, index) => (
@@ -244,7 +244,7 @@ function Accepted({ navigation }) {
                                         <View style={{ position: 'relative', marginBottom: 5 }}>
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 12, height: 12 }} source={require('../../../assets/asicon1.png')} />
                                             <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
-                                                Task ID: {task?.id ?? 'NA'}
+                                                Task ID: {task?.displayId ?? 'NA'}
                                             </Text>
                                         </View>
                                         <View style={{ position: 'relative', marginBottom: 5 }}>
