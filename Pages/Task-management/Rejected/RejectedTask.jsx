@@ -1,6 +1,6 @@
-import { useState, useEffect, useContext } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, Button, FlatList, Alert } from 'react-native'
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, RefreshControl, FlatList, Alert } from 'react-native'
 // import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium, Montserrat_400Regular } from '@expo-google-fonts/montserrat'
 import { Picker } from '@react-native-picker/picker';
 import { Checkbox } from 'react-native-paper';
@@ -17,6 +17,11 @@ import { useSearch } from '../../../hooks/userSearch1';
 
 
 
+
+
+const wait = (timeout) => {
+    return new Promise(resolve => setTimeout(resolve, timeout));
+};
 
 
 
@@ -41,7 +46,7 @@ function RejectedTask({ navigation }) {
     const visibleTasks = searchQuery
         ? filteredData           // Show all if searching
         : filteredData.slice(0, visibleCount); // Show limited if not
-
+    const [refreshing, setRefreshing] = useState(false);
 
     const formatDateTime = (isoString) => {
         const date = new Date(isoString);
@@ -162,6 +167,10 @@ function RejectedTask({ navigation }) {
     };
 
 
+    const onRefresh = useCallback(() => {
+        fetchData();
+        wait(2000).then(() => setRefreshing(false));
+    }, []);
 
 
     const sendComment = async () => {
@@ -208,7 +217,11 @@ function RejectedTask({ navigation }) {
         <SafeAreaView style={[styles.container, GlobalStyles.SafeAreaView]}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                showsHorizontalScrollIndicator={false}>
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.scrollView}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }>
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }} >
                     <TouchableOpacity onPress={() => navigation.navigate("TaskStack", { screen: "TaskScreen" })} style={{ flexDirection: 'row', alignItems: 'center', }}>

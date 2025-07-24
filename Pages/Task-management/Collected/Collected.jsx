@@ -1,6 +1,6 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, FlatList, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, FlatList, Alert, RefreshControl} from 'react-native';
 // import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium } from '@expo-google-fonts/montserrat';
 import { Picker } from '@react-native-picker/picker';
 import TaskStatusTabs from '../TaskStatusTabs';
@@ -21,6 +21,11 @@ import { useSearch } from '../../../hooks/userSearch1';
 
 
 
+const wait = (timeout) => {
+    return new Promise(resolve => setTimeout(resolve, timeout));
+};
+
+
 function Collected({ navigation }) {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedValue, setSelectedValue] = useState(null);
@@ -37,7 +42,7 @@ function Collected({ navigation }) {
     const [images, setImages] = useState([]);
     const [commentText, setCommentText] = useState('');
     const [modalVisible2, setModalVisible2] = useState(false);
-
+    const [refreshing, setRefreshing] = useState(false);
         const { showAlertModal, hideAlert } = useGlobalAlert();
         const [visibleCount, setVisibleCount] = useState(5);
     const { searchQuery, filteredData, search } = useSearch(allTasksData);
@@ -155,10 +160,14 @@ function Collected({ navigation }) {
 
     };
 
+    const onRefresh = useCallback(() => {
+        fetchData();
+        getAllOperationEmpp();
+        wait(2000).then(() => setRefreshing(false));
+    }, []);
+
     const navigateToUserLocation = (task) => {
         const locationString = task?.pickUpLocation?.coordinates;
-
-        console.log('droppppppppppppppppppppppppp', task)
         
         if (!locationString) {
             showAlertModal('Location not available', true);
@@ -305,7 +314,11 @@ function Collected({ navigation }) {
         <SafeAreaView style={[styles.container, GlobalStyles.SafeAreaView]}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                showsHorizontalScrollIndicator={false}>
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.scrollView}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }>
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
                     <TouchableOpacity onPress={() => navigation.navigate("TaskStack", { screen: "TaskScreen" })} style={{ flexDirection: 'row', alignItems: 'center', }}>

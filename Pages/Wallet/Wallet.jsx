@@ -4,7 +4,7 @@ import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, Animated, 
 // import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium, Montserrat_400Regular } from '@expo-google-fonts/montserrat';
 import { Picker } from '@react-native-picker/picker';
 import DatePicker from 'react-native-date-picker'
-import {GlobalStyles} from '../GlobalStyles';
+import { GlobalStyles } from '../GlobalStyles';
 import TaskService from '../Services/task_service';
 import { useGlobalAlert } from '../../Context/GlobalAlertContext';
 import RazorpayCheckout from 'react-native-razorpay';
@@ -514,20 +514,18 @@ function Wallet({ navigation, progress = 0.5 }) {
                         </TouchableOpacity>
                     </View>
                     <View style={{ backgroundColor: '#F6FAFF', borderRadius: 20, padding: 15, marginTop: 10 }}>
-                        {
+                        {transactions.length > 0 ? (
                             transactions.map((item) => (
                                 <TouchableWithoutFeedback key={item.id} onPress={() => isActiveTrans(item.id)}>
                                     <View style={styles.amtBox}>
                                         <View style={styles.amtInnbox}>
                                             <View style={styles.flexBox}>
                                                 <View style={styles.arrowBtn}>
-                                                    {
-                                                        item.transactionType === 'debit' ? (
-                                                            <Image style={{ width: 18, height: 18 }} source={require('../../assets/dibitedarrow.png')} />
-                                                        ) : (
-                                                            <Image style={{ width: 18, height: 18 }} source={require('../../assets/creditarrow.png')} />
-                                                        )
-                                                    }
+                                                    {item.transactionType === 'debit' ? (
+                                                        <Image style={{ width: 18, height: 18 }} source={require('../../assets/dibitedarrow.png')} />
+                                                    ) : (
+                                                        <Image style={{ width: 18, height: 18 }} source={require('../../assets/creditarrow.png')} />
+                                                    )}
                                                 </View>
                                                 <View style={styles.flexText}>
                                                     <Text
@@ -543,43 +541,50 @@ function Wallet({ navigation, progress = 0.5 }) {
                                             </View>
                                             <View style={styles.rightBlock}>
                                                 <Text style={styles.creditAmnt}>₹{item.billAmount}</Text>
-                                                <Text style={styles.dates}>{dayjs(item.createdAt).format('MMMM D, YYYY h:mm A')}</Text>
-                                                {/* {activeTransactionId === item.id && (
-                                            <Text style={{ marginTop: 10, fontSize: 8 }}>
-                                                Receipt ID: {item.receiptId}
-                                                Payment Mode: .....
-                                                Transaction ID: {item.transactionId}
-                                            </Text>
-                                            )} */}
+                                                <Text style={styles.dates}>
+                                                    {dayjs(item.createdAt).format('MMMM D, YYYY h:mm A')}
+                                                </Text>
                                             </View>
                                         </View>
-                                        <View>
-                                            {activeTransactionId === item.id && (
-                                                <View style={{ marginTop: 10, fontSize: 8, borderTopWidth: 1, borderTopColor: '#d8dbe0', paddingTop: 10, }}>
-                                                    <View style={styles.transactionDtl}>
-                                                        <Text style={styles.tranIdd}>Receipt ID:</Text>
-                                                        <Text style={styles.tranRec}>{item.receipt?.receiptId}</Text>
-                                                    </View>
-                                                    {item.paymentMode && (
-                                                        <View style={styles.transactionDtl}>
-                                                            <Text style={styles.tranIdd}>Payment Mode:</Text>
-                                                            <Text style={styles.tranRec}>{item.paymentMode}</Text>
-                                                        </View>
-                                                    )}
-
-                                                    {item.transactionId && (
-                                                        <View style={styles.transactionDtl}>
-                                                            <Text style={styles.tranIdd}>Transaction ID:</Text>
-                                                            <Text style={styles.tranRec}>{item.transactionId}</Text>
-                                                        </View>
-                                                    )}
+                                        {activeTransactionId === item.id && (
+                                            <View
+                                                style={{
+                                                    marginTop: 10,
+                                                    fontSize: 8,
+                                                    borderTopWidth: 1,
+                                                    borderTopColor: '#d8dbe0',
+                                                    paddingTop: 10,
+                                                }}
+                                            >
+                                                <View style={styles.transactionDtl}>
+                                                    <Text style={styles.tranIdd}>Receipt ID:</Text>
+                                                    <Text style={styles.tranRec}>{item.receipt?.receiptId}</Text>
                                                 </View>
-                                            )}
-                                        </View>
+                                                {item.paymentMode && (
+                                                    <View style={styles.transactionDtl}>
+                                                        <Text style={styles.tranIdd}>Payment Mode:</Text>
+                                                        <Text style={styles.tranRec}>{item.paymentMode}</Text>
+                                                    </View>
+                                                )}
+                                                {item.transactionId && (
+                                                    <View style={styles.transactionDtl}>
+                                                        <Text style={styles.tranIdd}>Transaction ID:</Text>
+                                                        <Text style={styles.tranRec}>{item.transactionId}</Text>
+                                                    </View>
+                                                )}
+                                            </View>
+                                        )}
                                     </View>
                                 </TouchableWithoutFeedback>
                             ))
-                        }
+                        ) : (
+                            <View style={{ padding: 20, alignItems: 'center' }}>
+                                <Text style={{ fontSize: 16, color: '#64748B', fontFamily: 'Montserrat_500Medium' }}>
+                                    No history found
+                                </Text>
+                            </View>
+                        )}
+
                     </View>
 
                 </View>
@@ -767,21 +772,21 @@ function Wallet({ navigation, progress = 0.5 }) {
                                 </TouchableOpacity>
                             </View>
                             <View style={{ padding: 15, }}>
-                                <View style={{ padding: 0, flexDirection:'row', justifyContent:'space-between', gap:12, }}>
-                                    <View style={{flex:1,}}>
+                                <View style={{ padding: 0, flexDirection: 'row', justifyContent: 'space-between', gap: 12, }}>
+                                    <View style={{ flex: 1, }}>
                                         <Text style={styles.label}>From Date:</Text>
                                         <TouchableOpacity
                                             onPress={showFromDatePicker}
                                             style={{
-                                                borderWidth:1,
-                                                borderColor:'#ECEDF0',
+                                                borderWidth: 1,
+                                                borderColor: '#ECEDF0',
                                                 backgroundColor: '#FAFAFA',
                                                 paddingHorizontal: 12,
                                                 borderRadius: 5,
-                                                height:50,
-                                                flexDirection:'row',
-                                                alignItems:'center',
-                                                marginBottom:10,
+                                                height: 50,
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                marginBottom: 10,
                                             }}>
                                             <Text style={{ color: '#0C0D36', fontSize: 14, fontWeight: '500' }}>
                                                 {fromDate.toDateString()}
@@ -798,19 +803,19 @@ function Wallet({ navigation, progress = 0.5 }) {
                                             />
                                         )}
                                     </View>
-                                    <View style={{flex:1,}}>
+                                    <View style={{ flex: 1, }}>
                                         <Text style={styles.label}>To Date:</Text>
                                         <TouchableOpacity onPress={showToDatePicker}
                                             style={{
-                                                borderWidth:1,
-                                                borderColor:'#ECEDF0',
+                                                borderWidth: 1,
+                                                borderColor: '#ECEDF0',
                                                 backgroundColor: '#FAFAFA',
                                                 paddingHorizontal: 12,
                                                 borderRadius: 5,
-                                                height:50,
-                                                flexDirection:'row',
-                                                alignItems:'center',
-                                                marginBottom:10,
+                                                height: 50,
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                marginBottom: 10,
                                             }}>
                                             <Text style={{ color: '#0C0D36', fontSize: 14, fontWeight: '500' }}>{toDate.toDateString()}</Text>
                                         </TouchableOpacity>
@@ -903,7 +908,7 @@ function Wallet({ navigation, progress = 0.5 }) {
 
 const styles = StyleSheet.create({
     ScrollView: {
-        flex:1,
+        flex: 1,
     },
     label: {
         fontSize: 16,

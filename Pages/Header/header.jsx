@@ -5,11 +5,14 @@ import TaskService from '../Services/task_service';
 import { AuthContext } from "../../Context/AuthContext";
 import { BASE_API_URL } from '../Services/API';
 import { useFocusEffect } from '@react-navigation/native';
+import { useNotification } from '../../Context/NotificationContext';
 
 const header = ({ navigation, profileImage }) => {
 
+  const { setNotificationCount } = useNotification();
   const [userName, setUserName] = useState("");
-  const [notificationCount, setNotificationCount] = useState(0);
+  const [notificationCount2, setNotificationCount2] = useState(0);
+  const [intervalId, setIntervalId] = useState(null);
 
   const { setNotificationData } = useContext(AuthContext);
 
@@ -27,42 +30,36 @@ const header = ({ navigation, profileImage }) => {
       }
     };
 
-    const init = () => {
-      getUserData();
-
-      const interval = setInterval(() => {
-        checkNewNotifications();
-      }, 100000);
-
-      return () => clearInterval(interval);
+    const checkNewNotifications = async () => {
+      try {
+        const response = await TaskService.getMyNotifications();
+        if (response?.status == 1) {
+          setNotificationCount(response.data.unseen.length || 0);
+          setNotificationCount2(response.data.unseen.length || 0);
+        }
+      } catch (err) {
+        console.log("Notification check error:", err);
+      }
     };
 
-    init();
+    getUserData();
+    checkNewNotifications(); 
+
+    const id = setInterval(() => {
+      checkNewNotifications();
+    }, 10000);
+
+    setIntervalId(id);
+
 
     return () => {
       isMounted = false;
+      if (intervalId) clearInterval(intervalId);
+      clearInterval(id);
     };
+
+
   }, []);
-
-
-  //   useFocusEffect(
-  //   React.useCallback(() => {
-  //     console.log("Display focus called!")
-  //   }, [])
-  // );
-
-  const checkNewNotifications = async () => {
-    const response = await TaskService.getAllGeneralNotifications();
-    if (response.status == 1) {
-      const notifications = response.data;
-      const stored = await AsyncStorage.getItem("seenNotificationIds");
-      const seenIds = stored ? JSON.parse(stored) : [];
-
-      const unseenCount = notifications.filter(n => !seenIds.includes(n.id)).length;
-      setNotificationCount(unseenCount);
-      setNotificationData(unseenCount);
-    }
-  };
 
   return (
     <View>
@@ -98,7 +95,7 @@ const header = ({ navigation, profileImage }) => {
             source={require('../../assets/noti.png')}
           />
 
-          {notificationCount > 0 && (
+          {notificationCount2 > 0 && (
             <View
               pointerEvents="none"   // <-- let taps fall through to Pressable
               style={{
@@ -123,7 +120,7 @@ const header = ({ navigation, profileImage }) => {
                   textAlign: 'center',
                 }}
               >
-                {notificationCount > 99 ? '99+' : notificationCount}
+                {notificationCount2 > 99 ? '99+' : notificationCount2}
               </Text>
             </View>
           )}

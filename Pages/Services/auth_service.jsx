@@ -19,7 +19,7 @@ const AuthService = {
   // POST Request (Login)
   empLogin: async (userData) => {
     try {
-      const response = await apiClient.post("/auth/employeeLogin", userData); // Log the response data
+      const response = await apiClient.post("auth/employeeLogin", userData); // Log the response data
       if (response.data.access_token) {
         await AsyncStorage.setItem("token", response.data.access_token); // Save token
         await AsyncStorage.setItem("user_id", response.data.employee.id.toString()); // Store as string
@@ -54,7 +54,7 @@ const AuthService = {
   // },
   attendanceCheckIn: async (data) => {
     try {
-      const response = await apiClient.post("/global/employee/emp-attendance/checkIn", data, { timeout: 10000 });
+      const response = await apiClient.post("global/employee/emp-attendance/checkIn", data, { timeout: 10000 });
       if (!response || !response.data) {
       throw new Error('Empty response from server');
     }
@@ -67,7 +67,7 @@ const AuthService = {
 
   attendanceCheckOut: async (data) => {
     try {
-      const response = await apiClient.post("/global/employee/emp-attendance/checkOut", data);
+      const response = await apiClient.post("global/employee/emp-attendance/checkOut", data);
       if (!response || !response.data) {
       throw new Error('Empty response from server');
     }
@@ -80,7 +80,7 @@ const AuthService = {
 
   requestOTP: async (data) => {
     try {
-      const response = await apiClient.post("/requestOTP", data);
+      const response = await apiClient.post("requestOTP", data);
       if (!response || !response.data) {
       throw new Error('Empty response from server');
     }
@@ -93,7 +93,7 @@ const AuthService = {
 
   verifyOTP: async (data) => {
     try {
-      const response = await apiClient.post("/verifyOTP", data);
+      const response = await apiClient.post("verifyOTP", data);
       if (!response || !response.data) {
       throw new Error('Empty response from server');
     }
@@ -106,7 +106,7 @@ const AuthService = {
   
   updatePassword: async (data) => {
     try {
-      const response = await apiClient.post("/updatePassword", data);
+      const response = await apiClient.post("updatePassword", data);
       if (!response || !response.data) {
       throw new Error('Empty response from server');
     }

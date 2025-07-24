@@ -28,7 +28,7 @@ const attachAuthInterceptor = (instance) => {
 const createApiClient = (baseURL) => {
   const instance = axios.create({
     baseURL,
-    timeout: 3000,
+    timeout: 10000,
     headers: {
       "accept": "application/json"
     },
@@ -38,38 +38,52 @@ const createApiClient = (baseURL) => {
 
   // Optional: Logging for development
   if (__DEV__) {
-
+    // Restore original XMLHttpRequest and FormData in React Native debugger
     global.XMLHttpRequest = global.originalXMLHttpRequest
       ? global.originalXMLHttpRequest
       : global.XMLHttpRequest;
-
+  
     global.FormData = global.originalFormData
       ? global.originalFormData
       : global.FormData;
-
+  
     instance.interceptors.request.use((config) => {
-      console.log("[Axios Request]", config.method?.toUpperCase(), config.url);
-      console.log("Payload:", config.data);
-
-      if (config.headers) console.log("→ Headers:", config.headers);
-      if (config.params) console.log("→ Params:", config.params);
-      if (config.data) console.log("→ Data:", config.data);
+      const fullUrl = `${config.baseURL || ''}${config.url}`;
+      console.log("📡 [Axios Request]", config.method?.toUpperCase(), fullUrl);
+  
+      if (config.headers) console.log("🧾 Headers:", config.headers);
+      if (config.params) console.log("🔍 Params:", config.params);
+      if (config.data) console.log("📦 Data:", config.data);
+  
       return config;
     });
-
+  
     instance.interceptors.response.use(
       (response) => {
-        // console.log("[Axios Response]", response.status, response.config.url);
-        // console.log("Response Data:", response.data);
+        const fullUrl = `${response.config.baseURL || ''}${response.config.url}`;
+        console.log("✅ [Axios Response]", response.status, fullUrl);
+        console.log("📥 Response Data:", response.data);
         return response;
       },
       (error) => {
-        // console.error("[Axios Error]", error.response?.status, error.response?.config?.url);
-        // console.error("Error Response:", error.response?.data);
+        if (error.config) {
+          const fullUrl = `${error.config.baseURL || ''}${error.config.url}`;
+          console.error("❌ [Axios Error]", error.message);
+          console.error("📍 URL:", fullUrl);
+        }
+  
+        if (error.response) {
+          console.error("📛 Status:", error.response.status);
+          console.error("💬 Response Error:", error.response.data);
+        } else {
+          console.error("📴 Network/Unknown Error:", error.message);
+        }
+  
         return Promise.reject(error);
       }
     );
   }
+  
 
   return instance;
 };

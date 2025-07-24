@@ -42,6 +42,7 @@ import Approved from './Pages/Fuel-voucher/Approved/Approved';
 import Processed from './Pages/Fuel-voucher/Processed/Processed';
 import Rejected from './Pages/Fuel-voucher/Rejected/Rejected';
 import Receiptview from './Pages/Receipt/Receiptview';
+import {NotificationProvider} from './Context/NotificationContext'
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -243,6 +244,7 @@ export default function App() {
   }, []);
 
   return (
+    <NotificationProvider>
     <GlobalAlertProvider>
       <AuthProvider>
         <Animated.View style={[{ position: 'absolute', left:0, width:'100%', top: 0, zIndex: 1000, }, { transform: [{ translateY: slideAnim }] }]}>
@@ -273,6 +275,7 @@ export default function App() {
         </NavigationContainer>
       </AuthProvider>
     </GlobalAlertProvider>
+    </NotificationProvider>
   );
 }
 

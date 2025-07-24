@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, ActivityIndicator, Platform, 
-    TextInput, Modal, Animated, FlatList, Alert ,RefreshControl} from 'react-native';
+import {
+    StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, ActivityIndicator, Platform,
+    TextInput, Modal, Animated, FlatList, Alert, RefreshControl
+} from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { GlobalStyles } from '../../GlobalStyles';
 import { lightTheme } from '../../GlobalStyles';
@@ -50,34 +52,34 @@ function Pending({ navigation }) {
     const [showFromPicker, setShowFromPicker] = useState(false);
     const [showToPicker, setShowToPicker] = useState(false);
 
-      
 
-      useEffect(() => {
+
+    useEffect(() => {
         vehicleList();
         getAllFuelVoucher();
         setImages([])
-      }, [])
+    }, [])
 
-      useFocusEffect(
+    useFocusEffect(
         useCallback(() => {
-          getAllFuelVoucher(); // refresh when coming back from Submit page
+            getAllFuelVoucher(); 
         }, [])
-      );
+    );
     const vehicleList = async () => {
         try {
-            const userId =  await AsyncStorage.getItem('user_id')
-            const response = await TaskService.getVehicleByEmpId({employeeId: userId})
-            console.log('ressssss', response)
-            if(response.status==1) {
+            const userId = await AsyncStorage.getItem('user_id')
+            const response = await TaskService.getVehicleByEmpId({ employeeId: userId })
+
+            if (response.status == 1) {
                 setVehicles(response.data)
             } else {
                 setVehicles([])
-    
+
             }
         } catch (error) {
             showAlertModal(error, true)
             setVehicles([])
-        } finally{
+        } finally {
             setVehicles([])
         }
     }
@@ -89,53 +91,53 @@ function Pending({ navigation }) {
     const showToDatePicker = () => {
         setShowToPicker(true);
     };
+
+
     const formatDateTime = (dateString) => {
         if (!dateString) return '';
-      
+
         const date = new Date(dateString);
-      
+
         return date
-          .toLocaleString('en-IN', {
-            timeZone: 'Asia/Kolkata',
-            month: 'short',       // "Feb"
-            day: '2-digit',       // "20"
-            year: 'numeric',      // "2025"
-            hour: 'numeric',      // "4"
-            minute: '2-digit',    // "01"
-            hour12: true          // "PM"
-          })
-          .replace(',', ''); // Optional: Remove comma between date and time
-      };
-      
-      
+            .toLocaleString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                month: 'short',       // "Feb"
+                day: '2-digit',       // "20"
+                year: 'numeric',      // "2025"
+                hour: 'numeric',      // "4"
+                minute: '2-digit',    // "01"
+                hour12: true          // "PM"
+            })
+            .replace(',', ''); // Optional: Remove comma between date and time
+    };
 
     const formatToINR = (amount) => {
         return new Intl.NumberFormat('en-IN', {
-          style: 'currency',
-          currency: 'INR',
-          minimumFractionDigits: 2,
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: 2,
         }).format(amount || 0);
-      };
+    };
 
-      const getAllFuelVoucher = async () => {
+    const getAllFuelVoucher = async () => {
         try {
-          setLoading(true);
-          const response = await TaskService.getAllFuelVouchers({  fromDate: null,  toDate: null});
-            
-          if (response?.status) {
-            setFuelVoucherList(response.data.filter((item) => item.opStatus=="pending"));
-          } else {
-            setFuelVoucherList([]);
-          }
-        } catch (error) {
-          console.error('Error fetching fuel vouchers:', error);
-          setFuelVoucherList([]);
-        } finally {
-          setLoading(false);
-        }
-      };
+            setLoading(true);
+            const response = await TaskService.getAllFuelVouchers({ fromDate: null, toDate: null });
 
-      const onRefresh = useCallback(() => {
+            if (response?.status) {
+                setFuelVoucherList(response.data.filter((item) => item.opStatus == "pending"));
+            } else {
+                setFuelVoucherList([]);
+            }
+        } catch (error) {
+            console.error('Error fetching fuel vouchers:', error);
+            setFuelVoucherList([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const onRefresh = useCallback(() => {
         setRefreshing(true);
         getAllFuelVoucher()
         wait(2000).then(() => setRefreshing(false));
@@ -149,7 +151,7 @@ function Pending({ navigation }) {
         if (event?.type === 'set' || Platform.OS === 'ios') {
             if (selectedDate) {
                 setFromDate(selectedDate);
-
+                console.log('setFromDate', selectedDate)
                 if (selectedDate > toDate) {
                     setToDate(selectedDate);
                     showAlertModal('To Date auto-updated to match From Date: ' + selectedDate.toDateString(), true);
@@ -158,21 +160,22 @@ function Pending({ navigation }) {
         }
     };
 
-        const onToChange = (event, selectedDate) => {
-            if (Platform.OS === 'android') {
-                setShowToPicker(false); // Always hide manually on Android
-            }
-    
-            if (event?.type === 'set' || Platform.OS === 'ios') {
-                if (selectedDate) {
-                    if (selectedDate >= fromDate) {
-                        setToDate(selectedDate);
-                    } else {
-                        showAlertModal('To date cannot be before From date', true);
-                    }
+    const onToChange = (event, selectedDate) => {
+        if (Platform.OS === 'android') {
+            setShowToPicker(false); // Always hide manually on Android
+        }
+
+        if (event?.type === 'set' || Platform.OS === 'ios') {
+            if (selectedDate) {
+                if (selectedDate >= fromDate) {
+                    setToDate(selectedDate);
+                    console.log('setToDate', selectedDate)
+                } else {
+                    showAlertModal('To date cannot be before From date', true);
                 }
             }
-        };
+        }
+    };
 
     useEffect(() => {
         Animated.loop(
@@ -191,6 +194,57 @@ function Pending({ navigation }) {
         ).start();
     }, []);
 
+    const submitFilter = async () => {
+        const today = new Date();
+        const tenDaysAgo = new Date(today);
+        tenDaysAgo.setDate(today.getDate() - 10);
+
+        const formattedFrom = tenDaysAgo.toISOString().split('T')[0];
+        const formattedTo = toDate.toISOString().split('T')[0];
+        console.log("from date: ", formattedFrom, "to date: ", formattedTo)
+
+        try {
+            setLoading(true);
+            const response = await TaskService.getAllFuelVouchers({ fromDate: formattedFrom, toDate: formattedTo });
+            console.log('filterrrrr', response.data.filter((item) => item.opStatus == "pending"))
+            if (response?.status) {
+                setFuelVoucherList(response.data.filter((item) => item.opStatus == "pending"));
+                setLoading(false);
+                setFilter(false)
+            } else {
+                setFuelVoucherList([]);
+                setLoading(false);
+            }
+        } catch (error) {
+            console.error('Error fetching fuel vouchers:', error);
+            setFuelVoucherList([]);
+        } finally {
+            setLoading(false);
+        }
+
+    }
+
+
+    const resetFilter = async () => {
+        try {
+            setLoading(true);
+            const response = await TaskService.getAllFuelVouchers({ fromDate: null, toDate: null });
+
+            if (response?.status) {
+                setFuelVoucherList(response.data.filter((item) => item.opStatus == "pending"));
+                setLoading(false);
+                setFilter(false)
+            } else {
+                setFuelVoucherList([]);
+                setLoading(false);
+            }
+        } catch (error) {
+            console.error('Error fetching fuel vouchers:', error);
+            setFuelVoucherList([]);
+        } finally {
+            setLoading(false);
+        }
+    }
     const backgroundColor = bgColor.interpolate({
         inputRange: [0, 1],
         outputRange: ['#FFBB00', 'transparent'],
@@ -198,12 +252,12 @@ function Pending({ navigation }) {
 
     // const onSubmitFuelvoucher = async () => {
     //     const userId = await AsyncStorage.getItem('user_id');
-      
+
     //     if (!selectedVehicle) {
     //         Alert.alert('Missing Information', 'Please select a valid vehicle before submitting.');
     //         return;
     //     }
-        
+
     //     setLoading(true)
     //     const request = {
     //         employeeId: Number(userId),
@@ -212,7 +266,7 @@ function Pending({ navigation }) {
     //         paymentMode: selectPaymode,
     //         logisticRemarks: remarks,
     //     };
-        
+
     //     try {
     //         const response = await TaskService.saveFuelVoucher(request);
     //         await submitFuelVoucherAttachments(response.data?.id);
@@ -227,14 +281,14 @@ function Pending({ navigation }) {
 
     //     }
     //   };
-      
+
 
     //   const submitFuelVoucherAttachments = async (fuelVoucherId) => {
     //     if (!images.length) {
     //       console.warn('No image selected');
     //       return;
     //     }
-      
+
     //     const file = images[0]; // get the first image
     //     setLoading(true)
     //     const formData = new FormData();
@@ -244,7 +298,7 @@ function Pending({ navigation }) {
     //       type: file.type || 'image/jpeg',
     //       name: file.name || `attachment_${Date.now()}.jpg`,
     //     });
-      
+
     //     try {
     //       const response = await TaskService.addFuelVoucherAttachment(formData);
     //       if(response.status==1) {
@@ -263,19 +317,19 @@ function Pending({ navigation }) {
     //       throw error;
     //     }
     //   };
-      
+
 
 
     return (
-        <SafeAreaView style={[ 
+        <SafeAreaView style={[
             styles.container,
             GlobalStyles.SafeAreaView,
             { paddingBottom: lightTheme.paddingBottomNew }
-          ]}>
+        ]}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 showsHorizontalScrollIndicator={false}
-                    refreshControl={
+                refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }>
 
@@ -285,8 +339,8 @@ function Pending({ navigation }) {
                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Fuel Voucher Request</Text>
                     </TouchableOpacity>
                     <View style={{ position: 'relative', width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
-                    <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
-                    <View pointerEvents="none">
+                        <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
+                            <View pointerEvents="none">
                                 <NotificationCount />
                             </View>
                         </TouchableOpacity>
@@ -327,64 +381,64 @@ function Pending({ navigation }) {
                 </ScrollView>
 
                 {fuelVoucherList.map((allVehicles) => (
-                <View key={allVehicles.id}>
-                    <Text style={styles.title}>{formatDateTime(allVehicles.createdAt)}</Text>
+                    <View key={allVehicles.id}>
+                        <Text style={styles.title}>{formatDateTime(allVehicles.createdAt)}</Text>
 
-                    <View
-                    style={{
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: 15,
-                    }}
-                    >
-                    <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
-                        <Image
-                        style={{ width: 28, height: 20 }}
-                        source={require('../../../assets/voucher.png')}
-                        />
-                        <View style={{ paddingLeft: 6 }}>
-                        <Text
+                        <View
                             style={{
-                            fontFamily: 'Montserrat_500Medium',
-                            fontSize: 16,
-                            color: '#0C0D36',
-                            paddingBottom: 2,
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: 15,
                             }}
                         >
-                            {allVehicles?.fuelVoucherNo}
-                        </Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <View style={styles.bgborder}>
-                            <Animated.View style={[styles.animatebg, { backgroundColor }]} />
+                            <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
+                                <Image
+                                    style={{ width: 28, height: 20 }}
+                                    source={require('../../../assets/voucher.png')}
+                                />
+                                <View style={{ paddingLeft: 6 }}>
+                                    <Text
+                                        style={{
+                                            fontFamily: 'Montserrat_500Medium',
+                                            fontSize: 16,
+                                            color: '#0C0D36',
+                                            paddingBottom: 2,
+                                        }}
+                                    >
+                                        {allVehicles?.fuelVoucherNo}
+                                    </Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <View style={styles.bgborder}>
+                                            <Animated.View style={[styles.animatebg, { backgroundColor }]} />
+                                        </View>
+                                        <Text
+                                            style={{
+                                                fontFamily: 'Montserrat_600SemiBold',
+                                                fontSize: 11,
+                                                color: '#0C0D36',
+                                            }}
+                                        >
+                                            Payment Pending
+                                        </Text>
+                                    </View>
+                                </View>
                             </View>
-                            <Text
-                            style={{
-                                fontFamily: 'Montserrat_600SemiBold',
-                                fontSize: 11,
-                                color: '#0C0D36',
-                            }}
-                            >
-                            Payment Pending
-                            </Text>
-                        </View>
-                        </View>
-                    </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <View style={{ paddingRight: 15 }}>
-                        <Text
-                            style={{
-                            fontFamily: 'Montserrat_600SemiBold',
-                            fontSize: 14,
-                            color: '#FFBB00',
-                            }}
-                        >
-                            {formatToINR(allVehicles.amount)}
-                        </Text>
-                        </View>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <View style={{ paddingRight: 15 }}>
+                                    <Text
+                                        style={{
+                                            fontFamily: 'Montserrat_600SemiBold',
+                                            fontSize: 14,
+                                            color: '#FFBB00',
+                                        }}
+                                    >
+                                        {formatToINR(allVehicles.amount)}
+                                    </Text>
+                                </View>
 
-                        {/* <TouchableOpacity
+                                {/* <TouchableOpacity
                         style={[styles.touchBtn, { paddingHorizontal: 4 }]}
                         onPress={() =>
                             setActiveMenuId(
@@ -398,7 +452,7 @@ function Pending({ navigation }) {
                         />
                         </TouchableOpacity> */}
 
-                        {/* {activeMenuId === allVehicles.id && (
+                                {/* {activeMenuId === allVehicles.id && (
                         <View style={styles.viewBx}>
                             <TouchableOpacity
                             style={styles.viewText}
@@ -421,9 +475,9 @@ function Pending({ navigation }) {
                             </TouchableOpacity>
                         </View>
                         )} */}
+                            </View>
+                        </View>
                     </View>
-                    </View>
-                </View>
                 ))}
 
 
@@ -445,73 +499,73 @@ function Pending({ navigation }) {
                             <View style={{ padding: 15, }}>
                                 <View>
                                     {/* <Text style={styles.label}>Date Range</Text> */}
-                                      <View style={{ padding: 0, flexDirection:'row', justifyContent:'space-between', gap:12, }}>
-                                    <View style={{flex:1,}}>
-                                        <Text style={styles.label}>From Date:</Text>
-                                        <TouchableOpacity
-                                            onPress={showFromDatePicker}
-                                            style={{
-                                                borderWidth:1,
-                                                borderColor:'#ECEDF0',
-                                                backgroundColor: '#FAFAFA',
-                                                paddingHorizontal: 12,
-                                                borderRadius: 5,
-                                                height:50,
-                                                flexDirection:'row',
-                                                alignItems:'center',
-                                                marginBottom:10,
-                                            }}>
-                                            <Text style={{ color: '#0C0D36', fontSize: 14, fontWeight: '500' }}>
-                                                {fromDate.toDateString()}
-                                            </Text>
-                                        </TouchableOpacity>
+                                    <View style={{ padding: 0, flexDirection: 'row', justifyContent: 'space-between', gap: 12, }}>
+                                        <View style={{ flex: 1, }}>
+                                            <Text style={styles.label}>From Date:</Text>
+                                            <TouchableOpacity
+                                                onPress={showFromDatePicker}
+                                                style={{
+                                                    borderWidth: 1,
+                                                    borderColor: '#ECEDF0',
+                                                    backgroundColor: '#FAFAFA',
+                                                    paddingHorizontal: 12,
+                                                    borderRadius: 5,
+                                                    height: 50,
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    marginBottom: 10,
+                                                }}>
+                                                <Text style={{ color: '#0C0D36', fontSize: 14, fontWeight: '500' }}>
+                                                    {fromDate.toDateString()}
+                                                </Text>
+                                            </TouchableOpacity>
 
-                                        {showFromPicker && (
-                                            <DateTimePicker
-                                                value={fromDate}
-                                                mode="date"
-                                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                                onChange={onFromChange}
-                                                maximumDate={new Date(2100, 11, 31)}
-                                            />
-                                        )}
-                                    </View>
-                                    <View style={{flex:1,}}>
-                                        <Text style={styles.label}>To Date:</Text>
-                                        <TouchableOpacity onPress={showToDatePicker}
-                                            style={{
-                                                borderWidth:1,
-                                                borderColor:'#ECEDF0',
-                                                backgroundColor: '#FAFAFA',
-                                                paddingHorizontal: 12,
-                                                borderRadius: 5,
-                                                height:50,
-                                                flexDirection:'row',
-                                                alignItems:'center',
-                                                marginBottom:10,
-                                            }}>
-                                            <Text style={{ color: '#0C0D36', fontSize: 14, fontWeight: '500' }}>{toDate.toDateString()}</Text>
-                                        </TouchableOpacity>
+                                            {showFromPicker && (
+                                                <DateTimePicker
+                                                    value={fromDate}
+                                                    mode="date"
+                                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                                    onChange={onFromChange}
+                                                    maximumDate={new Date(2100, 11, 31)}
+                                                />
+                                            )}
+                                        </View>
+                                        <View style={{ flex: 1, }}>
+                                            <Text style={styles.label}>To Date:</Text>
+                                            <TouchableOpacity onPress={showToDatePicker}
+                                                style={{
+                                                    borderWidth: 1,
+                                                    borderColor: '#ECEDF0',
+                                                    backgroundColor: '#FAFAFA',
+                                                    paddingHorizontal: 12,
+                                                    borderRadius: 5,
+                                                    height: 50,
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    marginBottom: 10,
+                                                }}>
+                                                <Text style={{ color: '#0C0D36', fontSize: 14, fontWeight: '500' }}>{toDate.toDateString()}</Text>
+                                            </TouchableOpacity>
 
-                                        {showToPicker && (
-                                            <DateTimePicker
-                                                value={toDate}
-                                                mode="date"
-                                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                                onChange={onToChange}
-                                                minimumDate={fromDate}
-                                                maximumDate={new Date(2100, 11, 31)}
-                                            />
-                                        )}
+                                            {showToPicker && (
+                                                <DateTimePicker
+                                                    value={toDate}
+                                                    mode="date"
+                                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                                    onChange={onToChange}
+                                                    minimumDate={fromDate}
+                                                    maximumDate={new Date(2100, 11, 31)}
+                                                />
+                                            )}
+                                        </View>
                                     </View>
-                                </View>
                                 </View>
                                 <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', paddingVertical: 25, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between', }}>
-                                    <TouchableOpacity style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12, }}>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#2F81F5', textAlign: 'center', }}>Reset All</Text>
+                                    <TouchableOpacity onPress={() => {resetFilter()}} style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12, }}>
+                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#2F81F5', textAlign: 'center', }}>Reset</Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12, }}>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#fff', textAlign: 'center', }}>Apply Filters (3)</Text>
+                                    <TouchableOpacity onPress={() => {submitFilter()}} style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12, }}>
+                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#fff', textAlign: 'center', }}>Apply Filters</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -532,13 +586,13 @@ function Pending({ navigation }) {
             </TouchableOpacity>
 
             <FeulVoucherRequest visible={modalVisible} onClose={() => setModalVisible(false)}
-            onSuccess={() => {
-                setModalVisible(false);
-                getAllFuelVoucher(); 
-                
-              }} />
+                onSuccess={() => {
+                    setModalVisible(false);
+                    getAllFuelVoucher();
+
+                }} />
             {/* Request Modal */}
-            
+
 
 
             {loading && (
@@ -564,8 +618,8 @@ function Pending({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    ScrollView:{
-        paddingBottom:185,
+    ScrollView: {
+        paddingBottom: 185,
     },
     label: {
         fontSize: 16,
@@ -684,8 +738,8 @@ const styles = StyleSheet.create({
         borderTopEndRadius: 20,
         borderTopLeftRadius: 20,
     },
-    scrlablModalContainer:{
-        height:'75%',
+    scrlablModalContainer: {
+        height: '75%',
     },
     modalText: {
         fontFamily: 'Montserrat_500Medium',
@@ -782,7 +836,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FAFAFA',
         borderColor: '#E5E5E5',
         padding: 12,
-        marginBottom:10,
+        marginBottom: 10,
     },
     noImgSelected: {
         fontFamily: 'Montserrat_600SemiBold',
@@ -795,7 +849,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FAFAFA',
         borderColor: '#E5E5E5',
         padding: 12,
-        marginBottom:10,
+        marginBottom: 10,
     },
 
 

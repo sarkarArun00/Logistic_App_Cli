@@ -1,6 +1,6 @@
-import { useState, useEffect, useContext } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, PermissionsAndroid, FlatList, Alert } from 'react-native'
+import { StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, PermissionsAndroid, FlatList, Alert, RefreshControl} from 'react-native'
 // import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium, Montserrat_400Regular } from '@expo-google-fonts/montserrat'
 import { Picker } from '@react-native-picker/picker';
 import { Checkbox } from 'react-native-paper';
@@ -16,7 +16,7 @@ import { BASE_API_URL } from '../../Services/API';
 // import * as ImagePicker from 'expo-image-picker';
 // import * as ImageManipulator from 'expo-image-manipulator';
 
-import {GlobalStyles} from '../../GlobalStyles';
+import { GlobalStyles } from '../../GlobalStyles';
 import { Vibration } from 'react-native';
 import ImageResizer from 'react-native-image-resizer';
 import { readFile } from 'react-native-fs'; // For base64
@@ -24,6 +24,11 @@ import { readFile } from 'react-native-fs'; // For base64
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
 import { lightTheme } from '../../GlobalStyles';
 import { useSearch } from '../../../hooks/userSearch1';
+
+
+const wait = (timeout) => {
+    return new Promise(resolve => setTimeout(resolve, timeout));
+};
 
 
 
@@ -42,8 +47,8 @@ function Progress({ navigation }) {
     const [visibleCount, setVisibleCount] = useState(5);
     const { searchQuery, filteredData, search } = useSearch(allTasksData);
     const visibleTasks = searchQuery
-        ? filteredData           
-        : filteredData.slice(0, visibleCount); 
+        ? filteredData
+        : filteredData.slice(0, visibleCount);
 
     const [images, setImages] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -70,13 +75,12 @@ function Progress({ navigation }) {
 
     const [checked, setChecked] = useState(false); // For "Select All"
     const [itemIds, setItemIds] = useState([]); // Selected item IDs
-
+    const [refreshing, setRefreshing] = useState(false);
 
 
     const { showAlertModal, hideAlert } = useGlobalAlert();
 
     useEffect(() => {
-        fetchData();
 
         if (itemInfo.length > 0) {
             setChecked(itemIds.length === itemInfo.length);
@@ -87,6 +91,8 @@ function Progress({ navigation }) {
             setImages([]);
             setDeliveryRemarks('');
         }
+        getClientsAll();
+        fetchData();
     }, [collectModalVisible2, itemIds, itemInfo]);
 
     useEffect(() => {
@@ -105,22 +111,30 @@ function Progress({ navigation }) {
     }, [collectModalVisible3]);
 
     const fetchData = async () => {
-        setLoading(true);
         try {
+            setLoading(true);
             const response = await TaskService.getMyInProgressTasks();
-            console.log('newwwwwwwwwwwww',response)
-            setAllTasksData(response.data || []);
-            // setVisibleTasks(response.data?.slice(0, 5) || []);
-            search('', response.data); //
-            setLoading(false);
+            if(response.status==1) {
+                setAllTasksData(response.data || []);
+                search('', response.data); //
+                setLoading(false);
+            } else {
+                setAllTasksData([]);
+                setLoading(false);
+            }
 
         } catch (error) {
             console.error('Error fetching tasks:', error);
             search('', []);
-        } finally {
             setLoading(false);
-        }
+        } 
     };
+
+    const onRefresh = useCallback(() => {
+        fetchData();
+        getClientsAll();
+        wait(2000).then(() => setRefreshing(false));
+    }, []);
 
     // const handleLoadMore = () => {
     //     setLoadingMore(true);
@@ -141,9 +155,7 @@ function Progress({ navigation }) {
             }
         } catch (error) {
             console.error('Error fetching tasks:', error);
-        } finally {
-            setLoading(false);
-        }
+        } 
     }
 
     const sendComment = async () => {
@@ -458,9 +470,9 @@ function Progress({ navigation }) {
             setItemConsignemtData(task.items)
         }
         else if (task.taskType.taskType == 'Cash Collection') {
-            getClientsAll();
+
+            setSelectedClientId(task?.pickUpLocation?.clientId ? String(task.pickUpLocation.clientId) : "")
             setItemCashData(task?.receipts == 0 ? false : true)
-            setSelectedClientId(task.clientId || null)
             setItemTaskId(task.id);
             setpayMdlVisible(true);
         }
@@ -591,7 +603,11 @@ function Progress({ navigation }) {
         <SafeAreaView style={[styles.container, GlobalStyles.SafeAreaView]}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                showsHorizontalScrollIndicator={false}>
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.scrollView}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }>
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
                     <TouchableOpacity onPress={() => navigation.navigate("TaskStack", { screen: "TaskScreen" })} style={{ flexDirection: 'row', alignItems: 'center', }}>
@@ -600,7 +616,7 @@ function Progress({ navigation }) {
                     </TouchableOpacity>
                     <View >
                         <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
-                        <View pointerEvents="none">
+                            <View pointerEvents="none">
                                 <NotificationCount />
                             </View>
                         </TouchableOpacity>
@@ -797,7 +813,7 @@ function Progress({ navigation }) {
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
                                 <Text style={styles.modalText}>More Information</Text>
                                 <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-                                    <Image style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
+                                    <Image pointerEvents="none" style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
                                 </TouchableOpacity>
                             </View>
                             <ScrollView>
@@ -948,23 +964,27 @@ function Progress({ navigation }) {
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
                                 <Text style={styles.modalText}>Payment Details</Text>
                                 <TouchableOpacity style={styles.closeButton} onPress={() => setpayMdlVisible(false)}>
-                                    <Image style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
+                                    <Image pointerEvents="none" style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
                                 </TouchableOpacity>
                             </View>
                             <View style={{ padding: 15 }}>
                                 <View>
-                                    <Text style={styles.label}>Client Name</Text>
+                                    <Text style={styles.label}>Client Name </Text>
                                     <View style={styles.pickerContainer}>
                                         <Picker
                                             selectedValue={selectedClientId}
                                             onValueChange={(itemValue) => setSelectedClientId(itemValue)}
                                             style={styles.picker}
                                             dropdownIconColor={lightTheme.inputText}
-                                            enabled={!selectedClientId} // ❗️Read-only when ID exists
+                                            enabled={!selectedClientId}
                                         >
                                             <Picker.Item label="Select Client" value="" />
                                             {allClients.map((client) => (
-                                                <Picker.Item key={client.id} label={client.client_name} value={client.id} />
+                                                <Picker.Item
+                                                    key={client.id}
+                                                    label={client.client_name}
+                                                    value={String(client.id)} 
+                                                />
                                             ))}
                                         </Picker>
                                     </View>
@@ -1048,7 +1068,7 @@ function Progress({ navigation }) {
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
                                 <Text style={styles.modalText}>Collect Modal</Text>
                                 <TouchableOpacity style={styles.closeButton} onPress={() => setCollectModalVisible(false)}>
-                                    <Image style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
+                                    <Image pointerEvents="none" style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
                                 </TouchableOpacity>
                             </View>
                             <View style={{ padding: 15, }}>
@@ -1129,7 +1149,7 @@ function Progress({ navigation }) {
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
                                 <Text style={styles.modalText}>Collect Modal</Text>
                                 <TouchableOpacity style={styles.closeButton} onPress={() => setCollectModalVisible(false)}>
-                                    <Image style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
+                                    <Image pointerEvents="none" style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
                                 </TouchableOpacity>
                             </View>
                             <View style={{ padding: 15, }}>
@@ -1225,7 +1245,7 @@ function Progress({ navigation }) {
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
                                 <Text style={styles.modalText}>Delivery Modal</Text>
                                 <TouchableOpacity style={styles.closeButton} onPress={() => setCollectModalVisible2(false)}>
-                                    <Image style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
+                                    <Image pointerEvents="none" style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
                                 </TouchableOpacity>
                             </View>
                             <View style={{ padding: 15, }}>
@@ -1367,7 +1387,7 @@ function Progress({ navigation }) {
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
                                 <Text style={styles.modalText}>Consignment Details</Text>
                                 <TouchableOpacity style={styles.closeButton} onPress={() => setCollectModalVisible3(false)}>
-                                    <Image style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
+                                    <Image pointerEvents="none" style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
                                 </TouchableOpacity>
                             </View>
                             <View style={{ padding: 15, }}>
@@ -1515,7 +1535,7 @@ function Progress({ navigation }) {
                             }}
                             onPress={() => setModalVisible2(false)}
                         >
-                            <Text style={{ fontSize: 18, fontWeight: 'bold' }}>✕</Text>
+                            <Text pointerEvents="none" style={{ fontSize: 18, fontWeight: 'bold' }}>✕</Text>
                         </TouchableOpacity>
 
                         {/* Full Image */}

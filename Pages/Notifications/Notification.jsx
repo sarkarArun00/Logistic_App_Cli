@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Image, ActivityIndicator, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // import { Ionicons } from '@expo/vector-icons';
@@ -8,7 +8,8 @@ import TaskService from '../Services/task_service';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from '@react-navigation/native';
 import dayjs from 'dayjs';
-
+import { useNotification } from '../../Context/NotificationContext';
+import { useGlobalAlert } from '../../Context/GlobalAlertContext';
 
 
 
@@ -19,76 +20,139 @@ function Notification({ navigation }) {
     const [approvals, setApprovals] = useState([]);
     const viewedIdsRef = useRef(new Set());
     const timeoutRef = useRef(null);
+    const { setNotificationCount } = useNotification();
+    const { showAlertModal, hideAlert } = useGlobalAlert();
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true)
+                const response = await TaskService.getMyNotifications();
+                console.log('Response seenNotificationIds:', response.data);
+              
+                if (response.status == 1) {
+                    const allNotifications = response.data.seen;
+                    setNotifications(allNotifications); 
+                    setNotificationCount(response.data.unseen.length);
+                    setLoading(false)
+                }  else {
+                    setLoading(false)
+                }
+            } catch (error) {
+                console.log('Error fetching notifications:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const fetchEmployeeApprovals = async () => {
+            try {
+                const response = await TaskService.getEmployeeApprovals({ module: 'Logistic' });
+                console.log('Response: getEmployeeApprovals', response);
+
+                if (response.status == 1 && response.data?.pending.length > 0) {
+                    setApprovals(response.data?.pending);
+                } else {
+                    console.log('Response: No data found');
+                }
+            } catch (err) {
+                console.log("Error in getEmployeeApprovals:", err);
+            }
+        };
+
+        // markAllAsSeen();
+        fetchData();
+        fetchEmployeeApprovals();
+    },[])
 
     useFocusEffect(
         React.useCallback(() => {
-            const markAllAsSeen = async () => {
-                const response = await TaskService.getAllGeneralNotifications();
-                if (response.status == 1) {
-                    const ids = response.data.map(n => n.id);
-                    await AsyncStorage.setItem("seenNotificationIds", JSON.stringify(ids));
-                }
-            };
-
-            const fetchData = async () => {
-                try {
-                    setLoading(true)
-                    const response = await TaskService.getAllGeneralNotifications();
-                    console.log('Response seenNotificationIds:', response);
-                    if (response.status == 1) {
-                        const allNotifications = response.data;
-                        setNotifications(allNotifications); 
-                        const seenIds = allNotifications.map(n => n.id);
-                        await AsyncStorage.setItem("seenNotificationIds", JSON.stringify(seenIds));
-                        setLoading(false)
-                    }
-                } catch (error) {
-                    console.error('Error fetching notifications:', error);
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            const fetchEmployeeApprovals = async () => {
-                try {
-                    const response = await TaskService.getEmployeeApprovals({ module: 'Logistic' });
-                    console.log('Response: getEmployeeApprovals', response);
-
-                    if (response.status == 1) {
-                        setApprovals(response.data.pending);
-                    } else {
-                        console.log('Response: No data found');
-                    }
-                } catch (err) {
-                    console.log("Error in getEmployeeApprovals:", err);
-                }
-            };
-
-            markAllAsSeen();
-            fetchData();
-            fetchEmployeeApprovals();
+          const fetchData = async () => {
+            try {
+              setLoading(true);
+      
+              const response = await TaskService.getMyNotifications();
+              if (response.status === 1 && response.data.unseen.length > 0) {
+                const allNotifications = response.data.unseen;
+                const allIds = allNotifications.map(item => item.id);
+                console.log('allIds allIds', allIds);
+      
+                await markNotificationsAsSeen(allIds);
+              } else {
+                setLoading(false);
+                setNotificationCount(0);
+              }
+            } catch (error) {
+              console.log('Error fetching notifications:', error);
+            } finally {
+              setLoading(false);
+            }
+          };
+      
+          fetchData();
         }, [])
-    );
+      );
+      
 
-
-
-    const onViewableItemsChanged = useRef(({ viewableItems }) => {
-        const visibleIds = viewableItems.map(v => v.item.id);
-
-        // Add newly visible IDs to the Set
-        visibleIds.forEach(id => viewedIdsRef.current.add(id));
-
-        // Clear previous timeout if any
-        if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
+    const fetchNotifications = async () => {
+        const response = await TaskService.getMyNotifications();
+        if (response.status === 1) {
+          setNotifications(response.data?.seen);
+          setNotificationCount(response.data?.unseen?.length);
+        } else {
+          setNotificationCount(0);
         }
+      };
+      
+      const markNotificationsAsSeen = async (allIds) => {
+        const res = await TaskService.updateNotificationStatus({ notifIds: allIds });
+        if (res.status === 1) {
+          await fetchNotifications(); // Refresh list
+        }
+      };
+      
+      useFocusEffect(
+        React.useCallback(() => {
+          const init = async () => {
+            setLoading(true);
+            await fetchNotifications();
+            setLoading(false);
+          };
+          init();
+        }, [])
+      );
+      
 
-        // Set a delay before console logging
-        timeoutRef.current = setTimeout(() => {
-            console.log('IDs to be marked as seen:', [...viewedIdsRef.current]);
-        }, 2000); // adjust delay (in ms) as needed
+      const deleteGeneNotif = async (id) => {
 
-    }).current;
+        const response = await TaskService.deleteNotification({notifId: id})
+        console.log('deleting....', response)
+        if(response.status==1) {
+            fetchNotifications();
+        } else {
+            showAlertModal(response.data, true)
+        }
+      }
+
+
+
+    // const onViewableItemsChanged = useRef(({ viewableItems }) => {
+    //     const visibleIds = viewableItems.map(v => v.item.id);
+
+    //     // Add newly visible IDs to the Set
+    //     visibleIds.forEach(id => viewedIdsRef.current.add(id));
+
+    //     // Clear previous timeout if any
+    //     if (timeoutRef.current) {
+    //         clearTimeout(timeoutRef.current);
+    //     }
+
+    //     // Set a delay before console logging
+    //     timeoutRef.current = setTimeout(() => {
+    //         console.log('IDs to be marked as seen:', [...viewedIdsRef.current]);
+    //     }, 2000); // adjust delay (in ms) as needed
+
+    // }).current;
 
     const viewabilityConfig = {
         itemVisiblePercentThreshold: 50,
@@ -125,17 +189,21 @@ function Notification({ navigation }) {
         }
     }
 
-    const filteredNotifications = () => {
-        return notifications.filter(n => n.status == 0 || n.status == '0');
-    };
 
     const NotificationItem = ({ item }) => (
         <View style={{ flexDirection: 'row', paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: '#E0E0E0' }}>
             <Ionicons name={item.status == '1' ? "mail-outline" : "mail-outline"} size={32}
                 color={item.status == '1' ? "#64748B" : "#1E40AF"} style={styles.icon} />
             <View style={styles.textContainer}>
-                <Text style={styles.name}>{item.name} <Text style={styles.message}>{item.message}</Text></Text>
-                <Text style={styles.time}>{dayjs(item.createdAt).format('MMMM D, YYYY h:mm A')}</Text>
+                <View style={{flex:1,}}>
+                    <Text style={styles.name}>{item.name} <Text style={styles.message}>{item.message}</Text></Text>
+                    <Text style={styles.time}>{dayjs(item.createdAt).format('MMMM D, YYYY h:mm A')}</Text>
+                </View>
+                <View style={{width:25,}}>
+                    <TouchableOpacity onPress={() => {deleteGeneNotif(item.id)}}>
+                        <Ionicons name="trash-outline" size={24} color="#EF4444" />
+                    </TouchableOpacity>
+                </View>
             </View>
         </View>
 
@@ -183,8 +251,8 @@ function Notification({ navigation }) {
                     data={notifications}
                     renderItem={({ item }) => <NotificationItem item={item} />}
                     keyExtractor={item => item.id.toString()}
-                    onViewableItemsChanged={onViewableItemsChanged}
-                    viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
+                    // onViewableItemsChanged={onViewableItemsChanged}
+                    // viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
 
                     // Show "No Notification Found!" when the list is empty
                     ListEmptyComponent={
@@ -213,7 +281,7 @@ function Notification({ navigation }) {
 
                                 <View style={styles.textContainer}>
                                     <Text style={styles.name}>
-                                        {item.name}{' '}
+                                        {item?.name}{' '}
                                         <Text style={styles.message}>{item.message}</Text>
                                     </Text>
                                 </View>
@@ -222,21 +290,21 @@ function Notification({ navigation }) {
                                 <View style={styles.buttonRow}>
                                     <View>
                                         <Text style={styles.time}>
-                                            {item.time}{' '}
+                                            {item?.time}{' '}
                                             {dayjs(item.createdAt).format('MMMM D, YYYY h:mm A')}
                                         </Text>
                                     </View>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                                         <TouchableOpacity
                                             style={[styles.button, { backgroundColor: '#10B981' }]}
-                                            onPress={() => handleApprove(item.id)}
+                                            onPress={() => handleApprove(item?.id)}
                                         >
                                             <Text style={styles.buttonText}>Approve</Text>
                                         </TouchableOpacity>
 
                                         <TouchableOpacity
                                             style={[styles.button, { backgroundColor: '#EF4444' }]}
-                                            onPress={() => handleDecline(item.id)}
+                                            onPress={() => handleDecline(item?.id)}
                                         >
                                             <Text style={styles.buttonText}>Decline</Text>
                                         </TouchableOpacity>
@@ -245,9 +313,9 @@ function Notification({ navigation }) {
                             </View>
                         )
                     }
-                    keyExtractor={item => item.id.toString()}
-                    onViewableItemsChanged={onViewableItemsChanged}
-                    viewabilityConfig={viewabilityConfig}
+                    keyExtractor={item => item?.id.toString()}
+                    // onViewableItemsChanged={onViewableItemsChanged}
+                    // viewabilityConfig={viewabilityConfig}
                     ListEmptyComponent={() =>
                         selectedTab === 'Approval' ? (
                             <Text style={{ textAlign: 'center', marginTop: 350, color: '#999' }}>
@@ -298,6 +366,8 @@ const styles = StyleSheet.create({
     },
     textContainer: {
         flex: 1,
+        flexDirection:'row',
+        gap:10,
     },
     name: {
         fontFamily: 'Montserrat-SemiBold',

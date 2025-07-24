@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, ActivityIndicator, TextInput, Modal, Animated, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, ActivityIndicator, TextInput, Modal, Animated, Alert, RefreshControl } from 'react-native';
 // import { useFonts, Montserrat_600SemiBold, Montserrat_400Regular, Montserrat_500Medium } from '@expo-google-fonts/montserrat'
 import { Picker } from '@react-native-picker/picker';
 // import * as ImagePicker from 'expo-image-picker';
@@ -14,6 +14,10 @@ import NotificationCount from '../../Notifications/NotificationCount';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 
+
+const wait = (timeout) => {
+    return new Promise(resolve => setTimeout(resolve, timeout));
+};
 
 function Approved({ navigation }) {
     const [filter, setFilter] = useState(false);
@@ -29,7 +33,7 @@ function Approved({ navigation }) {
     const [loading, setLoading] = useState(false)
     const [activeMenuId, setActiveMenuId] = useState(null);
     const { showAlertModal, hideAlert } = useGlobalAlert();
-
+    const [refreshing, setRefreshing] = useState(false);
     const [fromDate, setFromDate] = useState(new Date());
     const [toDate, setToDate] = useState(new Date());
     const [showFromPicker, setShowFromPicker] = useState(false);
@@ -161,6 +165,12 @@ function Approved({ navigation }) {
     };
     // Camera End
 
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        getAllFuelVoucher()
+        wait(2000).then(() => setRefreshing(false));
+    }, []);
+
     const onFromChange = (event, selectedDate) => {
         if (Platform.OS === 'android') {
             setShowFromPicker(false); // Always hide manually on Android
@@ -224,7 +234,10 @@ function Approved({ navigation }) {
         ]}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                showsHorizontalScrollIndicator={false}>
+                showsHorizontalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }>
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={{ flexDirection: 'row', alignItems: 'center', }}>

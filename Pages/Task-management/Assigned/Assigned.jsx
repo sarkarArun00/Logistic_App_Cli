@@ -13,12 +13,14 @@ import TaskStatusTabs from '../TaskStatusTabs'
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // import * as ImagePicker from 'expo-image-picker';
 import NotificationCount from '../../Notifications/NotificationCount';
-import {GlobalStyles} from '../../GlobalStyles';
+import { GlobalStyles } from '../../GlobalStyles';
 import { Vibration } from 'react-native';
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
 import { BASE_API_URL } from '../../Services/API';
 import { lightTheme } from '../../GlobalStyles';
 import { useSearch } from '../../../hooks/userSearch1';
+import axios from 'axios';
+
 
 const wait = (timeout) => {
     return new Promise(resolve => setTimeout(resolve, timeout));
@@ -60,6 +62,7 @@ function Assigned({ navigation }) {
         fetchData();
     }, []);
 
+
     const onRefresh = useCallback(() => {
         setRefreshing(true);
         fetchData();
@@ -68,20 +71,23 @@ function Assigned({ navigation }) {
 
     const fetchData = async () => {
         try {
+            setLoading(true)
             const response = await TaskService.getAssignedTask();
-            console.log('sdkjhfjskdfhsdfs', response)
+            console.log('response response')
             if (response.status == 1) {
                 setAllTasksData(response.data || []);
-                // setVisibleTasks(response.data?.slice(0, 5) || []);
                 search('', response.data); //
+                setLoading(false)
             } else {
                 setAllTasksData([]);
                 // setVisibleTasks([]);
                 search('', []);
+                setLoading(false)
             }
 
         } catch (error) {
-            console.error('Error fetching tasks:', error);
+            console.log('Error fetching tasks:', error);
+            setLoading(false)
         } finally {
             setLoading(false);
         }
@@ -375,7 +381,7 @@ function Assigned({ navigation }) {
                     </TouchableOpacity>
                     <View >
                         <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
-                        <View pointerEvents="none">
+                            <View pointerEvents="none">
                                 <NotificationCount />
                             </View>
                         </TouchableOpacity>
@@ -534,9 +540,30 @@ function Assigned({ navigation }) {
                                 </ScrollView>
 
                                 <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', padding: 15, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between' }}>
-                                    <TouchableOpacity style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12 }} onPress={() => declineTaskByUser(task.id)}>
+                                    {/* <TouchableOpacity style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12 }} onPress={() => declineTaskByUser(task.id)}>
                                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#2F81F5', textAlign: 'center' }} >Reject</Text>
+                                    </TouchableOpacity> */}
+                                    <TouchableOpacity
+                                        style={{
+                                            width: '47%',
+                                            backgroundColor: task.canDecline === false ? '#E5E7EB' : '#EFF6FF', // gray if disabled
+                                            borderRadius: 28,
+                                            padding: 12
+                                        }}
+                                        onPress={() => declineTaskByUser(task.id)}
+                                        disabled={task.canDecline === false} // disable if false
+                                    >
+                                        <Text
+                                            style={{
+                                                fontFamily: 'Montserrat_600SemiBold',
+                                                color: task.canDecline === false ? '#9CA3AF' : '#2F81F5', // faded text if disabled
+                                                textAlign: 'center'
+                                            }}
+                                        >
+                                            Reject
+                                        </Text>
                                     </TouchableOpacity>
+
                                     <TouchableOpacity onPress={() => taskAccept(task.id)} style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12 }}>
                                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#fff', textAlign: 'center' }}>Accept</Text>
                                     </TouchableOpacity>

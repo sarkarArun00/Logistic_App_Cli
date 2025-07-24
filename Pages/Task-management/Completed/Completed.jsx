@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, Linking, TextInput, Modal, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, Linking, TextInput, Modal, ActivityIndicator, RefreshControl } from 'react-native';
 // import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium } from '@expo-google-fonts/montserrat';
 import { Picker } from '@react-native-picker/picker';
 import TaskStatusTabs from '../TaskStatusTabs';
@@ -13,6 +13,13 @@ import { Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker'; // install if not already
 
 // import { useSearch } from '../../../hooks/useSearch';
+
+const wait = (timeout) => {
+    return new Promise(resolve => setTimeout(resolve, timeout));
+};
+
+
+
 
 function Completed({ navigation }) {
     const [filter, setFilter] = useState(false);
@@ -33,13 +40,13 @@ function Completed({ navigation }) {
 
     const [showFromDatePicker, setShowFromDatePicker] = useState(false);
     const [showToDatePicker, setShowToDatePicker] = useState(false);
-
+    const [refreshing, setRefreshing] = useState(false);
 
     const formatDate = (date) => {
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
-        return `${year}-${month}-${day}`; // ✅ Format: 2025-07-19
+        return `${year}-${month}-${day}`; 
     };
 
 
@@ -81,6 +88,12 @@ function Completed({ navigation }) {
     }, []);
 
 
+    const onRefresh = useCallback(() => {
+        fetchData();
+        fetchClients();
+        wait(2000).then(() => setRefreshing(false));
+    }, []);
+
     const fetchClients = async () => {
         try {
             const response = await TaskService.getClientListByLogistic();
@@ -107,7 +120,6 @@ function Completed({ navigation }) {
                 "priority": null
             }
             const response = await TaskService.getMyCompletedTasks(payload);
-            console.log('response newwwwwwwwwwwwwwwwwwwwwww', response)
             if (response.status == 1) {
                 setCompletedTasks(response.data);
                 search('', response.data); // initialize filtered data
@@ -154,25 +166,6 @@ function Completed({ navigation }) {
 
 
 
-    // const handleLoadMore = () => {
-    //     setLoadingMore(true);
-    //     setTimeout(() => {
-    //         setVisibleCount(prev => prev + 5);
-    //         setLoadingMore(false);
-    //     }, 500);
-    // };
-
-
-
-    // const [fontsLoaded] = useFonts({
-    //     Montserrat_600SemiBold,
-    //     Montserrat_500Medium,
-    // });
-
-    // if (!fontsLoaded) {
-    //     return null;
-    // }
-
     const makeCall = (call) => {
         Linking.openURL(`tel:${call}`);
     };
@@ -182,7 +175,11 @@ function Completed({ navigation }) {
         <SafeAreaView style={[styles.container, GlobalStyles.SafeAreaView]}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                showsHorizontalScrollIndicator={false}>
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.scrollView}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }>
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
                     <TouchableOpacity onPress={() => navigation.navigate("TaskStack", { screen: "TaskScreen" })} style={{ flexDirection: 'row', alignItems: 'center', }}>
@@ -220,7 +217,7 @@ function Completed({ navigation }) {
                     </View>
                     <TouchableOpacity onPress={() => setFilter(true)} style={{ width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginLeft: 14, }}>
                         <Image style={{ width: 25, height: 25, }} source={require('../../../assets/filter.png')} />
-                        <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>2</Text>
+                        {/* <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>2</Text> */}
                     </TouchableOpacity>
                 </View>
 
