@@ -389,11 +389,12 @@ export default function Home({ navigation }) {
 
                 {/* Navigation Arrow Icon */}
                 <Image
-                    source={require('../../assets/arrow.png')}
+                    source={require('../../assets/rightarrow.png')}
                     style={{
                         width: 16,
                         height: 16,
-                        tintColor: 'green',
+                        objectFit: 'contain',
+                        // tintColor: 'green',
                     }}
                 />
             </TouchableOpacity>
@@ -426,7 +427,7 @@ export default function Home({ navigation }) {
 
                 <View style={{ position: 'relative', marginTop: 30, }}>
                     <TextInput
-                        style={{ fontSize: 14, fontFamily: 'Montserrat_500Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
+                        style={{ fontSize: 14, fontFamily: 'Montserrat-Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
                         placeholder="Search pages..."
                         placeholderTextColor="#0C0D36"
                         value={searchQuery}
@@ -460,7 +461,7 @@ export default function Home({ navigation }) {
                                 style={{
                                     textAlign: 'center',
                                     fontSize: 14,
-                                    fontFamily: 'Montserrat_500Medium',
+                                    fontFamily: 'Montserrat-Medium',
                                     color: '#999',
                                     padding: 10,
                                 }}
@@ -473,7 +474,7 @@ export default function Home({ navigation }) {
 
                 <View style={{ marginTop: 20, backgroundColor: '#ecf2fc', borderWidth: 1, borderColor: '#bdd7fc', borderRadius: 40, paddingHorizontal: 15, paddingTop: 35, paddingBottom: 24, }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25, }}>
-                        <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 14, lineHeight: 15, color: '#3085FE', }}>Manage Attendence</Text>
+                        <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 14, lineHeight: 15, color: '#3085FE', }}>Manage Attendence</Text>
                         {/* <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 12, lineHeight: 14, color: '#0C0D36', }}>Updated {displayTime}</Text> */}
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', }}>
@@ -482,13 +483,13 @@ export default function Home({ navigation }) {
                                 <View style={{ width: 35, height: 35, backgroundColor: '#F0F5F9', borderRadius: 8, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
                                     <Image style={{ width: 20, height: 20, }} source={require('../../assets/login.png')} />
                                 </View>
-                                <Text style={{ flex: 1, fontFamily: 'Montserrat_500Medium', fontSize: 14, lineHeight: 15, color: '#0C0D36', paddingLeft: 7, }}>Check In</Text>
+                                <Text style={{ flex: 1, fontFamily: 'Montserrat-Medium', fontSize: 14, lineHeight: 15, color: '#0C0D36', paddingLeft: 7, }}>Check In</Text>
                             </View>
                             <View>
-                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, lineHeight: 22, color: '#0C0D36', paddingTop: 14, }}>
+                                <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 16, lineHeight: 22, color: '#0C0D36', paddingTop: 14, }}>
                                     {checkInTimeDisplay ?? '--:--'}
                                 </Text>
-                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, lineHeight: 17, color: '#0C0D36', paddingTop: 6, }}>On Time</Text>
+                                <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, lineHeight: 17, color: '#0C0D36', paddingTop: 6, }}>On Time</Text>
                             </View>
                         </View>
                         <View style={{ width: '47%', backgroundColor: '#fff', borderRadius: 15, paddingHorizontal: 15, paddingVertical: 15, }}>
@@ -496,13 +497,13 @@ export default function Home({ navigation }) {
                                 <View style={{ width: 35, height: 35, backgroundColor: '#F0F5F9', borderRadius: 8, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
                                     <Image style={{ width: 20, height: 20, }} source={require('../../assets/checkout.png')} />
                                 </View>
-                                <Text style={{ flex: 1, fontFamily: 'Montserrat_500Medium', fontSize: 14, lineHeight: 15, color: '#0C0D36', paddingLeft: 7, }}>Working Hour</Text>
+                                <Text style={{ flex: 1, fontFamily: 'Montserrat-Medium', fontSize: 14, lineHeight: 15, color: '#0C0D36', paddingLeft: 7, }}>Working Hour</Text>
                             </View>
                             <View>
-                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, lineHeight: 22, color: '#0C0D36', paddingTop: 14, }}>
+                                <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 16, lineHeight: 22, color: '#0C0D36', paddingTop: 14, }}>
                                     {workingDuration ?? '--:--'}
                                 </Text>
-                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, lineHeight: 17, color: '#0C0D36', paddingTop: 6, }}>Shift Duration</Text>
+                                <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, lineHeight: 17, color: '#0C0D36', paddingTop: 6, }}>Shift Duration</Text>
                             </View>
                         </View>
                     </View>
@@ -539,15 +540,17 @@ export default function Home({ navigation }) {
                 </View>
 
                 <View style={{ paddingTop: 20, marginBottom: 90, }}>
-                    <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, lineHeight: 18, color: '#3085FE', paddingBottom: 20, }}>My Shortcuts</Text>
+                    {/* <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 14, lineHeight: 15, color: '#3085FE', paddingBottom: 20, }}>My Shortcuts</Text> */}
                     <View style={{ backgroundColor: '#F6FAFF', borderRadius: 40, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8, }}>
+                    <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 14, lineHeight: 15, color: '#3085FE', paddingBottom: 20, }}>My Shortcuts</Text>
+
                         <TouchableOpacity style={[styles.box, { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', borderRadius: 15, paddingHorizontal: 15, paddingVertical: 15, marginBottom: 12, }]}
                             onPress={() => navigation.navigate("TaskStack", { screen: "TaskScreen" })}>
                             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', }}>
                                 <View style={{ width: 34, }}>
                                     <Image style={{ width: 34, height: 34, }} source={require('../../assets/task1.png')} />
                                 </View>
-                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 14, lineHeight: 18, color: '#0C0D36', flex: 1, paddingLeft: 9, }}>My Tasks</Text>
+                                <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 14, lineHeight: 18, color: '#0C0D36', flex: 1, paddingLeft: 9, }}>My Tasks</Text>
                             </View>
                             <View style={{ width: 22, }}>
                                 <Image style={{ width: 22, height: 16, }} source={require('../../assets/rightarrow.png')} />
@@ -563,7 +566,7 @@ export default function Home({ navigation }) {
                                 </View>
                                 <Text
                                     style={{
-                                        fontFamily: 'Montserrat_500Medium',
+                                        fontFamily: 'Montserrat-Medium',
                                         fontSize: 14,
                                         lineHeight: 18,
                                         color: '#0C0D36',
@@ -603,7 +606,7 @@ export default function Home({ navigation }) {
                                 <View style={{ width: 34, }}>
                                     <Image style={{ width: 34, height: 34, }} source={require('../../assets/task3.png')} />
                                 </View>
-                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 14, lineHeight: 18, color: '#0C0D36', flex: 1, paddingLeft: 9, }}>Generate Receipt</Text>
+                                <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 14, lineHeight: 18, color: '#0C0D36', flex: 1, paddingLeft: 9, }}>Generate Receipt</Text>
                             </View>
                             <View style={{ width: 22, }}>
                                 <Image style={{ width: 22, height: 16, }} source={require('../../assets/rightarrow.png')} />
@@ -614,7 +617,7 @@ export default function Home({ navigation }) {
                                 <View style={{ width: 34, }}>
                                     <Image style={{ width: 34, height: 34, }} source={require('../../assets/task4.png')} />
                                 </View>
-                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 14, lineHeight: 18, color: '#0C0D36', flex: 1, paddingLeft: 9, }}>My Wallet</Text>
+                                <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 14, lineHeight: 18, color: '#0C0D36', flex: 1, paddingLeft: 9, }}>My Wallet</Text>
                             </View>
                             <View style={{ width: 22, }}>
                                 <Image style={{ width: 22, height: 16, }} source={require('../../assets/rightarrow.png')} />
