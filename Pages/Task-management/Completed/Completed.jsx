@@ -11,7 +11,7 @@ import {GlobalStyles} from '../../GlobalStyles';
 import { useSearch } from '../../../hooks/userSearch1';
 import { Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker'; // install if not already
-
+import { lightTheme } from '../../GlobalStyles';
 // import { useSearch } from '../../../hooks/useSearch';
 
 const wait = (timeout) => {
@@ -393,15 +393,13 @@ function Completed({ navigation }) {
                             <View style={{ padding: 15 }}>
 
                                 {/* Date Range */}
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
-                                    {/* From Date */}
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, marginTop: 10, marginBottom: 10, }}>
                                     <TouchableOpacity style={styles.dateInput} onPress={() => setShowFromDatePicker(true)}>
                                         <Text style={fromDate ? styles.dateText : styles.placeholderText}>
                                             {fromDate || 'From Date'}
                                         </Text>
                                     </TouchableOpacity>
 
-                                    {/* To Date */}
                                     <TouchableOpacity style={styles.dateInput} onPress={() => setShowToDatePicker(true)}>
                                         <Text style={toDate ? styles.dateText : styles.placeholderText}>
                                             {toDate || 'To Date'}
@@ -436,6 +434,8 @@ function Completed({ navigation }) {
                                         <Picker
                                             selectedValue={selectClient}
                                             onValueChange={(itemValue) => setSelectClient(itemValue)}
+                                            style={styles.picker}
+                                            dropdownIconColor={lightTheme.inputText}
                                         >
                                             {clients.length > 0 ? (
                                                 clients.map(client => (
@@ -443,6 +443,7 @@ function Completed({ navigation }) {
                                                         key={client.id}
                                                         label={client.client_name}
                                                         value={client.id}
+                                                        
                                                     />
                                                 ))
                                             ) : (
@@ -459,6 +460,8 @@ function Completed({ navigation }) {
                                         <Picker
                                             selectedValue={selectTask}
                                             onValueChange={(itemValue) => setSelectTask(itemValue)}
+                                            style={styles.picker}
+                                            dropdownIconColor={lightTheme.inputText}
                                         >
                                             <Picker.Item label="All Tasks" value="" />
                                             <Picker.Item label="Pickup" value="pickup" />
@@ -474,6 +477,8 @@ function Completed({ navigation }) {
                                         <Picker
                                             selectedValue={selectPriority}
                                             onValueChange={(itemValue) => setSelectPriority(itemValue)}
+                                            style={styles.picker}
+                                            dropdownIconColor={lightTheme.inputText}
                                         >
 
                                             <Picker.Item label="Normal" value="false" />
@@ -544,6 +549,23 @@ const styles = StyleSheet.create({
         padding: 15,
         backgroundColor: '#fff',
     },
+        label: {
+            fontSize: 16,
+            marginBottom: 8,
+            color: lightTheme.text,
+        },
+        pickerContainer: {
+            backgroundColor: lightTheme.inputBackground,
+            borderWidth: 1,
+            borderColor: lightTheme.border,
+            borderRadius: 8,
+            overflow: 'hidden',
+            marginBottom: 16,
+        },
+        picker: {
+            height: 50,
+            color: lightTheme.inputText, // Works on iOS and sometimes Android
+        },
     tcbtn: {
         borderWidth: 1,
         borderColor: '#0C0D36',
@@ -557,7 +579,7 @@ const styles = StyleSheet.create({
         borderColor: '#2F81F5',
     },
     acttext: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 12,
         color: '#0C0D36',
     },
@@ -576,7 +598,7 @@ const styles = StyleSheet.create({
         marginBottom:20,
     },
     oncetxt: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 12,
         color: '#2F81F5',
         backgroundColor: 'rgba(48, 133, 254, 0.1)',
@@ -594,23 +616,25 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.3)',
     },
     modalContainer: {
+        fontFamily: 'Montserrat-Medium',
         width: '100%',
         backgroundColor: '#fff',
         borderTopEndRadius: 20,
         borderTopLeftRadius: 20,
     },
     modalText: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 16,
         color: '#0C0D36',
     },
     label: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 15,
         color: '#0C0D36',
         paddingBottom: 10,
     },
     input: {
+        fontFamily: 'Montserrat-Medium',
         height: 54,
         borderWidth: 1,
         borderColor: '#ECEDF0',
@@ -620,6 +644,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
     pickerContainer: {
+        fontFamily: 'Montserrat-Medium',
         height: 54,
         borderWidth: 1,
         borderColor: '#ECEDF0',
@@ -629,6 +654,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
     textarea: {
+        fontFamily: 'Montserrat-Medium',
         height: 54,
         borderWidth: 1,
         borderColor: '#ECEDF0',
@@ -642,29 +668,31 @@ const styles = StyleSheet.create({
 
     label: {
         fontSize: 13,
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         color: '#0C0D36',
         marginBottom: 5,
       },
     dateInput: {
+        fontFamily: 'Montserrat-Medium',
         flex: 1,
         height: 50,
-        backgroundColor: '#F6FAFF',
+        backgroundColor: '#FAFAFA',
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: '#ECEDF0',
         justifyContent: 'center',
         paddingHorizontal: 12,
-        marginHorizontal: 5,  // spacing between from & to date
+        // marginHorizontal: 5,
+        fontSize:16,
       },
       dateText: {
-        fontSize: 14,
-        fontFamily: 'Montserrat_500Medium',
+        fontSize: 15,
+        fontFamily: 'Montserrat-Medium',
         color: '#0C0D36',
       },
       placeholderText: {
         fontSize: 14,
-        fontFamily: 'Montserrat_400Regular',
+        fontFamily: 'Montserrat-Medium',
         color: '#999',
       }
 
