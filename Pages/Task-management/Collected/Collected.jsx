@@ -873,6 +873,7 @@ const styles = StyleSheet.create({
         elevation: 3,
         marginTop: 20,
         borderRadius: 15,
+        marginBottom:20,
     },
     oncetxt: {
         fontFamily: 'Montserrat_500Medium',
