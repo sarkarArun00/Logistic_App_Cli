@@ -16,6 +16,8 @@ const header = ({ navigation, profileImage }) => {
 
   const { setNotificationData } = useContext(AuthContext);
 
+
+
   useEffect(() => {
     let isMounted = true;
 
@@ -30,10 +32,11 @@ const header = ({ navigation, profileImage }) => {
       }
     };
 
+
     const checkNewNotifications = async () => {
       try {
         const response = await TaskService.getMyNotifications();
-        if (response?.status == 1) {
+        if (isMounted && response?.status == 1) {
           setNotificationCount(response.data.unseen.length || 0);
           setNotificationCount2(response.data.unseen.length || 0);
         }
@@ -47,7 +50,7 @@ const header = ({ navigation, profileImage }) => {
 
     const id = setInterval(() => {
       checkNewNotifications();
-    }, 10000);
+    }, 30000);
 
     setIntervalId(id);
 
@@ -69,7 +72,7 @@ const header = ({ navigation, profileImage }) => {
             <Image style={{ width: '100%', height: '100%', objectFit: 'cover', }} source={
               profileImage
                 ? { uri: BASE_API_URL + profileImage }
-                : require('../../assets/user.jpg') // fallback image
+                : require('../../assets/loading_gray.gif') // fallback image
             } />
           </TouchableOpacity>
           <Text numberOfLines={1} ellipsizeMode="tail" style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 19, color: '#3085FE', paddingLeft: 8, width: 180, }}>Hi {userName} !</Text>

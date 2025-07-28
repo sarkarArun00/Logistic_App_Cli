@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, FlatList, Alert, RefreshControl} from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, FlatList, Alert, RefreshControl, ActivityIndicator} from 'react-native';
 // import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium } from '@expo-google-fonts/montserrat';
 import { Picker } from '@react-native-picker/picker';
 import TaskStatusTabs from '../TaskStatusTabs';
@@ -18,6 +18,7 @@ import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
 import {BASE_API_URL} from '../../Services/API';
 import { lightTheme } from '../../GlobalStyles';
 import { useSearch } from '../../../hooks/userSearch1';
+import { useFocusEffect } from '@react-navigation/native';
 
 
 
@@ -38,7 +39,7 @@ function Collected({ navigation }) {
     const [selectedTaskId, setTaskId] = useState('');
     const [taskId, setItemTaskId] = useState(null);
     const [fullImageUri, setFullImageUri] = useState(null);
-
+    const [loading, setLoading] = useState(true);
     const [images, setImages] = useState([]);
     const [commentText, setCommentText] = useState('');
     const [modalVisible2, setModalVisible2] = useState(false);
@@ -46,9 +47,9 @@ function Collected({ navigation }) {
         const { showAlertModal, hideAlert } = useGlobalAlert();
         const [visibleCount, setVisibleCount] = useState(5);
     const { searchQuery, filteredData, search } = useSearch(allTasksData);
-    const visibleTasks = searchQuery
-        ? filteredData           // Show all if searching
-        : filteredData.slice(0, visibleCount); // Show limited if not
+    // const visibleTasks = searchQuery
+    //     ? filteredData           // Show all if searching
+    //     : filteredData.slice(0, visibleCount); // Show limited if not
 
 
     // const [fontsLoaded] = useFonts({
@@ -56,29 +57,80 @@ function Collected({ navigation }) {
     //     Montserrat_500Medium,
     // });
 
-    useEffect(() => {
+    // useFocusEffect(
+    //     useCallback(() => {
+    //         console.log("callllllllllllled")
+    //         const fetchData = async () => {
+    //             // try {
+    //                 setLoading(true)
+    //                 const response = await TaskService.getMyCollectedTasks();
+    //                 if (response.status == 1) {
+    //                     setAllTasksData(response.data || []);
+    //                     // setVisibleTasks(response.data?.slice(0, 5) || []);
+    //                     search('',response.data)
+    //                     setLoading(false)
+    //                 } else {
+    //                     setAllTasksData([]);
+    //                     // setVisibleTasks([]);
+    //                     search('',[])
+    //                     setLoading(false)
+    //                 }
+    //             // } catch (error) {
+    //             //     // console.error('Error fetching tasks:', error);
+    //             // } finally {
+    //             //     setLoading(false);
+    //             // }
+    //         };
+    //         fetchData();
+    //     }, [])
+    // )
+
+    useEffect(  () => {
+        const fetchData = async () => {
+            try {
+                setLoading(true)
+              const response = await TaskService.getMyCollectedTasks();
+              if(response.status==1) {
+                setAllTasksData(response.data);
+                setLoading(false)
+              } else {
+                setAllTasksData([]);
+                setLoading(false)
+              }
+              console.log('hhhhhhhhhhhhh', response);
+            } catch (error) {
+              console.error('Error fetching collected tasks:', error);
+            }
+          };
+
+        // const fetchData = async () => {
+        //     try {
+        //         setLoading(true)
+        //         const response = await TaskService.getMyCollectedTasks();
+        //         console.log('hhhhhhhhhhhhh', response)
+        //         if (response.status == 1) {
+        //             setAllTasksData(response.data || []);
+        //             // setVisibleTasks(response.data?.slice(0, 5) || []);
+        //             search('',response.data)
+        //             setLoading(false)
+        //         } else {
+        //             setAllTasksData([]);
+        //             // setVisibleTasks([]);
+        //             search('',[])
+        //             setLoading(false)
+        //         }
+        //     } catch (error) {
+        //         // console.error('Error fetching tasks:', error);
+        //     } finally {
+        //         setLoading(false);
+        //     }
+        // };
+
         fetchData();
         getAllOperationEmpp();
     }, []);
 
-    const fetchData = async () => {
-        try {
-            const response = await TaskService.getMyCollectedTasks();
-            if (response.status == 1) {
-                setAllTasksData(response.data || []);
-                // setVisibleTasks(response.data?.slice(0, 5) || []);
-                search('',response.data)
-            } else {
-                setAllTasksData([]);
-                // setVisibleTasks([]);
-                search('',[])
-            }
-        } catch (error) {
-            // console.error('Error fetching tasks:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+
 
 
     // const handleLoadMore = () => {
@@ -300,6 +352,23 @@ function Collected({ navigation }) {
         return compressedImage;
     };
 
+    const formatDateTime = (dateString) => {
+        if (!dateString) return '';
+
+        const date = new Date(dateString);
+
+        return date
+            .toLocaleString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                month: 'short',       // "Feb"
+                day: '2-digit',       // "20"
+                year: 'numeric',      // "2025"
+                hour: 'numeric',      // "4"
+                minute: '2-digit',    // "01"
+                hour12: true          // "PM"
+            })
+            .replace(',', ''); // Optional: Remove comma between date and time
+    };
 
     // if (!fontsLoaded) {
     //     return null;
@@ -350,8 +419,8 @@ function Collected({ navigation }) {
                 </ScrollView> */}
 
                 <View style={{ paddingHorizontal: 3, }}>
-                    {visibleTasks && visibleTasks.length > 0 ? (
-                        visibleTasks.map((task, index) => (
+                    {allTasksData && allTasksData.length > 0 ? (
+                        allTasksData.map((task, index) => (
                             <View style={styles.mainbox} key={task.id || index}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15 }}>
                                     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
@@ -449,7 +518,7 @@ function Collected({ navigation }) {
                                     {
                                         task?.taskFrequency == 'Once' && (
                                             <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 15 }}>
-                                                <Text style={styles.oncetxt}>{task?.preferredDate}</Text>
+                                                <Text style={styles.oncetxt}>{formatDateTime(task?.preferredDate)}</Text>
                                                 <Text style={styles.oncetxt}>{task?.preferredTime?.start_time} - {task?.preferredTime?.end_time}</Text>
                                             </View>
                                         )
@@ -725,6 +794,25 @@ function Collected({ navigation }) {
                     </View>
                 </Modal>
             </ScrollView>
+
+            {loading && (
+                <View
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 9999,
+                    }}
+                >
+                    <ActivityIndicator size="large" color="#FFFFFF" />
+                    <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
+                </View>
+            )}
         </SafeAreaView>
     )
 }

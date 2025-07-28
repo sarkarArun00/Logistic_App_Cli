@@ -73,7 +73,7 @@ function Assigned({ navigation }) {
         try {
             setLoading(true)
             const response = await TaskService.getAssignedTask();
-            console.log('response response')
+            console.log('response response', response)
             if (response.status == 1) {
                 setAllTasksData(response.data || []);
                 search('', response.data); //
@@ -332,6 +332,24 @@ function Assigned({ navigation }) {
         );
     };
 
+    const formatDateTime = (dateString) => {
+        if (!dateString) return '';
+
+        const date = new Date(dateString);
+
+        return date
+            .toLocaleString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                month: 'short',       // "Feb"
+                day: '2-digit',       // "20"
+                year: 'numeric',      // "2025"
+                hour: 'numeric',      // "4"
+                minute: '2-digit',    // "01"
+                hour12: true          // "PM"
+            })
+            .replace(',', ''); // Optional: Remove comma between date and time
+    };
+
     const handleDeleteImage = (index) => {
         const updatedImages = images.filter((_, i) => i !== index);
         setImages(updatedImages);
@@ -513,7 +531,7 @@ function Assigned({ navigation }) {
                                     {
                                         task?.taskFrequency == 'Once' && (
                                             <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 15 }}>
-                                                <Text style={styles.oncetxt}>{task?.preferredDate}</Text>
+                                                <Text style={styles.oncetxt}>{formatDateTime(task?.preferredDate)}</Text>
                                                 <Text style={styles.oncetxt}>{task?.preferredTime?.start_time} - {task?.preferredTime?.end_time}</Text>
                                             </View>
                                         )

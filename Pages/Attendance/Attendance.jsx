@@ -7,7 +7,7 @@ import RNSwipeVerify from 'react-native-swipe-verify';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from '@react-navigation/native';
 import Header from '../Header/header'
-import {GlobalStyles} from '../GlobalStyles';
+import { GlobalStyles } from '../GlobalStyles';
 
 // import * as Location from 'expo-location';
 import AuthService from '../Services/auth_service';
@@ -47,7 +47,7 @@ function Attendance({ navigation }) {
 
     const [userName, setUserName] = useState("");
     const [checkInTime, setCheckInTime] = useState(null);
-    const [workingDuration, setWorkingDuration] = useState('00:00');
+    const [workingDuration, setWorkingDuration] = useState(null);
 
     const timerRef = useRef(null);
     const [checkInTimeDisplay, setCheckInTimeDisplay] = useState(null);
@@ -150,7 +150,7 @@ function Attendance({ navigation }) {
                     setIsCheckedIn(false);
                     setCheckInTime(null);
                     setCheckInTimeDisplay(null);
-                    setWorkingDuration('00:00');
+                    setWorkingDuration('--:--');
                 }
             };
 
@@ -247,49 +247,36 @@ function Attendance({ navigation }) {
     };
 
     const handleDayPress = async (day) => {
-        setMarkedDates(prev => ({
-            ...prev,
-            [day.dateString]: {
-                customStyles: {
-                    container: {
-                        backgroundColor: '#3085FE',
-                        borderRadius: 20,
-                    },
-                    text: {
-                        color: 'white',
-                        fontWeight: 'bold',
-                    },
-                }
-            }
-        }));
-        console.log('day press ........', day)
-        // try {
-        const userId = await AsyncStorage.getItem("user_id");
-        if (!userId) return showAlertModal("User ID not found", true);
-
-        const request = {
-            employeeId: Number(userId),
-            loginDate: day.dateString
-        };
-
-        const response = await TaskService.getLoginByDate(request);
-        const format = 'D/M/YYYY, h:mm:ss a';
-
-        console.log('resssssssss', response)
-        if (response.status == 1) {
-            const loginTime = dayjs.tz(response.data.login, format, 'Asia/Kolkata').format('hh:mm A');
-            const logoutTime = dayjs.tz(response.data.logout, format, 'Asia/Kolkata').format('hh:mm A');
-            setCheckInCheckOut({ checkIn: loginTime, checkOut: logoutTime })
-            setAttendance(response.data);
-        } else {
-            showAlertModal(response.message || 'Failed to fetch attendance details for the selected date.', true);
-            setAttendance([]);
-        }
-        // } catch (error) {
-        //     showAlertModal("Error fetching attendance details: " + error.message, true);
-        // }
+        fetchAttendanceData2(day.dateString)
     };
 
+    const fetchAttendanceData2 = async (dateString) => {
+        try {
+            const userId = await AsyncStorage.getItem("user_id");
+            if (!userId) return showAlertModal("User ID not found", true);
+    
+            const request = {
+                employeeId: Number(userId),
+                loginDate: dateString,
+            };
+            setLoading(true)
+            const response = await TaskService.getLoginByDate(request);
+            console.log('aaaaaaaaaaaa', response)
+            const format = 'D/M/YYYY, h:mm:ss a';
+    
+            if (response.status == 1) {
+                const loginTime = dayjs.tz(response.data.login, format, 'Asia/Kolkata').format('hh:mm A');
+                const logoutTime = dayjs.tz(response.data.logout, format, 'Asia/Kolkata').format('hh:mm A');
+                setCheckInCheckOut({ checkIn: loginTime, checkOut: logoutTime });
+                setAttendance(response.data);
+            } else {
+                showAlertModal(response.message || 'No data for selected date.', true);
+                setAttendance([]);
+            }
+        } finally {
+            setLoading(false)
+        }
+    };
 
     const getTimeAgo = (timestamp) => {
         if (!timestamp) return 'N/A';
@@ -395,7 +382,7 @@ function Attendance({ navigation }) {
             // 👉 Check In Logic
             let response = await AuthService.attendanceCheckIn(request);
             if (response.status == 1) {
-                showAlertModal('You have successfully checked in.', false);
+                showAlertModal('You have successfully Checked In.', false);
                 const now = new Date();
                 const isoString = now.toISOString();
                 const formattedTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -416,12 +403,12 @@ function Attendance({ navigation }) {
             // 👉 Check Out Logic
             let response = await AuthService.attendanceCheckOut(request);
             if (response.status == 1) {
-                showAlertModal('You have successfully checked out.', false);
+                showAlertModal('You have successfully Checked Out.', false);
                 await AsyncStorage.multiRemove(['isCheckedIn', 'checkInTime', 'checkInTimeDisplay']);
 
                 setIsCheckedIn(false);
                 setCheckInTimeDisplay(null);
-                setWorkingDuration('00:00');
+                setWorkingDuration('--:--');
                 clearInterval(timerRef.current);
                 Vibration.vibrate(500);
             } else {
@@ -466,6 +453,18 @@ function Attendance({ navigation }) {
     }, []);
 
 
+    const formatDateTime = (dateString) => {
+        if (!dateString) return '';
+    
+        const date = new Date(dateString);
+    
+        const day = date.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit' });
+        const month = date.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', month: '2-digit' });
+        const year = date.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', year: 'numeric' });
+    
+        return `${day}-${month}-${year}`;
+    };
+    
 
 
     return (
@@ -524,7 +523,7 @@ function Attendance({ navigation }) {
                             </View>
                             <View>
                                 <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, lineHeight: 22, color: '#0C0D36', paddingTop: 14, }}>
-                                    {workingDuration} Hours
+                                    {workingDuration ?? '--:--'}
                                 </Text>
                                 <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, lineHeight: 17, color: '#0C0D36', paddingTop: 6, }}>Shift Duration</Text>
                             </View>
@@ -565,73 +564,73 @@ function Attendance({ navigation }) {
                 <View style={styles.container}>
                     {loading && <ActivityIndicator size="large" color="#3085FE" />}
                     <Calendar
-  markingType="custom"
-  markedDates={markedDates}
-  onMonthChange={handleMonthChange}
-  onDayPress={handleDayPress}  // this is your callback
-  dayComponent={({ date, state }) => {
-    const today = moment().format('YYYY-MM-DD');
-    const isToday = date.dateString === today;
-    const animatedValue = useRef(new Animated.Value(1)).current;
+                        markingType="custom"
+                        markedDates={markedDates}
+                        onMonthChange={handleMonthChange}
+                        onDayPress={handleDayPress}  // this is your callback
+                        dayComponent={({ date, state }) => {
+                            const today = moment().format('YYYY-MM-DD');
+                            const isToday = date.dateString === today;
+                            const animatedValue = useRef(new Animated.Value(1)).current;
 
-    useEffect(() => {
-      if (isToday) {
-        Animated.loop(
-          Animated.sequence([
-            Animated.timing(animatedValue, {
-              toValue: 1.05,
-              duration: 800,
-              easing: Easing.inOut(Easing.ease),
-              useNativeDriver: true,
-            }),
-            Animated.timing(animatedValue, {
-              toValue: 1,
-              duration: 800,
-              easing: Easing.inOut(Easing.ease),
-              useNativeDriver: true,
-            }),
-          ])
-        ).start();
-      }
-    }, [isToday]);
+                            useEffect(() => {
+                                if (isToday) {
+                                    Animated.loop(
+                                        Animated.sequence([
+                                            Animated.timing(animatedValue, {
+                                                toValue: 1.05,
+                                                duration: 800,
+                                                easing: Easing.inOut(Easing.ease),
+                                                useNativeDriver: true,
+                                            }),
+                                            Animated.timing(animatedValue, {
+                                                toValue: 1,
+                                                duration: 800,
+                                                easing: Easing.inOut(Easing.ease),
+                                                useNativeDriver: true,
+                                            }),
+                                        ])
+                                    ).start();
+                                }
+                            }, [isToday]);
 
-    const style = markedDates[date.dateString]?.customStyles?.container || {};
-    const textStyle = markedDates[date.dateString]?.customStyles?.text || {};
-    const AnimatedWrapper = isToday ? Animated.View : View;
+                            const style = markedDates[date.dateString]?.customStyles?.container || {};
+                            const textStyle = markedDates[date.dateString]?.customStyles?.text || {};
+                            const AnimatedWrapper = isToday ? Animated.View : View;
 
-    return (
-      <TouchableOpacity onPress={() => handleDayPress(date)}>
-        <AnimatedWrapper
-          style={{
-            ...style,
-            transform: isToday ? [{ scale: animatedValue }] : [],
-            justifyContent: 'center',
-            alignItems: 'center',
-            width: 36,
-            height: 36,
-          }}
-        >
-          <Text
-            style={{
-              ...textStyle,
-              opacity: state === 'disabled' ? 0.4 : 1,
-            }}
-          >
-            {date.day}
-          </Text>
-        </AnimatedWrapper>
-      </TouchableOpacity>
-    );
-  }}
-  theme={{
-    todayTextColor: '#3085FE',
-    arrowColor: '#3085FE',
-    monthTextColor: '#000',
-    textDayFontWeight: '500',
-    textMonthFontWeight: 'bold',
-    textDayHeaderFontWeight: '500',
-  }}
-/>
+                            return (
+                                <TouchableOpacity onPress={() => handleDayPress(date)}>
+                                    <AnimatedWrapper
+                                        style={{
+                                            ...style,
+                                            transform: isToday ? [{ scale: animatedValue }] : [],
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            width: 36,
+                                            height: 36,
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                ...textStyle,
+                                                opacity: state === 'disabled' ? 0.4 : 1,
+                                            }}
+                                        >
+                                            {date.day}
+                                        </Text>
+                                    </AnimatedWrapper>
+                                </TouchableOpacity>
+                            );
+                        }}
+                        theme={{
+                            todayTextColor: '#3085FE',
+                            arrowColor: '#3085FE',
+                            monthTextColor: '#000',
+                            textDayFontWeight: '500',
+                            textMonthFontWeight: 'bold',
+                            textDayHeaderFontWeight: '500',
+                        }}
+                    />
 
 
                 </View>
@@ -641,7 +640,7 @@ function Attendance({ navigation }) {
                 <View style={styles.card}>
                     <View style={styles.section}>
                         <Text style={styles.label}>Log In</Text>
-                        <Text style={styles.value}>{checkInCheckout?.checkIn || ""}</Text>
+                        <Text style={styles.value}>{formatDateTime(attendance?.loginDate)} {checkInCheckout?.checkIn || ""}</Text>
                     </View>
 
                     <View style={styles.divider} />

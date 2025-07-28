@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, PermissionsAndroid, FlatList, Alert, RefreshControl} from 'react-native'
+import { StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, PermissionsAndroid, FlatList, Alert, RefreshControl } from 'react-native'
 // import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium, Montserrat_400Regular } from '@expo-google-fonts/montserrat'
 import { Picker } from '@react-native-picker/picker';
 import { Checkbox } from 'react-native-paper';
@@ -82,9 +82,9 @@ function Progress({ navigation }) {
 
     useEffect(() => {
 
-        if (itemInfo.length > 0) {
-            setChecked(itemIds.length === itemInfo.length);
-        }
+        // if (itemInfo.length > 0) {
+        //     setChecked(itemIds.length === itemInfo.length);
+        // }
 
         if (collectModalVisible2) {
             // Clear images on every open
@@ -114,7 +114,8 @@ function Progress({ navigation }) {
         try {
             setLoading(true);
             const response = await TaskService.getMyInProgressTasks();
-            if(response.status==1) {
+            console.log('in progress task ', response)
+            if (response.status == 1) {
                 setAllTasksData(response.data || []);
                 search('', response.data); //
                 setLoading(false);
@@ -127,7 +128,7 @@ function Progress({ navigation }) {
             console.error('Error fetching tasks:', error);
             search('', []);
             setLoading(false);
-        } 
+        }
     };
 
     const onRefresh = useCallback(() => {
@@ -155,7 +156,7 @@ function Progress({ navigation }) {
             }
         } catch (error) {
             console.error('Error fetching tasks:', error);
-        } 
+        }
     }
 
     const sendComment = async () => {
@@ -498,12 +499,13 @@ function Progress({ navigation }) {
             showAlertModal('Please select at least one item to delivery.', true);
             return;
         }
-        setLoading(true);
+        // setLoading(true);
         let request = {
             taskId: selectedTaskId || [],
             remarks: deliverRemarks,
             itemIds: itemIds,
         };
+        console.log('request request request', request)
 
         try {
             const response = await TaskService.collectMyTask(request);
@@ -576,22 +578,44 @@ function Progress({ navigation }) {
 
 
     const toggleItemChecked = (id) => {
-        if (itemIds.some(item => item.id === id)) {
-            setItemIds(itemIds.filter(item => item.id !== id));
+        const isAlreadySelected = itemIds.some(item => item.id === id);
+
+        if (isAlreadySelected) {
+            setItemIds(prev => prev.filter(item => item.id !== id));
         } else {
-            setItemIds([...itemIds, { id }]);
+            setItemIds(prev => [...prev, { id }]);
         }
+
     };
 
-    const handleSelectAll = () => {
-        if (checked) {
-            setItemIds([]); // Unselect all
-        } else {
-            const allIds = itemInfo.map((info) => ({ id: info.item.id }));
-            setItemIds(allIds); // Select all
-        }
-        setChecked(!checked);
+
+    const formatDateTime = (dateString) => {
+        if (!dateString) return '';
+
+        const date = new Date(dateString);
+
+        return date
+            .toLocaleString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                month: 'short',       // "Feb"
+                day: '2-digit',       // "20"
+                year: 'numeric',      // "2025"
+                hour: 'numeric',      // "4"
+                minute: '2-digit',    // "01"
+                hour12: true          // "PM"
+            })
+            .replace(',', ''); // Optional: Remove comma between date and time
     };
+
+    // const handleSelectAll = () => {
+    //     if (checked) {
+    //         setItemIds([]); // Unselect all
+    //     } else {
+    //         const allIds = itemInfo.map((info) => ({ id: info.item.id }));
+    //         setItemIds(allIds); // Select all
+    //     }
+    //     setChecked(!checked);
+    // };
 
 
     // Call Button
@@ -733,7 +757,7 @@ function Progress({ navigation }) {
                                     {
                                         task?.taskFrequency == 'Once' && (
                                             <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 15 }}>
-                                                <Text style={styles.oncetxt}>{task?.preferredDate}</Text>
+                                                <Text style={styles.oncetxt}>{formatDateTime(task?.preferredDate)}</Text>
                                                 <Text style={styles.oncetxt}>{task?.preferredTime?.start_time} - {task?.preferredTime?.end_time}</Text>
                                             </View>
                                         )
@@ -983,7 +1007,7 @@ function Progress({ navigation }) {
                                                 <Picker.Item
                                                     key={client.id}
                                                     label={client.client_name}
-                                                    value={String(client.id)} 
+                                                    value={String(client.id)}
                                                 />
                                             ))}
                                         </Picker>
@@ -1340,8 +1364,8 @@ function Progress({ navigation }) {
                                             </Text>
                                         </View>
                                         <Checkbox
-                                            status={itemIds.some((item) => item.id === info.item.id) ? 'checked' : 'unchecked'}
-                                            onPress={() => toggleItemChecked(info.item.id)}
+                                            status={itemIds.some(item => item.id === info.itemId) ? 'checked' : 'unchecked'}
+                                            onPress={() => toggleItemChecked(info.itemId)}
                                         />
 
                                     </View>

@@ -32,7 +32,7 @@ export default function Home({ navigation }) {
     const [userName, setUserName] = useState("");
 
     const [checkInTime, setCheckInTime] = useState(null);
-    const [workingDuration, setWorkingDuration] = useState('00:00');
+    const [workingDuration, setWorkingDuration] = useState(null);
 
     const timerRef = useRef(null);
     const [checkInTimeDisplay, setCheckInTimeDisplay] = useState(null);
@@ -73,7 +73,7 @@ export default function Home({ navigation }) {
             }
         };
         getUserData();
-        fetchProfilePicture();
+
     }, [navigation])
 
 
@@ -145,7 +145,7 @@ export default function Home({ navigation }) {
                     setIsCheckedIn(false);
                     setCheckInTime(null);
                     setCheckInTimeDisplay(null);
-                    setWorkingDuration('00:00');
+                    setWorkingDuration('--:--');
                 }
             };
 
@@ -153,6 +153,7 @@ export default function Home({ navigation }) {
 
             init();
             getCurrentLocation();
+            fetchProfilePicture();
 
             return () => clearInterval(timerRef.current);
         }, [])
@@ -277,7 +278,7 @@ export default function Home({ navigation }) {
             if (!isCheckedIn) {
                 const response = await AuthService.attendanceCheckIn(request);
                 if (response.status == 1) {
-                    showAlertModal('You have successfully checked in.', false);
+                    showAlertModal('You have successfully Checked In.', false);
                     setTimeout(() => hideAlert(), 3000);
                     const now = new Date();
                     const isoString = now.toISOString();
@@ -298,13 +299,13 @@ export default function Home({ navigation }) {
                 // 👉 Check Out
                 const response = await AuthService.attendanceCheckOut(request);
                 if (response.status == 1) {
-                    showAlertModal('You have successfully checked out.', false);
+                    showAlertModal('You have successfully Checked Out.', false);
                     setTimeout(() => hideAlert(), 3000);
                     await AsyncStorage.multiRemove(['isCheckedIn', 'checkInTime', 'checkInTimeDisplay']);
                     Vibration.vibrate(500);
                     setIsCheckedIn(false);
                     setCheckInTimeDisplay(null);
-                    setWorkingDuration('00:00');
+                    setWorkingDuration('--:--');
                     clearInterval(timerRef.current);
                 } else {
                     showAlertModal('Check-out failed. Please try again.', true);
@@ -499,7 +500,7 @@ export default function Home({ navigation }) {
                             </View>
                             <View>
                                 <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, lineHeight: 22, color: '#0C0D36', paddingTop: 14, }}>
-                                    {workingDuration} Hours
+                                    {workingDuration ?? '--:--'}
                                 </Text>
                                 <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, lineHeight: 17, color: '#0C0D36', paddingTop: 6, }}>Shift Duration</Text>
                             </View>

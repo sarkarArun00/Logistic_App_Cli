@@ -159,6 +159,24 @@ function Accepted({ navigation }) {
         });
     };
 
+    const formatDateTime = (dateString) => {
+        if (!dateString) return '';
+
+        const date = new Date(dateString);
+
+        return date
+            .toLocaleString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                month: 'short',       // "Feb"
+                day: '2-digit',       // "20"
+                year: 'numeric',      // "2025"
+                hour: 'numeric',      // "4"
+                minute: '2-digit',    // "01"
+                hour12: true          // "PM"
+            })
+            .replace(',', ''); // Optional: Remove comma between date and time
+    };
+
     // Call Button
     const makeCall = (call) => {
         Linking.openURL(`tel:${call}`);
@@ -317,7 +335,7 @@ function Accepted({ navigation }) {
                                     {
                                         task?.taskFrequency == 'Once' && (
                                             <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 15 }}>
-                                                <Text style={styles.oncetxt}>{task?.preferredDate}</Text>
+                                                <Text style={styles.oncetxt}>{formatDateTime(task?.preferredDate)}</Text>
                                                 <Text style={styles.oncetxt}>{task?.preferredTime?.start_time} - {task?.preferredTime?.end_time}</Text>
                                             </View>
                                         )
@@ -367,7 +385,7 @@ function Accepted({ navigation }) {
                     )}
 
                     {/* Load More */}
-                    {visibleTasks?.length < allTasksData?.length && (
+                    {allTasksData?.length > 5 && visibleTasks?.length < allTasksData?.length && (
                         <TouchableOpacity
                             onPress={handleLoadMore}
                             style={{
