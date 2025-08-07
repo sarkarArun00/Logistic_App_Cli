@@ -552,7 +552,7 @@ function Attendance({ navigation }) {
 
                 <View style={{ position: 'relative', marginTop: 30 }}>
                     <TextInput
-                        style={{ fontSize: 14, fontFamily: 'Montserrat_500Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
+                        style={{ fontSize: 14, fontFamily: 'Montserrat-Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
                         placeholder="Search"
                         placeholderTextColor="#0C0D36"
                     />
@@ -561,7 +561,7 @@ function Attendance({ navigation }) {
 
                 <View style={{ marginTop: 20, backgroundColor: '#ecf2fc', borderWidth: 1, borderColor: '#bdd7fc', borderRadius: 40, paddingHorizontal: 15, paddingTop: 35, paddingBottom: 24, }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25, }}>
-                        <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 14, lineHeight: 15, color: '#3085FE', }}>Manage Attendence</Text>
+                        <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 14, lineHeight: 15, color: '#3085FE', }}>Manage Attendence</Text>
                         {/* <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 12, lineHeight: 14, color: '#0C0D36', }}>Updated {displayTime}</Text> */}
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', }}>
@@ -570,13 +570,13 @@ function Attendance({ navigation }) {
                                 <View style={{ width: 35, height: 35, backgroundColor: '#F0F5F9', borderRadius: 8, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
                                     <Image style={{ width: 20, height: 20, }} source={require('../../assets/login.png')} />
                                 </View>
-                                <Text style={{ flex: 1, fontFamily: 'Montserrat_500Medium', fontSize: 14, lineHeight: 15, color: '#0C0D36', paddingLeft: 7, }}>Check In</Text>
+                                <Text style={{ flex: 1, fontFamily: 'Montserrat-Medium', fontSize: 14, lineHeight: 15, color: '#0C0D36', paddingLeft: 7, }}>Check In</Text>
                             </View>
                             <View>
-                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, lineHeight: 22, color: '#0C0D36', paddingTop: 14, }}>
+                                <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 16, lineHeight: 22, color: '#0C0D36', paddingTop: 14, }}>
                                     {checkInTimeDisplay ?? '--:--'}
                                 </Text>
-                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, lineHeight: 17, color: '#0C0D36', paddingTop: 6, }}>On Time</Text>
+                                <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, lineHeight: 17, color: '#0C0D36', paddingTop: 6, }}>On Time</Text>
                             </View>
                         </View>
                         <View style={{ width: '47%', backgroundColor: '#fff', borderRadius: 15, paddingHorizontal: 15, paddingVertical: 15, }}>
@@ -584,13 +584,13 @@ function Attendance({ navigation }) {
                                 <View style={{ width: 35, height: 35, backgroundColor: '#F0F5F9', borderRadius: 8, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
                                     <Image style={{ width: 20, height: 20, }} source={require('../../assets/checkout.png')} />
                                 </View>
-                                <Text style={{ flex: 1, fontFamily: 'Montserrat_500Medium', fontSize: 14, lineHeight: 15, color: '#0C0D36', paddingLeft: 7, }}>Working Hour</Text>
+                                <Text style={{ flex: 1, fontFamily: 'Montserrat-Medium', fontSize: 14, lineHeight: 15, color: '#0C0D36', paddingLeft: 7, }}>Working Hour</Text>
                             </View>
                             <View>
-                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, lineHeight: 22, color: '#0C0D36', paddingTop: 14, }}>
+                                <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 16, lineHeight: 22, color: '#0C0D36', paddingTop: 14, }}>
                                     {workingDuration ?? '--:--'}
                                 </Text>
-                                <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, lineHeight: 17, color: '#0C0D36', paddingTop: 6, }}>Shift Duration</Text>
+                                <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, lineHeight: 17, color: '#0C0D36', paddingTop: 6, }}>Shift Duration</Text>
                             </View>
                         </View>
                     </View>
@@ -823,12 +823,12 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     label: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         color: 'white',
         fontSize: 16,
     },
     value: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         color: 'white',
         fontSize: 14,
         marginTop: 4,
@@ -845,7 +845,7 @@ const styles = StyleSheet.create({
         marginHorizontal: "auto",
     },
     swipeText: {
-        fontFamily: 'Montserrat_400Regular',
+        fontFamily: 'Montserrat-Regular',
         fontSize: 14,
         color: '#fff',
     },

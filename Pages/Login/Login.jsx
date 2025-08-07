@@ -218,14 +218,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   title: {
-    fontFamily: 'Montserrat_600SemiBold',
+    fontFamily: 'Montserrat-SemiBold',
     fontSize: 34,
     color: '#3082F8',
     textAlign: 'center',
     marginBottom: 30,
   },
   forgotTitle: {
-    fontFamily: 'Montserrat_500Medium',
+    fontFamily: 'Montserrat-Medium',
     fontSize: 15,
     color: '#0C0D36',
     textAlign: 'center',
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   loginText: {
-    fontFamily: 'Montserrat_600SemiBold',
+    fontFamily: 'Montserrat-SemiBold',
     fontSize: 16,
     color: '#fff',
     textAlign: 'center',
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
   inputContainer: {
-    fontFamily: 'Montserrat_500Medium',
+    fontFamily: 'Montserrat-Medium',
     fontSize: 16,
     height: 60,
     borderBottomWidth: 1,

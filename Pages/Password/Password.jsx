@@ -364,13 +364,13 @@ const styles = StyleSheet.create({
         top: 9,
     },
     heading: {
-        fontFamily: 'Montserrat_600SemiBold',
+        fontFamily: 'Montserrat-SemiBold',
         fontSize: 24,
         textAlign: 'center',
         letterSpacing: -0.5,
     },
     bold: {
-        fontFamily: 'Montserrat_700Bold',
+        fontFamily: 'Montserrat-Bold',
         color: '#0C0D36',
     },
     passIcon: {
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
         marginBottom: 28,
     },
     subText: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 14,
         lineHeight: 22,
         textAlign: 'center',
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     label: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 14,
         color: '#0C0D36',
         marginBottom: 10,
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
         paddingRight: 15,
     },
     inputBox: {
-        fontFamily: 'Montserrat_400Regular',
+        fontFamily: 'Montserrat-Regular',
         height: 54,
         borderWidth: 1,
         borderColor: '#ECEDF0',
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
         marginTop: 0,
     },
     continueText: {
-        fontFamily: 'Montserrat_600SemiBold',
+        fontFamily: 'Montserrat-SemiBold',
         color: '#fff',
         fontSize: 16,
     },
@@ -445,14 +445,14 @@ const styles = StyleSheet.create({
         paddingBottom: 10,
     },
     resend: {
-        fontFamily: 'Montserrat_400Regular',
+        fontFamily: 'Montserrat-Regular',
         color: '#0C0D36',
         fontSize: 14,
         textAlign: 'center',
 
     },
     boldText: {
-        fontFamily: 'Montserrat_600SemiBold',
+        fontFamily: 'Montserrat-SemiBold',
         color: '#3082F8',
         fontSize: 14,
         borderBottomWidth: 1,
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
         marginLeft: 8,
     },
     timer: {
-        fontFamily: 'Montserrat_400Regular',
+        fontFamily: 'Montserrat-Regular',
         color: '#0C0D36',
         fontSize: 14,
         textAlign: 'center',
@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 10,
         borderColor: '#ECEDF0',
-        fontFamily: 'Montserrat_600SemiBold',
+        fontFamily: 'Montserrat-SemiBold',
         fontSize: 16,
         width: 45,
         height: 45,
@@ -486,14 +486,14 @@ const styles = StyleSheet.create({
         top: 16,
     },
     sccText: {
-        fontFamily: 'Montserrat_600SemiBold',
+        fontFamily: 'Montserrat-SemiBold',
         fontSize: 18,
         color: '#0C0D36',
         textAlign: 'center',
         marginBottom: 20,
     },
     congText: {
-        fontFamily: 'Montserrat_400Regular',
+        fontFamily: 'Montserrat-Regular',
         fontSize: 16,
         color: '#0C0D36',
         textAlign: 'center',

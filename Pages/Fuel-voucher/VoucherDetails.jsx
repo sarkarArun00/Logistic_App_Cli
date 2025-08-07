@@ -148,13 +148,13 @@ const VoucherDetails = ({ navigation, route }) => {
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Amount In Words</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <Text style={[styles.value, { flexWrap: 'nowrap' }, {width: 250}]}>
+            {/* <ScrollView horizontal showsHorizontalScrollIndicator={false}> */}
+              <Text style={[styles.value, { flexWrap: 'nowrap' }, {width: 190}]}>
                 {`${toWords(receiptData?.amount || 0)} only`
                   .toLowerCase()
                   .replace(/\b\w/g, char => char.toUpperCase())}
               </Text>
-            </ScrollView>
+            {/* </ScrollView> */}
           </View>
 
         </View>
@@ -263,6 +263,7 @@ const styles = StyleSheet.create({
     height: 15,
   },
   backText: {
+    fontFamily:'Montserrat-SemiBold',
     paddingLeft: 8,
     fontSize: 16,
     fontWeight: '600',
@@ -280,18 +281,21 @@ const styles = StyleSheet.create({
     height: 56,
   },
   successText: {
+    fontFamily:'Montserrat-Medium',
     marginTop: 10,
     fontSize: 18,
     fontWeight: '600',
     color: '#0C0D36',
   },
   amountText: {
+    fontFamily:'Montserrat-Medium',
     fontSize: 24,
     fontWeight: 'bold',
     color: '#27AE60',
     marginTop: 6,
   },
   failedAmountText: {
+    fontFamily:'Montserrat-Medium',
     fontSize: 24,
     fontWeight: 'bold',
     color: 'red',
@@ -304,12 +308,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   receiptTitle: {
+    fontFamily:'Montserrat-Medium',
     fontSize: 18,
     fontWeight: '700',
     marginBottom: 4,
     color: '#0C0D36',
   },
   receiptNumber: {
+    fontFamily:'Montserrat-Medium',
     fontSize: 14,
     color: '#666',
     marginBottom: 12,
@@ -320,11 +326,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   label: {
+    fontFamily:'Montserrat-Medium',
     flex:1,
     fontSize: 14,
     color: '#888',
   },
   value: {
+    fontFamily:'Montserrat-Medium',
     fontSize: 14,
     fontWeight: '600',
     color: '#0C0D36',
@@ -343,11 +351,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   remarksLabel: {
+    fontFamily:'Montserrat-Medium',
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 4,
   },
   remarksValue: {
+    fontFamily:'Montserrat-Medium',
     fontSize: 14,
     color: '#444',
   },
@@ -373,6 +383,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   doneButton: {
+    fontFamily:'Montserrat-Medium',
     backgroundColor: '#0C0D36',
     paddingVertical: 12,
     paddingHorizontal: 40,
@@ -391,6 +402,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   attachmentLabel: {
+    fontFamily:'Montserrat-Medium',
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 10,
@@ -404,6 +416,7 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   noAttachmentText: {
+    fontFamily:'Montserrat-Medium',
     fontSize: 13,
     color: '#888',
     fontStyle: 'italic',

@@ -432,7 +432,7 @@ function FeulVoucherRequest({ visible, onClose, onSuccess }) {
                             </View>
                             <View>
                                 <TouchableOpacity onPress={() => onSubmitFuelvoucher()} style={{ backgroundColor: '#2F81F5', borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10, }}>
-                                    <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 16, color: 'white', textAlign: 'center', }}>Send</Text>
+                                    <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 16, color: 'white', textAlign: 'center', }}>Send</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -481,12 +481,12 @@ const styles = StyleSheet.create({
         height: '75%',
     },
     modalText: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 16,
         color: '#0C0D36',
     },
     label: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 15,
         color: '#0C0D36',
         paddingBottom: 10,
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
         padding: 12,
     },
     uploadTitle: {
-        fontFamily: 'Montserrat_600SemiBold',
+        fontFamily: 'Montserrat-SemiBold',
         fontSize: 14,
         color: '#2F81F5',
         textAlign: 'center',
@@ -563,7 +563,7 @@ const styles = StyleSheet.create({
         paddingBottom: 3,
     },
     uploadSubTitle: {
-        fontFamily: 'Montserrat_400Regular',
+        fontFamily: 'Montserrat-Regular',
         fontSize: 13,
         color: '#0C0D36',
         textAlign: 'center',
@@ -578,7 +578,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     noImgSelected: {
-        fontFamily: 'Montserrat_600SemiBold',
+        fontFamily: 'Montserrat-SemiBold',
         fontSize: 13,
         color: '#0C0D36',
         textAlign: 'center',

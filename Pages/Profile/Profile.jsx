@@ -337,12 +337,12 @@ function Profile({ navigation }) {
                         </Modal>
                     </>
                     <View style={{ flex: 1, paddingLeft: 20, }}>
-                        <Text style={{ fontFamily: 'Montserrat_700Bold', fontSize: 16, color: '#0F0F0F', paddingBottom: 2, }}>{userInfo?.employee_name}
+                        <Text style={{ fontFamily: 'Montserrat-Bold', fontSize: 16, color: '#0F0F0F', paddingBottom: 2, }}>{userInfo?.employee_name}
                             <TouchableOpacity onPress={() => setModalVisible(true)} style={{ paddingLeft: 5, }}>
                                 <Image style={{ width: 20, height: 20, }} source={require('../../assets/edit.png')} />
                             </TouchableOpacity>
                         </Text>
-                        <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 14, color: '#A0A7BA', }}>ID: {userInfo?.id}</Text>
+                        <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 14, color: '#A0A7BA', }}>ID: {userInfo?.id}</Text>
                     </View>
                 </View>
 
@@ -411,7 +411,7 @@ function Profile({ navigation }) {
                             <Image style={{ width: 8, height: 14, }} source={require('../../assets/rightarrow2.png')} />
                         </View>
                     </TouchableOpacity>
-                    <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#353A48', textAlign: 'center', paddingVertical: 20, }}>App Version 1.0.0</Text>
+                    <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#353A48', textAlign: 'center', paddingVertical: 20, }}>App Version 1.0.0</Text>
                 </View>
 
                 {/* Edit Modal */}
@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
     },
     modalText: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 16,
         color: '#0C0D36',
     },
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     Text: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 14,
         color: '#2F81F5',
         paddingTop: 8,
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     tsktext: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 16,
         color: '#0C0D36',
         paddingLeft: 15,

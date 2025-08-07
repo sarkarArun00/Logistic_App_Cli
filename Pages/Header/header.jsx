@@ -75,7 +75,7 @@ const header = ({ navigation, profileImage }) => {
                 : require('../../assets/loading_gray.gif') // fallback image
             } />
           </TouchableOpacity>
-          <Text numberOfLines={1} ellipsizeMode="tail" style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 19, color: '#3085FE', paddingLeft: 8, width: 180, }}>Hi {userName} !</Text>
+          <Text numberOfLines={1} ellipsizeMode="tail" style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 19, color: '#3085FE', paddingLeft: 8, width: 180, }}>Hi {userName} !</Text>
         </View>
         <Pressable
           onPress={() => navigation.navigate('Notification')}
@@ -116,7 +116,7 @@ const header = ({ navigation, profileImage }) => {
             >
               <Text
                 style={{
-                  fontFamily: 'Montserrat_400Regular',
+                  fontFamily: 'Montserrat-Regular',
                   fontSize: 10,
                   lineHeight: 13,
                   color: '#fff',

@@ -2,7 +2,7 @@ import { useRoute } from '@react-navigation/native';
 import React, { useState, useEffect, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet, View, Alert, Text, TouchableOpacity, Pressable, Image, RefreshControl, ActivityIndicator, ScrollView, TouchableWithoutFeedback, TextInput, Modal, PermissionsAndroid, Platform } from 'react-native';
-// import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium } from '@expo-google-fonts/montserrat';
+// import { useFonts, Montserrat-SemiBold, Montserrat-Medium } from '@expo-google-fonts/montserrat';
 import { Picker } from '@react-native-picker/picker';
 // import Menu from '../Menu-bar/Menu'
 import TaskService from '../Services/task_service';
@@ -708,7 +708,7 @@ function Receipt({ navigation }) {
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={{ flexDirection: 'row', alignItems: 'center', }}>
                         <Image style={{ width: 14, height: 14, }} source={require('../../assets/leftarrow.png')} />
-                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Receipt</Text>
+                        <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Receipt</Text>
                     </TouchableOpacity>
                     {/* <View style={{ position: 'relative', width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
                         <TouchableOpacity onPress={() => navigation.navigate('Notification')}>
@@ -721,7 +721,7 @@ function Receipt({ navigation }) {
                 <View style={{ flexDirection: 'row', marginTop: 20, }}>
                     <View style={{ flex: 1, position: 'relative', }}>
                         <TextInput
-                            style={{ fontSize: 14, fontFamily: 'Montserrat_500Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
+                            style={{ fontSize: 14, fontFamily: 'Montserrat-Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
                             placeholder="Search"
                             placeholderTextColor="#0C0D36"
                             value={query} onChangeText={handleSearch}
@@ -737,7 +737,7 @@ function Receipt({ navigation }) {
                 <View>
 
                     {!receiptData || Object.keys(receiptData).length === 0 ? (
-                        <Text style={{ textAlign: 'center', marginTop: 360, fontFamily: 'Montserrat_500Medium', fontSize: 14, color: '#0C0D36' }}>
+                        <Text style={{ textAlign: 'center', marginTop: 360, fontFamily: 'Montserrat-Medium', fontSize: 14, color: '#0C0D36' }}>
                             No data found!
                         </Text>
                     ) : (
@@ -771,7 +771,7 @@ function Receipt({ navigation }) {
                                                                         ellipsizeMode="tail"
                                                                         style={{
                                                                             width: 180,
-                                                                            fontFamily: 'Montserrat_500Medium',
+                                                                            fontFamily: 'Montserrat-Medium',
                                                                             fontSize: 16,
                                                                             color: '#0C0D36',
                                                                             paddingBottom: 3,
@@ -780,7 +780,7 @@ function Receipt({ navigation }) {
                                                                         {item.receiptId || `Receipt Copy ${index + 1}`}
                                                                     </Text>
                                                                     <Text style={{
-                                                                        fontFamily: 'Montserrat_500Medium',
+                                                                        fontFamily: 'Montserrat-Medium',
                                                                         fontSize: 12,
                                                                         color: '#0C0D36',
                                                                     }}>
@@ -797,7 +797,7 @@ function Receipt({ navigation }) {
                                                                             paddingHorizontal: 8,
                                                                             borderRadius: 12,
                                                                         }}>
-                                                                            <Text style={{ fontSize: 11, color: '#fff', fontFamily: 'Montserrat_500Medium' }}>
+                                                                            <Text style={{ fontSize: 11, color: '#fff', fontFamily: 'Montserrat-Medium' }}>
                                                                                 {getStatusLabel(item.authoriseStatus, item.generateStatus)}
                                                                             </Text>
                                                                         </View>
@@ -928,10 +928,10 @@ function Receipt({ navigation }) {
                                 </View>
                                 <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', paddingVertical: 25, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between', }}>
                                     <TouchableOpacity onPress={() => { resetFilter() }} style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12, }}>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#2F81F5', textAlign: 'center', }}>Reset</Text>
+                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#2F81F5', textAlign: 'center', }}>Reset</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity onPress={() => { applyFilter() }} style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12, }}>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#fff', textAlign: 'center', }}>Apply Filter</Text>
+                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#fff', textAlign: 'center', }}>Apply Filter</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -959,7 +959,7 @@ function Receipt({ navigation }) {
                 onRequestClose={() => setModalVisible(false)}>
                 <View style={styles.modalBackground}>
                     <View style={styles.modalContainer}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical:15, marginBottom:15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
                             <Text style={styles.modalText}>Create Receipt:</Text>
                             <TouchableOpacity onPress={() => setModalVisible(false)}>
                                 <Image style={{ width: 18, height: 18 }} source={require('../../assets/mdlclose.png')} />
@@ -1037,7 +1037,7 @@ function Receipt({ navigation }) {
                                 paddingHorizontal: 10,
                             }}>
                             <Text style={{
-                                fontFamily: 'Montserrat_600SemiBold',
+                                fontFamily: 'Montserrat-SemiBold',
                                 fontSize: 16,
                                 color: 'white',
                                 textAlign: 'center',
@@ -1111,7 +1111,7 @@ const styles = StyleSheet.create({
         fontSize: 12,
         marginTop: 2,
         marginBottom: 8,
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
     },
 
     container: {
@@ -1120,7 +1120,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     title: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 16,
         color: '#2F81F5',
         marginVertical: 20,
@@ -1144,7 +1144,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
     },
     downloadText: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 14,
         color: '#0C0D36',
     },
@@ -1161,7 +1161,7 @@ const styles = StyleSheet.create({
     },
 
     createText: {
-        fontFamily: 'Montserrat_600SemiBold',
+        fontFamily: 'Montserrat-SemiBold',
         fontSize: 15,
         color: '#3085FE',
     },
@@ -1181,12 +1181,12 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 20,
     },
     modalText: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 16,
         color: '#0C0D36',
     },
     label: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 15,
         color: '#0C0D36',
         paddingBottom: 10,

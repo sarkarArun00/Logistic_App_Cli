@@ -456,7 +456,7 @@ function Wallet({ navigation, progress = 0.5 }) {
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={{ flexDirection: 'row', alignItems: 'center', }}>
                         <Image style={{ width: 14, height: 14, }} source={require('../../assets/leftarrow.png')} />
-                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Wallet</Text>
+                        <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Wallet</Text>
                     </TouchableOpacity>
                     <View style={{ position: 'relative', width: 50, height: 50, marginTop: 5, marginRight: 2, borderRadius: 25, backgroundColor: '#F6FAFF', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
                         <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
@@ -506,7 +506,7 @@ function Wallet({ navigation, progress = 0.5 }) {
                 <View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20, }}>
                         <View style={{ flex: 1, position: 'relative', }}>
-                            <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 16, color: '#3085FE', }}>Transaction History</Text>
+                            <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 16, color: '#3085FE', }}>Transaction History</Text>
                         </View>
                         <TouchableOpacity onPress={() => setFilter(true)} style={{ width: 50, height: 50, borderRadius: 25, backgroundColor: '#F6FAFF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginLeft: 14, }}>
                             <Image style={{ width: 25, height: 25, }} source={require('../../assets/filter.png')} />
@@ -579,7 +579,7 @@ function Wallet({ navigation, progress = 0.5 }) {
                             ))
                         ) : (
                             <View style={{ padding: 20, alignItems: 'center' }}>
-                                <Text style={{ fontSize: 16, color: '#64748B', fontFamily: 'Montserrat_500Medium' }}>
+                                <Text style={{ fontSize: 16, color: '#64748B', fontFamily: 'Montserrat-Medium' }}>
                                     No history found
                                 </Text>
                             </View>
@@ -741,7 +741,7 @@ function Wallet({ navigation, progress = 0.5 }) {
                                     >
                                         <Text
                                             style={{
-                                                fontFamily: 'Montserrat_600SemiBold',
+                                                fontFamily: 'Montserrat-SemiBold',
                                                 fontSize: 16,
                                                 color: 'white',
                                                 textAlign: 'center',
@@ -870,10 +870,10 @@ function Wallet({ navigation, progress = 0.5 }) {
                                 </View>
                                 <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', paddingVertical: 25, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between', }}>
                                     <TouchableOpacity style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12, }} onPress={() => resetFilter()}>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#2F81F5', textAlign: 'center', }}>Reset All</Text>
+                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#2F81F5', textAlign: 'center', }}>Reset All</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12, }} onPress={() => submitFilter()}>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#fff', textAlign: 'center', }}>Apply Filters</Text>
+                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#fff', textAlign: 'center', }}>Apply Filters</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -936,18 +936,18 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     balance: {
-        fontFamily: 'Montserrat_400Regular',
+        fontFamily: 'Montserrat-Regular',
         fontSize: 32,
         color: '#0C0D36',
     },
     balancelabel: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 12,
         color: 'rgba(12,13,54,0.5)',
         marginTop: 10,
     },
     labelText: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 16,
         color: 'rgba(12,13,54,0.5)',
     },
@@ -971,7 +971,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     amountText: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 16,
         color: '#fff',
         textAlign: 'center',
@@ -991,18 +991,18 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 20,
     },
     modalText: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 16,
         color: '#0C0D36',
     },
     label: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 15,
         color: '#0C0D36',
         paddingBottom: 10,
     },
     input: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         height: 54,
         borderWidth: 1,
         borderColor: '#ECEDF0',
@@ -1012,7 +1012,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
     pickerContainer: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         height: 54,
         borderWidth: 1,
         borderColor: '#ECEDF0',
@@ -1022,7 +1022,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
     textarea: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         height: 54,
         borderWidth: 1,
         borderColor: '#ECEDF0',
@@ -1093,24 +1093,24 @@ const styles = StyleSheet.create({
         paddingLeft: 10,
     },
     recAmnt: {
-        fontFamily: 'Montserrat_600SemiBold',
+        fontFamily: 'Montserrat-SemiBold',
         fontSize: 12,
         color: '#3085FE',
     },
     clientName: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 12,
         color: '#0C0D36',
         paddingTop: 3,
     },
     creditAmnt: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 14,
         color: '#0C0D36',
         textAlign: 'right',
     },
     dates: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 12,
         color: '#0C0D36',
         textAlign: 'right',

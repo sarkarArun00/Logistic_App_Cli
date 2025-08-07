@@ -636,7 +636,7 @@ const styles = StyleSheet.create({
         marginHorizontal: "auto",
     },
     swipeText: {
-        fontFamily: 'Montserrat_400Regular',
+        fontFamily: 'Montserrat-Regular',
         fontSize: 14,
         color: '#fff',
     },

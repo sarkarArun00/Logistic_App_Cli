@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, ActivityIndicator, TextInput, Modal, Animated, FlatList, Alert } from 'react-native';
-// import { useFonts, Montserrat_600SemiBold, Montserrat_400Regular, Montserrat_500Medium } from '@expo-google-fonts/montserrat'
+// import { useFonts, Montserrat-SemiBold, Montserrat-Regular, Montserrat-Medium } from '@expo-google-fonts/montserrat'
 import { Picker } from '@react-native-picker/picker';
 // import * as ImagePicker from 'expo-image-picker';
 import { GlobalStyles } from '../../GlobalStyles';
@@ -163,7 +163,7 @@ function Rejected({ navigation }) {
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={{ flexDirection: 'row', alignItems: 'center', }}>
                         <Image style={{ width: 14, height: 14, }} source={require('../../../assets/leftarrow.png')} />
-                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Fuel Voucher Request</Text>
+                        <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Fuel Voucher Request</Text>
                     </TouchableOpacity>
                     <View style={{ position: 'relative', width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
                         <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
@@ -177,7 +177,7 @@ function Rejected({ navigation }) {
                 <View style={{ flexDirection: 'row', marginTop: 20, }}>
                     <View style={{ flex: 1, position: 'relative', }}>
                         <TextInput
-                            style={{ fontSize: 14, fontFamily: 'Montserrat_500Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
+                            style={{ fontSize: 14, fontFamily: 'Montserrat-Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
                             placeholder="Search"
                             placeholderTextColor="#0C0D36"
                         />
@@ -185,7 +185,7 @@ function Rejected({ navigation }) {
                     </View>
                     <TouchableOpacity onPress={() => setFilter(true)} style={{ width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginLeft: 14, }}>
                         <Image style={{ width: 25, height: 25, }} source={require('../../../assets/filter.png')} />
-                        {/* <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>2</Text> */}
+                        {/* <Text style={{ position: 'absolute', fontFamily: 'Montserrat-Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>2</Text> */}
                     </TouchableOpacity>
                 </View>
 
@@ -227,7 +227,7 @@ function Rejected({ navigation }) {
                                 <View style={{ paddingLeft: 6 }}>
                                     <Text
                                         style={{
-                                            fontFamily: 'Montserrat_500Medium',
+                                            fontFamily: 'Montserrat-Medium',
                                             fontSize: 16,
                                             color: '#0C0D36',
                                             paddingBottom: 2,
@@ -237,7 +237,7 @@ function Rejected({ navigation }) {
                                     </Text>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', }}>
                                         <View style={styles.bgborder}><Animated.View style={[styles.animatebg, { backgroundColor }]} /></View>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 11, color: '#0C0D36', }}>Payment Approved</Text>
+                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 11, color: '#0C0D36', }}>Payment Approved</Text>
                                     </View>
                                 </View>
                             </View>
@@ -246,7 +246,7 @@ function Rejected({ navigation }) {
                                 <View style={{ paddingRight: 15 }}>
                                     <Text
                                         style={{
-                                            fontFamily: 'Montserrat_600SemiBold',
+                                            fontFamily: 'Montserrat-SemiBold',
                                             fontSize: 14,
                                             color: 'red',
                                         }}
@@ -386,10 +386,10 @@ function Rejected({ navigation }) {
                                 </View>
                                 <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', paddingVertical: 25, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between', }}>
                                     <TouchableOpacity style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12, }}>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#2F81F5', textAlign: 'center', }}>Reset All</Text>
+                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#2F81F5', textAlign: 'center', }}>Reset All</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12, }}>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#fff', textAlign: 'center', }}>Apply Filters (3)</Text>
+                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#fff', textAlign: 'center', }}>Apply Filters (3)</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     title: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 16,
         color: '#2F81F5',
         marginVertical: 20,
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
     },
     downloadText: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 14,
         color: '#0C0D36',
     },
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 21,
     },
     createText: {
-        fontFamily: 'Montserrat_600SemiBold',
+        fontFamily: 'Montserrat-SemiBold',
         fontSize: 15,
         color: '#3085FE',
     },
@@ -534,7 +534,7 @@ const styles = StyleSheet.create({
         borderColor: '#2F81F5',
     },
     acttext: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 12,
         color: '#0C0D36',
     },
@@ -558,12 +558,12 @@ const styles = StyleSheet.create({
         height: '75%',
     },
     modalText: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 16,
         color: '#0C0D36',
     },
     label: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 15,
         color: '#0C0D36',
         paddingBottom: 10,
@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
         padding: 12,
     },
     uploadTitle: {
-        fontFamily: 'Montserrat_600SemiBold',
+        fontFamily: 'Montserrat-SemiBold',
         fontSize: 14,
         color: '#2F81F5',
         textAlign: 'center',
@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
         paddingBottom: 3,
     },
     uploadSubTitle: {
-        fontFamily: 'Montserrat_400Regular',
+        fontFamily: 'Montserrat-Regular',
         fontSize: 13,
         color: '#0C0D36',
         textAlign: 'center',
@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     noImgSelected: {
-        fontFamily: 'Montserrat_600SemiBold',
+        fontFamily: 'Montserrat-SemiBold',
         fontSize: 13,
         color: '#0C0D36',
         textAlign: 'center',

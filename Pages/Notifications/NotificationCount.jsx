@@ -31,7 +31,7 @@ const NotificationCount = ({ navigation }) => {
         {notificationCount > 0 && (
           <Text style={{
             position: 'absolute',
-            fontFamily: 'Montserrat_400Regular',
+            fontFamily: 'Montserrat-Regular',
             fontSize: 10,
             lineHeight: 13,
             color: '#fff',
@@ -50,7 +50,7 @@ const NotificationCount = ({ navigation }) => {
         {notificationCount >= 0 && (
           <Text style={{
             position: 'absolute',
-            fontFamily: 'Montserrat_400Regular',
+            fontFamily: 'Montserrat-Regular',
             fontSize: 10,
             lineHeight: 13,
             color: '#fff',

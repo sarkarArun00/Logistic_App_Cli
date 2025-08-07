@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
     StyleSheet, View, Text, Alert, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, RefreshControl, ActivityIndicator
 } from 'react-native';
-// import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium, Montserrat_400Regular } from '@expo-google-fonts/montserrat';
+// import { useFonts, Montserrat-SemiBold, Montserrat-Medium, Montserrat-Regular } from '@expo-google-fonts/montserrat';
 import TaskService from '../../Services/task_service';
 import TaskStatusTabs from '../TaskStatusTabs'
 import NotificationCount from '../../Notifications/NotificationCount';
@@ -40,9 +40,9 @@ function Accepted({ navigation }) {
 
 
     // const [fontsLoaded] = useFonts({
-    //     Montserrat_600SemiBold,
-    //     Montserrat_500Medium,
-    //     Montserrat_400Regular,
+    //     Montserrat-SemiBold,
+    //     Montserrat-Medium,
+    //     Montserrat-Regular,
     // });
 
     useEffect(() => {
@@ -206,7 +206,7 @@ function Accepted({ navigation }) {
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
                     <TouchableOpacity onPress={() => navigation.navigate("TaskStack", { screen: "TaskScreen" })} style={{ flexDirection: 'row', alignItems: 'center', }}>
                         <Image style={{ width: 14, height: 14, }} source={require('../../../assets/leftarrow.png')} />
-                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Accepted Task</Text>
+                        <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Accepted Task</Text>
                     </TouchableOpacity>
                     <View >
                         <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
@@ -219,7 +219,7 @@ function Accepted({ navigation }) {
 
                 <View style={{ position: 'relative', marginTop: 20, }}>
                     <TextInput
-                        style={{ fontSize: 14, fontFamily: 'Montserrat_500Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
+                        style={{ fontSize: 14, fontFamily: 'Montserrat-Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
                         placeholder="Search"
                         placeholderTextColor="#0C0D36"
                         value={searchQuery}
@@ -243,7 +243,7 @@ function Accepted({ navigation }) {
                                         <View style={{ width: 29, height: 29, borderRadius: 50, backgroundColor: '#edfafc', alignItems: 'center', justifyContent: 'center' }}>
                                             <Image style={{ width: 17, height: 17 }} source={require('../../../assets/texticon.png')} />
                                         </View>
-                                        <Text style={{ flex: 1, paddingLeft: 7, fontFamily: 'Montserrat_500Medium', fontSize: 15, color: '#2F81F5' }}>
+                                        <Text style={{ flex: 1, paddingLeft: 7, fontFamily: 'Montserrat-Medium', fontSize: 15, color: '#2F81F5' }}>
                                             {task.taskType?.taskType}
                                         </Text>
                                     </View>
@@ -261,31 +261,31 @@ function Accepted({ navigation }) {
                                     <View style={{ flex: 1 }}>
                                         <View style={{ position: 'relative', marginBottom: 5 }}>
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 12, height: 12 }} source={require('../../../assets/asicon1.png')} />
-                                            <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
+                                            <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
                                                 Task ID: {task?.displayId ?? 'NA'}
                                             </Text>
                                         </View>
                                         <View style={{ position: 'relative', marginBottom: 5 }}>
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 11, height: 13 }} source={require('../../../assets/asicon2.png')} />
-                                            <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
+                                            <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
                                                 {task?.pickUpLocation?.address ?? 'No Address'}
                                             </Text>
                                         </View>
                                         <View style={{ position: 'relative', marginBottom: 5 }}>
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 13, height: 13 }} source={require('../../../assets/asicon3.png')} />
-                                            <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
+                                            <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
                                                 {task?.preferredTime?.start_time?.slice(0, 5)} - {task?.preferredTime?.end_time?.slice(0, 5)}
                                             </Text>
                                         </View>
                                         <View style={{ position: 'relative', marginBottom: 5 }}>
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 13, height: 13 }} source={require('../../../assets/asicon4.png')} />
-                                            <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
+                                            <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
                                                 Assigned By: {task?.assigned?.assigner.employee_name}
                                             </Text>
                                         </View>
                                         {/* <View style={{ position: 'relative' }}>
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 16, height: 16 }} source={require('../../../assets/asicon4.png')} />
-                                            <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
+                                            <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
                                                 {task?.pickUpLocation?.client_name ?? task?.pickUpLocation?.centreName ?? '...'}
 
                                             </Text>
@@ -308,7 +308,7 @@ function Accepted({ navigation }) {
                                                 />
                                                 <Text
                                                     style={{
-                                                        fontFamily: 'Montserrat_500Medium',
+                                                        fontFamily: 'Montserrat-Medium',
                                                         fontSize: 13,
                                                         color: '#0C0D36',
                                                         paddingLeft: 20,
@@ -325,7 +325,7 @@ function Accepted({ navigation }) {
                                             <View style={{ position: 'relative', marginTop: 30 }}>
                                                 <View style={{ width: 16, height: 16, borderWidth: 2, borderColor: '#F43232', borderRadius: 50, position: 'absolute', left: 0, top: 2 }}></View>
                                                 <View style={{ width: 8, height: 8, backgroundColor: '#F43232', borderRadius: 50, position: 'absolute', left: 4, top: 6 }}></View>
-                                                <Text style={{ fontFamily: 'Montserrat_500Medium', color: '#F43232', paddingLeft: 20 }}>Urgent</Text>
+                                                <Text style={{ fontFamily: 'Montserrat-Medium', color: '#F43232', paddingLeft: 20 }}>Urgent</Text>
                                             </View>
                                         </View>
                                     )}
@@ -364,17 +364,17 @@ function Accepted({ navigation }) {
                                 <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', padding: 15, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between' }}>
                                     {/*<TouchableOpacity style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12 }} onPress={() => navigation.navigate('mapNavigation', { task: task })}> */}
                                     <TouchableOpacity style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12 }} onPress={() => navigateToUserLocation(task)}>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#2F81F5', textAlign: 'center' }}>Navigate</Text>
+                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#2F81F5', textAlign: 'center' }}>Navigate</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity onPress={() => startTask(task.id)} style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12 }}>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#fff', textAlign: 'center' }}>Start</Text>
+                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#fff', textAlign: 'center' }}>Start</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
                         ))
                     ) : (
                         <View style={{ padding: 20, alignItems: 'center', justifyContent: 'center', marginTop: 200 }}>
-                            {/* <Text style={{ fontSize: 16, color: '#999', fontFamily: 'Montserrat_500Medium' }}>
+                            {/* <Text style={{ fontSize: 16, color: '#999', fontFamily: 'Montserrat-Medium' }}>
                                 No Data Found
                             </Text> */}
                             <Image style={{ width: 200, height: 200, marginTop: -50 }}
@@ -395,7 +395,7 @@ function Accepted({ navigation }) {
                                 padding: 12,
                                 borderRadius: 10,
                                 alignItems: 'center',
-                                marginBottom: 50,
+                                marginBottom: 10,
                                 flexDirection: 'row',
                                 justifyContent: 'center',
                             }}
@@ -404,13 +404,13 @@ function Accepted({ navigation }) {
                             {loadingMore ? (
                                 <>
                                     <ActivityIndicator size="small" color="#fff" />
-                                    <Text style={{ color: 'white', marginLeft: 10, fontFamily: 'Montserrat_600SemiBold' }}>
+                                    <Text style={{ color: 'white', marginLeft: 10, fontFamily: 'Montserrat-SemiBold' }}>
                                         Loading...
                                     </Text>
                                 </>
                             ) : (
                                 <>
-                                    <Text style={{ color: 'white', fontFamily: 'Montserrat_600SemiBold' }}>
+                                    <Text style={{ color: 'white', fontFamily: 'Montserrat-SemiBold' }}>
                                         Load More
                                     </Text>
                                 </>
@@ -437,18 +437,18 @@ function Accepted({ navigation }) {
 
                             <View style={{ padding: 15, }}>
                                 {/* <View style={{ marginBottom: 10, }}>
-                                    <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 15, paddingBottom: 15, }}>Akash Kundu (#ABG70015) </Text>
+                                    <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 15, paddingBottom: 15, }}>Akash Kundu (#ABG70015) </Text>
                                     <View style={{ flexDirection: 'row', marginBottom: 10, }}>
                                         <View style={{ width: 24, height: 24, borderWidth: 1, borderColor: '#1AA123', borderRadius: '50%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
                                             <Image style={{ width: 14, height: 14, }} source={require('../../../assets/texticon2.png')} />
                                         </View>
-                                        <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 15, paddingLeft: 10, }}>Container Name (Bar Code)</Text>
+                                        <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 15, paddingLeft: 10, }}>Container Name (Bar Code)</Text>
                                     </View>
                                     <View style={{ flexDirection: 'row', marginBottom: 10, }}>
                                         <View style={{ width: 24, height: 24, borderWidth: 1, borderColor: '#1AA123', borderRadius: '50%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
                                             <Image style={{ width: 14, height: 14, }} source={require('../../../assets/texticon2.png')} />
                                         </View>
-                                        <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 15, paddingLeft: 10, }}>Container Name (Bar Code)</Text>
+                                        <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 15, paddingLeft: 10, }}>Container Name (Bar Code)</Text>
                                     </View>
 
                                 </View> */}
@@ -463,7 +463,7 @@ function Accepted({ navigation }) {
                                 </View>
 
                                 <TouchableOpacity onPress={() => { setModalVisible(false); }} style={{ backgroundColor: '#2F81F5', borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10, }}>
-                                    <Text style={{ fontFamily: 'Montserrat_600SemiBold', fontSize: 16, color: 'white', textAlign: 'center', }}>Close</Text>
+                                    <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 16, color: 'white', textAlign: 'center', }}>Close</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -516,7 +516,7 @@ const styles = StyleSheet.create({
         borderColor: '#2F81F5',
     },
     acttext: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 12,
         color: '#0C0D36',
     },
@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
         marginBottom:20,
     },
     oncetxt: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 12,
         color: '#2F81F5',
         backgroundColor: 'rgba(48, 133, 254, 0.1)',
@@ -559,18 +559,18 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 20,
     },
     modalText: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 16,
         color: '#0C0D36',
     },
     label: {
-        fontFamily: 'Montserrat_500Medium',
+        fontFamily: 'Montserrat-Medium',
         fontSize: 15,
         color: '#0C0D36',
         paddingBottom: 10,
     },
     input: {
-        fontFamily: 'Montserrat_400Regular',
+        fontFamily: 'Montserrat-Regular',
         height: 54,
         borderWidth: 1,
         borderColor: '#ECEDF0',
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
     textarea: {
-        fontFamily: 'Montserrat_400Regular',
+        fontFamily: 'Montserrat-Regular',
         height: 54,
         borderWidth: 1,
         borderColor: '#ECEDF0',

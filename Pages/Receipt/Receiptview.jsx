@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet, View, Text, TouchableOpacity, Image, Alert, ScrollView, PermissionsAndroid, Platform, ToastAndroid } from 'react-native';
 import TaskService from '../Services/task_service';
-// import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium, Montserrat_400Regular } from '@expo-google-fonts/montserrat';
+// import { useFonts, Montserrat-SemiBold, Montserrat-Medium, Montserrat-Regular } from '@expo-google-fonts/montserrat';
 import { toWords } from 'number-to-words';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import Share from 'react-native-share';
@@ -11,9 +11,9 @@ import Share from 'react-native-share';
 
 function Receiptview({ navigation, route }) {
   // const [fontsLoaded] = useFonts({
-  //     Montserrat_600SemiBold,
-  //     Montserrat_500Medium,
-  //     Montserrat_400Regular,
+  //     Montserrat-SemiBold,
+  //     Montserrat-Medium,
+  //     Montserrat-Regular,
   // });
 
   // if (!fontsLoaded) {
@@ -338,7 +338,7 @@ const formatDateTime2 = (dateString) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} >
           <Image source={require('../../assets/locate-back.png')} style={{ width: 23, height: 15, }} />
           {/* this line has issue********* */}
-          {/* <Text style={{ fontSize: 'Montserrat_600SemiBold', color: '#0C0D36', paddingLeft: 5, }}>Receipt</Text> */}
+          {/* <Text style={{ fontSize: 'Montserrat-SemiBold', color: '#0C0D36', paddingLeft: 5, }}>Receipt</Text> */}
         </TouchableOpacity>
         { status != null ? (
         <View style={styles.paymentBox}>
@@ -411,7 +411,7 @@ const formatDateTime2 = (dateString) => {
                   borderRadius: 12,
                   // marginBottom: 4,
                 }}>
-                  <Text style={{ fontSize: 11, color: '#fff', fontFamily: 'Montserrat_500Medium' }}>
+                  <Text style={{ fontSize: 11, color: '#fff', fontFamily: 'Montserrat-Medium' }}>
                     {getStatusLabel(receiptData?.authoriseStatus, receiptData?.generateStatus)}
                   </Text>
                 </View>
@@ -471,7 +471,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   payText: {
-    fontFamily: 'Montserrat_400Regular',
+    fontFamily: 'Montserrat-Regular',
     fontSize: 16,
     color: '#474747',
     textAlign: 'center',
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   payText1: {
-    fontFamily: 'Montserrat_600SemiBold',
+    fontFamily: 'Montserrat-SemiBold',
     fontSize: 18,
     color: '#474747',
     textAlign: 'center',
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   inrText: {
-    fontFamily: 'Montserrat_600SemiBold',
+    fontFamily: 'Montserrat-SemiBold',
     fontSize: 24,
     color: '#0C0D36',
     textAlign: 'center',
@@ -515,14 +515,14 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   receTitle: {
-    fontFamily: 'Montserrat_500Medium',
+    fontFamily: 'Montserrat-Medium',
     fontSize: 16,
     color: '#0C0D36',
     textAlign: 'center',
     paddingBottom: 7,
   },
   receSubTitle: {
-    fontFamily: 'Montserrat_500Medium',
+    fontFamily: 'Montserrat-Medium',
     fontSize: 13,
     color: '#707070',
     textAlign: 'center',
@@ -533,14 +533,14 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   sndTitle: {
-    fontFamily: 'Montserrat_600SemiBold',
+    fontFamily: 'Montserrat-SemiBold',
     fontSize: 12,
     color: '#707070',
     flex: 1,
   },
   sndSubTitle: {
     width: 170,
-    fontFamily: 'Montserrat_600SemiBold',
+    fontFamily: 'Montserrat-SemiBold',
     fontSize: 12,
     color: '#0C0D36',
     textAlign: 'right',
@@ -563,13 +563,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   remTitle: {
-    fontFamily: 'Montserrat_500Medium',
+    fontFamily: 'Montserrat-Medium',
     fontSize: 16,
     color: '#0C0D36',
     width: 88,
   },
   remSubTitle: {
-    fontFamily: 'Montserrat_400Regular',
+    fontFamily: 'Montserrat-Regular',
     fontSize: 13,
     color: '#707070',
     flex: 1,
@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   pdfText: {
-    fontFamily: 'Montserrat_500Medium',
+    fontFamily: 'Montserrat-Medium',
     fontSize: 14,
     color: '#0C0D36',
     marginLeft: 7,
@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   doneText: {
-    fontFamily: 'Montserrat_500Medium',
+    fontFamily: 'Montserrat-Medium',
     fontSize: 14,
     color: '#fff',
     textAlign: 'center',
