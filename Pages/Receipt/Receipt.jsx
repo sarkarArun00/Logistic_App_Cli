@@ -809,7 +809,7 @@ function Receipt({ navigation }) {
 
                                                     {/* 3-Dot Menu */}
                                                     <TouchableWithoutFeedback onPress={() => setActiveMenuIndex(null)}>
-                                                        <View>
+                                                        <View style={{ position: 'relative', zIndex: 1 }}>
                                                             <Pressable
                                                                 style={[styles.touchBtn, { paddingHorizontal: 4 }]}
                                                                 onPress={(e) => {
@@ -1138,6 +1138,7 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 5,
         paddingVertical: 11,
+        zIndex:99,
     },
     viewText: {
         paddingVertical: 8,
