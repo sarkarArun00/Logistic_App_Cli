@@ -48,18 +48,18 @@ const header = ({ navigation, profileImage }) => {
     getUserData();
     checkNewNotifications(); 
 
-    const id = setInterval(() => {
-      checkNewNotifications();
-    }, 30000);
+    // const id = setInterval(() => {
+    //   checkNewNotifications();
+    // }, 30000);
 
-    setIntervalId(id);
+    // setIntervalId(id);
 
 
-    return () => {
-      isMounted = false;
-      if (intervalId) clearInterval(intervalId);
-      clearInterval(id);
-    };
+    // return () => {
+    //   isMounted = false;
+    //   if (intervalId) clearInterval(intervalId);
+    //   clearInterval(id);
+    // };
 
 
   }, []);

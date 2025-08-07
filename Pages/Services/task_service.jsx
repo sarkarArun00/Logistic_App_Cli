@@ -508,6 +508,16 @@ const TaskService = {
       throw error;
     }
   },
+  
+  getAllTaskTypes: async () => {
+    try {
+      const response = await apiClient.get('operation/logistics/getAllTaskTypes');
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
 
   handleReceiptDownload: async (url) => {
     const { showAlertModal, hideAlert } = useGlobalAlert();

@@ -7,7 +7,7 @@ import TaskStatusTabs from '../TaskStatusTabs';
 import TaskService from '../../Services/task_service';
 import NotificationCount from '../../Notifications/NotificationCount';
 
-import {GlobalStyles} from '../../GlobalStyles';
+import { GlobalStyles } from '../../GlobalStyles';
 import { useSearch } from '../../../hooks/userSearch1';
 import { Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker'; // install if not already
@@ -25,7 +25,7 @@ function Completed({ navigation }) {
     const [filter, setFilter] = useState(false);
     const [selectClient, setSelectClient] = useState();
     const [selectTask, setSelectTask] = useState();
-    const [selectPriority, setSelectPriority] = useState();
+    const [selectPriority, setSelectPriority] = useState('false');
     const [loading, setLoading] = useState(true);
     const [completedTasks, setCompletedTasks] = useState([]);
     const [visibleCount, setVisibleCount] = useState(5);
@@ -41,12 +41,13 @@ function Completed({ navigation }) {
     const [showFromDatePicker, setShowFromDatePicker] = useState(false);
     const [showToDatePicker, setShowToDatePicker] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+    const [allTaskType, setTaskType] = useState([])
 
     const formatDate = (date) => {
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
-        return `${year}-${month}-${day}`; 
+        return `${year}-${month}-${day}`;
     };
 
 
@@ -83,6 +84,7 @@ function Completed({ navigation }) {
     useEffect(() => {
         fetchData();
     }, []);
+
     useEffect(() => {
         fetchClients(); // New call for clients
     }, []);
@@ -108,6 +110,7 @@ function Completed({ navigation }) {
             console.error('Error fetching clients:', error);
         }
     };
+
     const fetchData = async () => {
         setLoading(true)
         try {
@@ -135,6 +138,7 @@ function Completed({ navigation }) {
             setLoading(false);
         }
     };
+
     const applyFilters = async () => {
         setLoading(true);
         try {
@@ -146,7 +150,8 @@ function Completed({ navigation }) {
                 priority: selectPriority === 'true' ? true : (selectPriority === 'false' ? false : null)
             };
 
-
+            console.log('filter payload: ', payload)
+            
             const response = await TaskService.getMyCompletedTasks(payload);
 
             if (response.status === 1) {
@@ -182,6 +187,20 @@ function Completed({ navigation }) {
             .replace(',', ''); // Optional: Remove comma between date and time
     };
 
+
+    const taskTypes = async () => {
+        try {
+            const response = await TaskService.getAllTaskTypes();
+            console.log('Task Type: ', response)
+            if (response.status == 1) {
+                setTaskType(response.data)
+            } else {
+                setTaskType([])
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
     const makeCall = (call) => {
         Linking.openURL(`tel:${call}`);
     };
@@ -204,7 +223,7 @@ function Completed({ navigation }) {
                     </TouchableOpacity>
                     <View >
                         <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
-                        <View pointerEvents="none">
+                            <View pointerEvents="none">
                                 <NotificationCount />
                             </View>
                         </TouchableOpacity>
@@ -231,7 +250,11 @@ function Completed({ navigation }) {
                         />
                         <Image style={{ position: 'absolute', top: 16, right: 20, width: 20, height: 20, }} source={require('../../../assets/search.png')} />
                     </View>
-                    <TouchableOpacity onPress={() => setFilter(true)} style={{ width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginLeft: 14, }}>
+                    <TouchableOpacity onPress={() => {
+                        setFilter(true)
+                        taskTypes()
+                    }}
+                        style={{ width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginLeft: 14, }}>
                         <Image style={{ width: 25, height: 25, }} source={require('../../../assets/filter.png')} />
                         {/* <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>2</Text> */}
                     </TouchableOpacity>
@@ -443,7 +466,7 @@ function Completed({ navigation }) {
                                                         key={client.id}
                                                         label={client.client_name}
                                                         value={client.id}
-                                                        
+
                                                     />
                                                 ))
                                             ) : (
@@ -459,13 +482,19 @@ function Completed({ navigation }) {
                                     <View style={styles.pickerContainer}>
                                         <Picker
                                             selectedValue={selectTask}
-                                            onValueChange={(itemValue) => setSelectTask(itemValue)}
+                                            onValueChange={(itemValue) => {
+                                                // Prevent changing to default if already selected
+                                                if (itemValue !== "") {
+                                                    setSelectTask(itemValue);
+                                                }
+                                            }}
                                             style={styles.picker}
                                             dropdownIconColor={lightTheme.inputText}
                                         >
-                                            <Picker.Item label="All Tasks" value="" />
-                                            <Picker.Item label="Pickup" value="pickup" />
-                                            <Picker.Item label="Delivery" value="delivery" />
+                                            <Picker.Item label="-select-" value="" />
+                                            {allTaskType.map((item) => (
+                                                <Picker.Item key={item.id} label={item.taskType} value={item.id} />
+                                            ))}
                                         </Picker>
                                     </View>
                                 </View>
@@ -497,6 +526,7 @@ function Completed({ navigation }) {
                                             setSelectClient(null);
                                             setSelectTask(null);
                                             setSelectPriority(null);
+                                            setFilter(false);
                                             fetchData(); // reset API
                                         }}
                                     >
@@ -549,23 +579,23 @@ const styles = StyleSheet.create({
         padding: 15,
         backgroundColor: '#fff',
     },
-        label: {
-            fontSize: 16,
-            marginBottom: 8,
-            color: lightTheme.text,
-        },
-        pickerContainer: {
-            backgroundColor: lightTheme.inputBackground,
-            borderWidth: 1,
-            borderColor: lightTheme.border,
-            borderRadius: 8,
-            overflow: 'hidden',
-            marginBottom: 16,
-        },
-        picker: {
-            height: 50,
-            color: lightTheme.inputText, // Works on iOS and sometimes Android
-        },
+    label: {
+        fontSize: 16,
+        marginBottom: 8,
+        color: lightTheme.text,
+    },
+    pickerContainer: {
+        backgroundColor: lightTheme.inputBackground,
+        borderWidth: 1,
+        borderColor: lightTheme.border,
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginBottom: 16,
+    },
+    picker: {
+        height: 50,
+        color: lightTheme.inputText, // Works on iOS and sometimes Android
+    },
     tcbtn: {
         borderWidth: 1,
         borderColor: '#0C0D36',
@@ -595,7 +625,7 @@ const styles = StyleSheet.create({
         elevation: 3,
         marginTop: 20,
         borderRadius: 15,
-        marginBottom:20,
+        marginBottom: 20,
     },
     oncetxt: {
         fontFamily: 'Montserrat-Medium',
@@ -671,7 +701,7 @@ const styles = StyleSheet.create({
         fontFamily: 'Montserrat-Medium',
         color: '#0C0D36',
         marginBottom: 5,
-      },
+    },
     dateInput: {
         fontFamily: 'Montserrat-Medium',
         flex: 1,
@@ -683,18 +713,18 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingHorizontal: 12,
         // marginHorizontal: 5,
-        fontSize:16,
-      },
-      dateText: {
+        fontSize: 16,
+    },
+    dateText: {
         fontSize: 15,
         fontFamily: 'Montserrat-Medium',
         color: '#0C0D36',
-      },
-      placeholderText: {
+    },
+    placeholderText: {
         fontSize: 14,
         fontFamily: 'Montserrat-Medium',
         color: '#999',
-      }
+    }
 
 })
 

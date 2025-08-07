@@ -536,7 +536,7 @@ function Wallet({ navigation, progress = 0.5 }) {
                                                     >
                                                         {item.transactionType === 'debit' ? 'Transfer Amount' : 'Received Amount'}
                                                     </Text>
-                                                    <Text style={styles.clientName}>{item.remarks}</Text>
+                                                    <Text style={styles.clientName}>{item.sender_or_receiver}</Text>
                                                 </View>
                                             </View>
                                             <View style={styles.rightBlock}>

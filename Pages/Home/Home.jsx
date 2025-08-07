@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-    StyleSheet, View, Text, Alert, TouchableOpacity, Image, ScrollView, Modal, TextInput, Platform, PermissionsAndroid, FlatList, Linking, RefreshControl
+    StyleSheet, View, Text, Alert, TouchableOpacity, Image, Button, ScrollView, Modal, TextInput, Platform, PermissionsAndroid, FlatList, Linking, RefreshControl
 } from 'react-native';
 // import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 // import { useFonts, Montserrat_600SemiBold, Montserrat_400Regular, Montserrat_500Medium } from '@expo-google-fonts/montserrat';
@@ -14,12 +14,16 @@ import AuthService from '../Services/auth_service';
 import TaskService from '../Services/task_service';
 import { useGlobalAlert } from '../../Context/GlobalAlertContext';
 import { useFocusEffect } from '@react-navigation/native';
-import Geolocation from '@react-native-community/geolocation';
 import { Vibration } from 'react-native';
-import TaskScreen from '../Task-management/Task-Screen/Task-Screen';
+
 import { lightTheme } from '../GlobalStyles';
-// import IntentLauncher from 'react-native-intent-launcher';
-import { AppState } from 'react-native';
+
+import { checkGPSAndGetLocation } from '../../Context/location.js'
+import GPSModal from '../../Context/GPSModal.js'
+import RNAndroidLocationEnabler from 'react-native-location-enabler';
+import { promptForEnableLocationIfNeeded } from 'react-native-android-location-enabler';
+const { PRIORITIES: { HIGH_ACCURACY }, useLocationSettings } = RNAndroidLocationEnabler;
+
 
 
 const wait = (timeout) => {
@@ -39,20 +43,20 @@ export default function Home({ navigation }) {
     const [displayTime, setDisplayTime] = useState(null);
 
     const { showAlertModal, hideAlert } = useGlobalAlert();
-    const [latitude, setLatitude] = useState(null);
-    const [longitude, setLongitude] = useState(null);
     const [userInfo, setUserInfo] = useState(null);
     const [refreshing, setRefreshing] = useState(false);
 
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredPages, setFilteredPages] = useState([]);
     const [showLocationModal, setShowLocationModal] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+
 
     const pages = [
         { id: '1', name: 'Profile', link: 'Profile' },
         { id: '2', name: 'Assigned', link: 'Assigned' },
         { id: '3', name: 'Accepted', link: 'Accepted' },
-        { id: '4', name: 'In Progress', link: 'In Progress' },
+        { id: '4', name: 'In Progress', link: 'In Progress' }, 
         { id: '5', name: 'Collected', link: 'Collected' },
         { id: '6', name: 'Completed', link: 'Completed' },
         { id: '7', name: 'Notification', link: 'Notification' },
@@ -60,6 +64,7 @@ export default function Home({ navigation }) {
         { id: '9', name: 'Receipt', link: 'Receipt' },
         { id: '10', name: 'Rejected Task', link: 'Rejected Task' },
     ];
+
 
     useEffect(() => {
         const getUserData = async () => {
@@ -78,22 +83,22 @@ export default function Home({ navigation }) {
 
 
 
-    useEffect(() => {
-        const subscription = AppState.addEventListener('change', (nextState) => {
-            if (nextState === 'active') {
-                // App came back from background — re-check location
-                getCurrentLocation();
-            }
-        });
+    // useEffect(() => {
+    //     const subscription = AppState.addEventListener('change', (nextState) => {
+    //         if (nextState === 'active') {
+    //             // App came back from background — re-check location
+    //             getCurrentLocation();
+    //         }
+    //     });
 
-        return () => subscription.remove();
-    }, []);
+    //     return () => subscription.remove();
+    // }, []);
 
     const onRefresh = async () => {
         setRefreshing(true);
         try {
             // await your data fetching function
-            await getCurrentLocation();
+            // await getCurrentLocation();
         } catch (error) {
             console.error(error);
         } finally {
@@ -152,7 +157,6 @@ export default function Home({ navigation }) {
 
 
             init();
-            getCurrentLocation();
             fetchProfilePicture();
 
             return () => clearInterval(timerRef.current);
@@ -197,84 +201,78 @@ export default function Home({ navigation }) {
 
 
     const requestLocationPermission = async () => {
-        if (Platform.OS === 'ios') {
-            const auth = Geolocation.requestAuthorization('whenInUse');
-            return auth === 'granted';
-        }
-
         if (Platform.OS === 'android') {
-            try {
-                const granted = await PermissionsAndroid.request(
-                    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-                    {
-                        title: 'Location Permission',
-                        message: 'We need to access your location to continue.',
-                        buttonNeutral: 'Ask Me Later',
-                        buttonNegative: 'Cancel',
-                        buttonPositive: 'OK',
-                    }
-                );
-
-                return granted === PermissionsAndroid.RESULTS.GRANTED;
-            } catch (err) {
-                console.warn('Permission error:', err);
-                return false;
+          try {
+            const granted = await PermissionsAndroid.request(
+              PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+              {
+                title: 'Geolocation Permission',
+                message: 'Can we access your location?',
+                buttonNeutral: 'Ask Me Later',
+                buttonNegative: 'Cancel',
+                buttonPositive: 'OK',
+              },
+            );
+            console.log('granted', granted);
+            if (granted === 'granted') {
+              console.log('You can use Geolocation');
+              return true;
+            } else {
+              console.log('You cannot use Geolocation');
+              return false;
             }
+          } catch (err) {
+            return false;
+          }
         }
+      };
 
-        return false;
-    };
 
-    const getCurrentLocation = async () => {
+      const handleEnableAndGetLocation = async () => {
+        // 1. First, check and request runtime permissions
         const hasPermission = await requestLocationPermission();
-
         if (!hasPermission) {
-            // showAlertModal('Location permission denied or unavailable.', true);
-            return;
+          console.log('Location permission denied.');
+          return;
         }
+    
+        // 2. Now, on Android, check and prompt to enable GPS if needed
+        if (Platform.OS === 'android') {
+          try {
+            const enableResult = await promptForEnableLocationIfNeeded();
+            if (enableResult === 'already-enabled' || enableResult === 'enabled') {
+              console.log('GPS is enabled, fetching location...');
 
-        Geolocation.getCurrentPosition(
-            position => {
-                const { latitude, longitude } = position.coords;
-                setLatitude(latitude);
-                setLongitude(longitude);
-                console.log('Latitude:', latitude);
-                console.log('Longitude:', longitude);
-            },
-            error => {
-                console.warn('Location Error:', error.code, error.message);
-                setLatitude(null);
-                setLongitude(null);
-            },
-            {
-                enableHighAccuracy: false,
-                timeout: 60000,
-                maximumAge: 10000,
-                forceRequestLocation: true,
-                showLocationDialog: true,
+            } else {
+              console.log('User did not enable GPS.');
             }
-        );
-    };
+          } catch (error) {
+            console.error(error);
+            console.log('An error occurred while trying to enable GPS.');
+          }
+        } else {
+          // 3. On iOS, permissions and GPS are handled by the system
+          console.log('Fetching location on iOS...');
+        }
+      };
+
+      const handleEnableGPS = () => {
+        setShowModal(false);
+        handleEnableAndGetLocation(); // Opens device settings so user can turn on GPS manually
+      };
+
 
     const handleSwipe = async () => {
-        try {
-            //    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            if (latitude === null || longitude === null) {
-                // showAlertModal('Unable to fetch location. Please try again.', true);
-                setShowLocationModal(true);
-                swipeRef.current?.reset();
-                return;
-            }
+        checkGPSAndGetLocation(
+          async (latitude, longitude) => {
             const userId = await AsyncStorage.getItem("user_id");
             const request = {
-                employeeId: userId,
-                loginDate: new Date().toISOString().split('T')[0],
-                latitude: latitude,
-                longitude: longitude,
+              employeeId: userId,
+              loginDate: new Date().toISOString().split('T')[0],
+              latitude,
+              longitude,
             };
-
-            console.log('requesting checkIn or checkOut :', request);
-            // return
+    
             if (!isCheckedIn) {
                 const response = await AuthService.attendanceCheckIn(request);
                 if (response.status == 1) {
@@ -292,6 +290,7 @@ export default function Home({ navigation }) {
                     setCheckInTimeDisplay(formattedTime);
                     setIsCheckedIn(true);
                     startTimer(now);
+                    swipeRef.current?.reset();
                 } else {
                     showAlertModal('Check-in failed. Please try again.', true);
                 }
@@ -307,35 +306,22 @@ export default function Home({ navigation }) {
                     setCheckInTimeDisplay(null);
                     setWorkingDuration('--:--');
                     clearInterval(timerRef.current);
+                    swipeRef.current?.reset();
                 } else {
                     showAlertModal('Check-out failed. Please try again.', true);
                 }
             }
-        } catch (err) {
-            console.error("handleSwipe error:", err);
-            showAlertModal('Unexpected error occurred. Try again.', true);
-        } finally {
+          },
+          (reason) => {
+            if (reason === 'gps_off') {
+              setShowModal(true);
+            } else {
+              Alert.alert('Location Error', reason || 'Unknown location error');
+            }
             swipeRef.current?.reset();
-        }
-    };
-
-    // const openSettings = () => {
-    //     if (Platform.OS === 'android') {
-    //       IntentLauncher.startActivity({
-    //         action: 'android.settings.LOCATION_SOURCE_SETTINGS',
-    //       });
-    //     } else {
-    //       Linking.openURL('app-settings:');
-    //     }
-    //   };
-
-    const openSettings = () => {
-        if (Platform.OS === 'android') {
-            Linking.openSettings(); // opens app settings
-        } else {
-            Linking.openURL('app-settings:');
-        }
-    };
+          }
+        );
+      };
 
     const startTimer = (checkInDate) => {
         clearInterval(timerRef.current);
@@ -363,7 +349,6 @@ export default function Home({ navigation }) {
     };
 
     const renderItem = ({ item, index }) => {
-        console.log('jhfsdhfjhjshjfshjfsjfjh', item.name)
         return (
             <TouchableOpacity
                 onPress={() => navigation.navigate(item.name)}
@@ -402,16 +387,6 @@ export default function Home({ navigation }) {
     };
 
 
-
-    // const [fontsLoaded] = useFonts({
-    //     Montserrat_600SemiBold,
-    //     Montserrat_400Regular,
-    //     Montserrat_500Medium
-    // });
-
-    // if (!fontsLoaded) {
-    //     return null;
-    // }
 
     return (
         <SafeAreaView style={styles.container}>
@@ -537,12 +512,21 @@ export default function Home({ navigation }) {
                             </Text>
                         </RNSwipeVerify>
                     </View>
+
+                    {/* <View style={{ flex: 1, justifyContent: 'center' }}>
+                        <Button title="Enable Location" onPress={handleEnableLocation} />
+                    </View> */}
+                    <GPSModal
+                        visible={showModal}
+                        onClose={() => setShowModal(false)}
+                        onEnable={handleEnableGPS}
+                    />
                 </View>
 
                 <View style={{ paddingTop: 20, marginBottom: 90, }}>
                     {/* <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 14, lineHeight: 15, color: '#3085FE', paddingBottom: 20, }}>My Shortcuts</Text> */}
                     <View style={{ backgroundColor: '#F6FAFF', borderRadius: 40, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8, }}>
-                    <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 14, lineHeight: 15, color: '#3085FE', paddingBottom: 20, }}>My Shortcuts</Text>
+                        <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 14, lineHeight: 15, color: '#3085FE', paddingBottom: 20, }}>My Shortcuts</Text>
 
                         <TouchableOpacity style={[styles.box, { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', borderRadius: 15, paddingHorizontal: 15, paddingVertical: 15, marginBottom: 12, }]}
                             onPress={() => navigation.navigate("TaskStack", { screen: "TaskScreen" })}>
@@ -625,45 +609,6 @@ export default function Home({ navigation }) {
                         </TouchableOpacity>
                     </View>
                 </View>
-
-                <Modal
-                    transparent
-                    animationType="fade"
-                    visible={showLocationModal}
-                    onRequestClose={() => setShowLocationModal(false)}
-                >
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalBox}>
-                            <Text style={styles.modalTitle}>Enable Location</Text>
-                            <Text style={styles.modalText}>
-                                Unable to fetch location. Please enable your location services.
-                            </Text>
-
-                            <View style={styles.buttonContainer}>
-                                <TouchableOpacity
-                                    onPress={() => setShowLocationModal(false)}
-                                    style={[styles.button, styles.cancelButton]}
-                                >
-                                    <Text style={styles.cancelText}>Cancel</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        setShowLocationModal(false);
-                                        if (Platform.OS === 'android') {
-                                            Linking.openURL('android.settings.LOCATION_SOURCE_SETTINGS');
-                                        } else {
-                                            Linking.openURL('app-settings:');
-                                        }
-                                    }}
-                                    style={[styles.button, styles.openButton]}
-                                >
-                                    <Text style={styles.openText} onPress={() => { openSettings() }}>Open Settings</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </View>
-                </Modal>
 
             </ScrollView>
         </SafeAreaView>
