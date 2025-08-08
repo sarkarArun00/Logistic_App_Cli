@@ -23,7 +23,8 @@ import GPSModal from '../../Context/GPSModal.js'
 import RNAndroidLocationEnabler from 'react-native-location-enabler';
 import { promptForEnableLocationIfNeeded } from 'react-native-android-location-enabler';
 const { PRIORITIES: { HIGH_ACCURACY }, useLocationSettings } = RNAndroidLocationEnabler;
-
+import TaskScreen from '../Task-management/Task-Screen/Task-Screen.jsx';
+import ShimmerSwipeText from './ShimmerSwipeText';
 
 
 const wait = (timeout) => {
@@ -53,16 +54,18 @@ export default function Home({ navigation }) {
 
 
     const pages = [
-        { id: '1', name: 'Profile', link: 'Profile' },
-        { id: '2', name: 'Assigned', link: 'Assigned' },
-        { id: '3', name: 'Accepted', link: 'Accepted' },
-        { id: '4', name: 'In Progress', link: 'In Progress' }, 
-        { id: '5', name: 'Collected', link: 'Collected' },
-        { id: '6', name: 'Completed', link: 'Completed' },
-        { id: '7', name: 'Notification', link: 'Notification' },
-        { id: '8', name: 'Attendance', link: 'Attendance' },
-        { id: '9', name: 'Receipt', link: 'Receipt' },
-        { id: '10', name: 'Rejected Task', link: 'Rejected Task' },
+        // { id: '1', name: 'Profile', link: 'Profile' },
+        // { id: '2', name: 'Assigned', link: 'Assigned' },
+        // { id: '3', name: 'Accepted', link: 'Accepted' },
+        // { id: '4', name: 'In Progress', link: 'In Progress' }, 
+        // { id: '5', name: 'Collected', link: 'Collected' },
+        // { id: '6', name: 'Completed', link: 'Completed' },
+        // { id: '1', name: 'TaskScreen', link: 'TaskScreen' },
+        { id: '1', name: 'Notification', link: 'Notification' },
+        { id: '2', name: 'Attendance', link: 'Attendance' },
+        { id: '3', name: 'Receipt', link: 'Receipt' },
+        { id: '4', name: 'Profile', link: 'Profile' },
+        // { id: '10', name: 'Rejected Task', link: 'Rejected Task' },
     ];
 
 
@@ -202,126 +205,150 @@ export default function Home({ navigation }) {
 
     const requestLocationPermission = async () => {
         if (Platform.OS === 'android') {
-          try {
-            const granted = await PermissionsAndroid.request(
-              PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-              {
-                title: 'Geolocation Permission',
-                message: 'Can we access your location?',
-                buttonNeutral: 'Ask Me Later',
-                buttonNegative: 'Cancel',
-                buttonPositive: 'OK',
-              },
-            );
-            console.log('granted', granted);
-            if (granted === 'granted') {
-              console.log('You can use Geolocation');
-              return true;
-            } else {
-              console.log('You cannot use Geolocation');
-              return false;
+            try {
+                const granted = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                    {
+                        title: 'Geolocation Permission',
+                        message: 'Can we access your location?',
+                        buttonNeutral: 'Ask Me Later',
+                        buttonNegative: 'Cancel',
+                        buttonPositive: 'OK',
+                    },
+                );
+                console.log('granted', granted);
+                if (granted === 'granted') {
+                    console.log('You can use Geolocation');
+                    return true;
+                } else {
+                    console.log('You cannot use Geolocation');
+                    return false;
+                }
+            } catch (err) {
+                return false;
             }
-          } catch (err) {
-            return false;
-          }
         }
-      };
+    };
 
 
-      const handleEnableAndGetLocation = async () => {
-        // 1. First, check and request runtime permissions
+    const handleEnableAndGetLocation = async () => {
         const hasPermission = await requestLocationPermission();
         if (!hasPermission) {
-          console.log('Location permission denied.');
-          return;
+            console.log('Location permission denied.');
+            return;
         }
-    
+
         // 2. Now, on Android, check and prompt to enable GPS if needed
         if (Platform.OS === 'android') {
-          try {
-            const enableResult = await promptForEnableLocationIfNeeded();
-            if (enableResult === 'already-enabled' || enableResult === 'enabled') {
-              console.log('GPS is enabled, fetching location...');
+            try {
+                const enableResult = await promptForEnableLocationIfNeeded();
+                if (enableResult === 'already-enabled' || enableResult === 'enabled') {
+                    console.log('GPS is enabled, fetching location...');
 
-            } else {
-              console.log('User did not enable GPS.');
+                } else {
+                    console.log('User did not enable GPS.');
+                }
+            } catch (error) {
+                console.error(error);
+                console.log('An error occurred while trying to enable GPS.');
             }
-          } catch (error) {
-            console.error(error);
-            console.log('An error occurred while trying to enable GPS.');
-          }
         } else {
-          // 3. On iOS, permissions and GPS are handled by the system
-          console.log('Fetching location on iOS...');
+            // 3. On iOS, permissions and GPS are handled by the system
+            console.log('Fetching location on iOS...');
         }
-      };
+    };
 
-      const handleEnableGPS = () => {
+    const handleEnableGPS = () => {
         setShowModal(false);
         handleEnableAndGetLocation(); // Opens device settings so user can turn on GPS manually
-      };
+    };
 
 
-    const handleSwipe = async () => {
-        checkGPSAndGetLocation(
-          async (latitude, longitude) => {
-            const userId = await AsyncStorage.getItem("user_id");
-            const request = {
-              employeeId: userId,
-              loginDate: new Date().toISOString().split('T')[0],
-              latitude,
-              longitude,
-            };
-    
-            if (!isCheckedIn) {
-                const response = await AuthService.attendanceCheckIn(request);
-                if (response.status == 1) {
-                    showAlertModal('You have successfully Checked In.', false);
-                    setTimeout(() => hideAlert(), 3000);
-                    const now = new Date();
-                    const isoString = now.toISOString();
-                    const formattedTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const handleSwipe = () => {
+        requestAnimationFrame(() => {
+            swipeRef.current?.reset(); // Always reset early for UI responsiveness
 
-                    await AsyncStorage.setItem('isCheckedIn', 'true');
-                    await AsyncStorage.setItem('checkInTime', isoString);
-                    await AsyncStorage.setItem('checkInTimeDisplay', formattedTime);
-                    Vibration.vibrate(500);
-                    setCheckInTime(isoString);
-                    setCheckInTimeDisplay(formattedTime);
-                    setIsCheckedIn(true);
-                    startTimer(now);
-                    swipeRef.current?.reset();
-                } else {
-                    showAlertModal('Check-in failed. Please try again.', true);
+            checkGPSAndGetLocation(
+                async (latitude, longitude) => {
+                    const userId = await AsyncStorage.getItem('user_id');
+
+                    const request = {
+                        employeeId: userId,
+                        loginDate: new Date().toISOString().split('T')[0],
+                        latitude,
+                        longitude,
+                    };
+
+                    try {
+                        if (!isCheckedIn) {
+                            // 👇 Check-In Logic
+                            const response = await AuthService.attendanceCheckIn(request);
+                            if (response.status === 1) {
+                                const now = new Date();
+                                const isoString = now.toISOString();
+                                const formattedTime = now.toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                });
+
+                                await AsyncStorage.multiSet([
+                                    ['isCheckedIn', 'true'],
+                                    ['checkInTime', isoString],
+                                    ['checkInTimeDisplay', formattedTime],
+                                ]);
+
+                                setIsCheckedIn(true);
+                                setCheckInTime(isoString);
+                                setCheckInTimeDisplay(formattedTime);
+                                startTimer(now);
+
+                                Vibration.vibrate(300);
+                                showAlertModal('✅ Checked In Successfully', false);
+                            } else {
+                                showAlertModal('❌ Check-in failed. Try again.', true);
+                            }
+                        } else {
+                            // 👇 Check-Out Logic
+                            const response = await AuthService.attendanceCheckOut(request);
+                            if (response.status === 1) {
+                                await AsyncStorage.multiRemove([
+                                    'isCheckedIn',
+                                    'checkInTime',
+                                    'checkInTimeDisplay',
+                                ]);
+
+                                setIsCheckedIn(false);
+                                setCheckInTimeDisplay(null);
+                                setWorkingDuration('--:--');
+                                clearInterval(timerRef.current);
+
+                                Vibration.vibrate(300);
+                                showAlertModal('✅ Checked Out Successfully', false);
+                            } else {
+                                showAlertModal('❌ Check-out failed. Try again.', true);
+                            }
+                        }
+
+                        // ✅ Hide message after 3s if needed
+                        setTimeout(hideAlert, 3000);
+                    } catch (err) {
+                        console.error('Attendance error:', err);
+                        Alert.alert('Error', 'Something went wrong. Please try again.');
+                    }
+                },
+                (reason) => {
+                    // 🔒 Location/GPS errors
+                    if (reason === 'gps_off') {
+                        setShowModal(true); // show modal to enable GPS
+                    } else {
+                        Alert.alert('Location Error', reason || 'Could not get location');
+                    }
                 }
-            } else {
-                // 👉 Check Out
-                const response = await AuthService.attendanceCheckOut(request);
-                if (response.status == 1) {
-                    showAlertModal('You have successfully Checked Out.', false);
-                    setTimeout(() => hideAlert(), 3000);
-                    await AsyncStorage.multiRemove(['isCheckedIn', 'checkInTime', 'checkInTimeDisplay']);
-                    Vibration.vibrate(500);
-                    setIsCheckedIn(false);
-                    setCheckInTimeDisplay(null);
-                    setWorkingDuration('--:--');
-                    clearInterval(timerRef.current);
-                    swipeRef.current?.reset();
-                } else {
-                    showAlertModal('Check-out failed. Please try again.', true);
-                }
-            }
-          },
-          (reason) => {
-            if (reason === 'gps_off') {
-              setShowModal(true);
-            } else {
-              Alert.alert('Location Error', reason || 'Unknown location error');
-            }
-            swipeRef.current?.reset();
-          }
-        );
-      };
+            );
+        });
+    };
+
+
 
     const startTimer = (checkInDate) => {
         clearInterval(timerRef.current);
@@ -507,9 +534,12 @@ export default function Home({ navigation }) {
                                 </View>
                             }
                             onVerified={handleSwipe}>
-                            <Text style={styles.swipeText}>
+                            {/* <Text style={styles.swipeText}>
                                 {isCheckedIn ? 'Slide to Check Out' : 'Slide to Check In'}
-                            </Text>
+                            </Text> */}
+                            <ShimmerSwipeText
+                                text={isCheckedIn ? 'Slide to Check Out' : 'Slide to Check In'}
+                            />
                         </RNSwipeVerify>
                     </View>
 
@@ -688,5 +718,6 @@ const styles = StyleSheet.create({
         color: '#fff',
     },
 
+    
 
 })

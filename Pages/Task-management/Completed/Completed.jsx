@@ -753,7 +753,7 @@ const styles = StyleSheet.create({
     placeholderText: {
         fontSize: 14,
         fontFamily: 'Montserrat-Medium',
-        color: '#999',
+        color: '#0C0D36',
     }
 
 })

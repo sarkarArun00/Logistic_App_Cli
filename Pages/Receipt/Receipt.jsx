@@ -917,7 +917,7 @@ function Receipt({ navigation }) {
                                             onValueChange={(itemValue, itemIndex) =>
                                                 setselectClient(itemValue)
                                             }>
-                                            <Picker.Item label="-- Select Client --" value="" enabled={false} />
+                                            <Picker.Item label="-Select client-" value="" enabled={false} />
                                             {
                                                 clientsByLogistic.map((item) => (
                                                     <Picker.Item key={item.id} label={item.client_name} value={item.id} />

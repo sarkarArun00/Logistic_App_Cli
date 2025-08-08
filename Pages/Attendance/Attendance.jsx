@@ -32,6 +32,7 @@ import GPSModal from '../../Context/GPSModal.js'
 import RNAndroidLocationEnabler from 'react-native-location-enabler';
 import { promptForEnableLocationIfNeeded } from 'react-native-android-location-enabler';
 const { PRIORITIES: { HIGH_ACCURACY }, useLocationSettings } = RNAndroidLocationEnabler;
+import ShimmerSwipeText from '../Home/ShimmerSwipeText.js';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -365,65 +366,89 @@ function Attendance({ navigation }) {
         handleEnableAndGetLocation(); // Opens device settings so user can turn on GPS manually
       };
 
-      const handleSwipe = async () => {
-        checkGPSAndGetLocation(
-          async (latitude, longitude) => {
-            const userId = await AsyncStorage.getItem("user_id");
-            const request = {
-              employeeId: userId,
-              loginDate: new Date().toISOString().split('T')[0],
-              latitude,
-              longitude,
-            };
-    
-            if (!isCheckedIn) {
-                const response = await AuthService.attendanceCheckIn(request);
-                if (response.status == 1) {
-                    showAlertModal('You have successfully Checked In.', false);
-                    setTimeout(() => hideAlert(), 3000);
+      const handleSwipe = () => {
+        // Defer heavy logic after swipe is released visually
+        requestAnimationFrame(() => {
+          swipeRef.current?.reset(); // Always reset early for UI responsiveness
+      
+          checkGPSAndGetLocation(
+            async (latitude, longitude) => {
+              const userId = await AsyncStorage.getItem('user_id');
+
+              const request = {
+                employeeId: userId,
+                loginDate: new Date().toISOString().split('T')[0],
+                latitude,
+                longitude,
+              };
+      
+              try {
+                if (!isCheckedIn) {
+                  // 👇 Check-In Logic
+                  const response = await AuthService.attendanceCheckIn(request);
+                  if (response.status === 1) {
                     const now = new Date();
                     const isoString = now.toISOString();
-                    const formattedTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                    await AsyncStorage.setItem('isCheckedIn', 'true');
-                    await AsyncStorage.setItem('checkInTime', isoString);
-                    await AsyncStorage.setItem('checkInTimeDisplay', formattedTime);
-                    Vibration.vibrate(500);
+                    const formattedTime = now.toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    });
+      
+                    await AsyncStorage.multiSet([
+                      ['isCheckedIn', 'true'],
+                      ['checkInTime', isoString],
+                      ['checkInTimeDisplay', formattedTime],
+                    ]);
+      
+                    setIsCheckedIn(true);
                     setCheckInTime(isoString);
                     setCheckInTimeDisplay(formattedTime);
-                    setIsCheckedIn(true);
                     startTimer(now);
-                    swipeRef.current?.reset();
+      
+                    Vibration.vibrate(300);
+                    showAlertModal('✅ Checked In Successfully', false);
+                  } else {
+                    showAlertModal('❌ Check-in failed. Try again.', true);
+                  }
                 } else {
-                    showAlertModal('Check-in failed. Please try again.', true);
-                }
-            } else {
-                // 👉 Check Out
-                const response = await AuthService.attendanceCheckOut(request);
-                if (response.status == 1) {
-                    showAlertModal('You have successfully Checked Out.', false);
-                    setTimeout(() => hideAlert(), 3000);
-                    await AsyncStorage.multiRemove(['isCheckedIn', 'checkInTime', 'checkInTimeDisplay']);
-                    Vibration.vibrate(500);
+                  // 👇 Check-Out Logic
+                  const response = await AuthService.attendanceCheckOut(request);
+                  if (response.status === 1) {
+                    await AsyncStorage.multiRemove([
+                      'isCheckedIn',
+                      'checkInTime',
+                      'checkInTimeDisplay',
+                    ]);
+      
                     setIsCheckedIn(false);
                     setCheckInTimeDisplay(null);
                     setWorkingDuration('--:--');
                     clearInterval(timerRef.current);
-                    swipeRef.current?.reset();
-                } else {
-                    showAlertModal('Check-out failed. Please try again.', true);
+      
+                    Vibration.vibrate(300);
+                    showAlertModal('✅ Checked Out Successfully', false);
+                  } else {
+                    showAlertModal('❌ Check-out failed. Try again.', true);
+                  }
                 }
+      
+                // ✅ Hide message after 3s if needed
+                setTimeout(hideAlert, 3000);
+              } catch (err) {
+                console.error('Attendance error:', err);
+                Alert.alert('Error', 'Something went wrong. Please try again.');
+              }
+            },
+            (reason) => {
+              // 🔒 Location/GPS errors
+              if (reason === 'gps_off') {
+                setShowModal(true); // show modal to enable GPS
+              } else {
+                Alert.alert('Location Error', reason || 'Could not get location');
+              }
             }
-          },
-          (reason) => {
-            if (reason === 'gps_off') {
-              setShowModal(true);
-            } else {
-              Alert.alert('Location Error', reason || 'Unknown location error');
-            }
-            swipeRef.current?.reset();
-          }
-        );
+          );
+        });
       };
 
     // const handleSwipe = async () => {
@@ -619,9 +644,12 @@ function Attendance({ navigation }) {
                                 </View>
                             }
                             onVerified={handleSwipe}>
-                            <Text style={styles.swipeText}>
+                            {/* <Text style={styles.swipeText}>
                                 {isCheckedIn ? 'Slide to Check Out' : 'Slide to Check In'}
-                            </Text>
+                            </Text> */}
+                            <ShimmerSwipeText
+                                text={isCheckedIn ? 'Slide to Check Out' : 'Slide to Check In'}
+                            />
                         </RNSwipeVerify>
                     </View>
                     <GPSModal

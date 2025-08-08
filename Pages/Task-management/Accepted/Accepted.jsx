@@ -21,7 +21,7 @@ const wait = (timeout) => {
 function Accepted({ navigation }) {
     // Hooks must be declared at the top — not conditionally
     const [modalVisible, setModalVisible] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [selectedTask, setSelectedTask] = useState([]);
     const [selectedItem, setSelectedTaskDesc] = useState('');
@@ -374,9 +374,6 @@ function Accepted({ navigation }) {
                         ))
                     ) : (
                         <View style={{ padding: 20, alignItems: 'center', justifyContent: 'center', marginTop: 200 }}>
-                            {/* <Text style={{ fontSize: 16, color: '#999', fontFamily: 'Montserrat-Medium' }}>
-                                No Data Found
-                            </Text> */}
                             <Image style={{ width: 200, height: 200, marginTop: -50 }}
                                 source={require('../../../assets/empty.png')}
                                 resizeMode="contain"
@@ -385,7 +382,8 @@ function Accepted({ navigation }) {
                     )}
 
                     {/* Load More */}
-                    {allTasksData?.length > 5 && visibleTasks?.length < allTasksData?.length && (
+                    {/* && visibleTasks?.length < allTasksData?.length  */}
+                    {allTasksData?.length > 5 && (
                         <TouchableOpacity
                             onPress={handleLoadMore}
                             style={{
