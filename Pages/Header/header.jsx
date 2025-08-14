@@ -20,7 +20,6 @@ const header = ({ navigation, profileImage }) => {
 
   useEffect(() => {
     let isMounted = true;
-
     const getUserData = async () => {
       try {
         const storedName = await AsyncStorage.getItem("user_name");
@@ -39,6 +38,8 @@ const header = ({ navigation, profileImage }) => {
         if (isMounted && response?.status == 1) {
           setNotificationCount(response.data.unseen.length || 0);
           setNotificationCount2(response.data.unseen.length || 0);
+
+          console.log('notttttttttt', response.data)
         }
       } catch (err) {
         console.log("Notification check error:", err);

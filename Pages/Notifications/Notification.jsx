@@ -24,26 +24,26 @@ function Notification({ navigation }) {
     const { showAlertModal, hideAlert } = useGlobalAlert();
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true)
-                const response = await TaskService.getMyNotifications();
-                console.log('Response seenNotificationIds:', response.data);
+        // const fetchData = async () => {
+        //     try {
+        //         setLoading(true)
+        //         const response = await TaskService.getMyNotifications();
+        //         console.log('Response seenNotificationIds:', response.data);
               
-                if (response.status == 1) {
-                    const allNotifications = response.data.seen;
-                    setNotifications(allNotifications); 
-                    setNotificationCount(response.data.unseen.length);
-                    setLoading(false)
-                }  else {
-                    setLoading(false)
-                }
-            } catch (error) {
-                console.log('Error fetching notifications:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
+        //         if (response.status == 1) {
+        //             const allNotifications = response.data.seen;
+        //             setNotifications(allNotifications); 
+        //             setNotificationCount(response.data.unseen.length);
+        //             setLoading(false)
+        //         }  else {
+        //             setLoading(false)
+        //         }
+        //     } catch (error) {
+        //         console.log('Error fetching notifications:', error);
+        //     } finally {
+        //         setLoading(false);
+        //     }
+        // };
 
         const fetchEmployeeApprovals = async () => {
             try {
@@ -60,8 +60,9 @@ function Notification({ navigation }) {
             }
         };
 
-        // markAllAsSeen();
-        fetchData();
+
+        // fetchData();
+        // fetchNotifications();
         fetchEmployeeApprovals();
     },[])
 
@@ -124,7 +125,6 @@ function Notification({ navigation }) {
       
 
       const deleteGeneNotif = async (id) => {
-
         const response = await TaskService.deleteNotification({notifId: id})
         console.log('deleting....', response)
         if(response.status==1) {
@@ -154,9 +154,9 @@ function Notification({ navigation }) {
 
     // }).current;
 
-    const viewabilityConfig = {
-        itemVisiblePercentThreshold: 50,
-    };
+    // const viewabilityConfig = {
+    //     itemVisiblePercentThreshold: 50,
+    // };
 
 
     const handleApprove = async (id) => {

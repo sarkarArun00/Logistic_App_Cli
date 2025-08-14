@@ -99,7 +99,7 @@ function LoginScreen() {
         showAlertModal('Login Successful!', false);
         setTimeout(() => {
           hideAlert();
-        }, 3000)
+        }, 1500)
       }
       else {
         showAlertModal('Invalid email or password.', true);

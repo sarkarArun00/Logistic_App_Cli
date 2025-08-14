@@ -11,6 +11,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { BASE_API_URL } from '../Services/API';
 import TaskService from '../Services/task_service';
 import { Vibration } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 // import {
@@ -77,6 +78,7 @@ function Profile({ navigation }) {
         try {
             await logout();
             navigation.replace('Login');
+            AsyncStorage.removeItem('user_id')
         } catch (error) {
             console.error('Error logging out:', error);
         }
