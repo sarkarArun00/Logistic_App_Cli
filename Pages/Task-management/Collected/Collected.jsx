@@ -375,9 +375,11 @@ function Collected({ navigation }) {
     // }
 
     // Call Button
-    const makeCall = () => {
-        Linking.openURL(`tel:${call}`);
-    };
+    const makeCall = (call) => {
+        const cleaned = call.replace(/\D/g, ''); // remove spaces, dashes, etc.
+        const formatted = cleaned.startsWith('+') ? cleaned : `+91${cleaned}`; // assuming India
+        Linking.openURL(`tel:${formatted}`);
+      };
 
     return (
         <SafeAreaView style={[styles.container, GlobalStyles.SafeAreaView]}>
@@ -432,7 +434,7 @@ function Collected({ navigation }) {
                                         </Text>
                                     </View>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 13 }}>
-                                        <TouchableOpacity onPress={() => makeCall(task?.employee?.phoneNumber)}>
+                                        <TouchableOpacity onPress={() => makeCall(task?.pickUpLocation?.contact)}>
                                             <Image style={{ width: 20, height: 20 }} source={require('../../../assets/call.png')} />
                                         </TouchableOpacity>
                                         <TouchableOpacity onPress={() => handleOpenModal(task)}>

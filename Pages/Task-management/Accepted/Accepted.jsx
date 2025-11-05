@@ -179,8 +179,10 @@ function Accepted({ navigation }) {
 
     // Call Button
     const makeCall = (call) => {
-        Linking.openURL(`tel:${call}`);
-    };
+        const cleaned = call.replace(/\D/g, ''); // remove spaces, dashes, etc.
+        const formatted = cleaned.startsWith('+') ? cleaned : `+91${cleaned}`; // assuming India
+        Linking.openURL(`tel:${formatted}`);
+      };
 
     // if (loading) {
     //     return (
@@ -248,7 +250,7 @@ function Accepted({ navigation }) {
                                         </Text>
                                     </View>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 13 }}>
-                                        <TouchableOpacity onPress={() => makeCall(task?.employee?.phoneNumber)}>
+                                        <TouchableOpacity onPress={() => makeCall(task?.pickUpLocation?.contact)}>
                                             <Image style={{ width: 20, height: 20 }} source={require('../../../assets/call.png')} />
                                         </TouchableOpacity>
                                         <TouchableOpacity onPress={() => handleOpenModal(task)}>
