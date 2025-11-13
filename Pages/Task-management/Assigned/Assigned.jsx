@@ -76,12 +76,12 @@ function Assigned({ navigation }) {
             console.log('response response', response)
             if (response.status == 1) {
                 setAllTasksData(response.data || []);
-                search('', response.data); //
+                // search('', response.data); //
                 setLoading(false)
             } else {
                 setAllTasksData([]);
                 // setVisibleTasks([]);
-                search('', []);
+                // search('', []);
                 setLoading(false)
             }
 
@@ -378,8 +378,8 @@ function Assigned({ navigation }) {
         const cleaned = call.replace(/\D/g, ''); // remove spaces, dashes, etc.
         const formatted = cleaned.startsWith('+') ? cleaned : `+91${cleaned}`; // assuming India
         Linking.openURL(`tel:${formatted}`);
-      };
-      
+    };
+
 
     return (
         <SafeAreaView style={[
@@ -416,7 +416,7 @@ function Assigned({ navigation }) {
                         placeholder="Search"
                         placeholderTextColor="#0C0D36"
                         value={searchQuery}
-                        onChangeText={(text) => search(text, allTasksData)}
+                        onChangeText={(text) => search(text)}
                     />
                     <Image style={{ position: 'absolute', top: 16, right: 20, width: 20, height: 20, }} source={require('../../../assets/search.png')} />
                 </View>
@@ -903,7 +903,7 @@ const styles = StyleSheet.create({
         elevation: 3,
         marginTop: 20,
         borderRadius: 15,
-        marginBottom:20,
+        marginBottom: 20,
     },
     oncetxt: {
         fontFamily: 'Montserrat-Medium',

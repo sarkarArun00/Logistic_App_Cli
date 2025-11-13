@@ -671,9 +671,14 @@ function Wallet({ navigation, progress = 0.5 }) {
                                                 dropdownIconColor={lightTheme.inputText} // Android only 
                                             >
                                                 <Picker.Item label="-Select-" value="" />
-                                                {
-                                                    allCenters.map((item) => (
-                                                        <Picker.Item key={item.id} label={item.centreName} value={item.id} />
+                                                {allCenters
+                                                    .filter(item => item.status === true)
+                                                    .map(item => (
+                                                        <Picker.Item
+                                                            key={item.id}
+                                                            label={item.centreName}
+                                                            value={item.id}
+                                                        />
                                                     ))
                                                 }
                                             </Picker>

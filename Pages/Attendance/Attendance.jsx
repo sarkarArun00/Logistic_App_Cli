@@ -73,6 +73,8 @@ function Attendance({ navigation }) {
     const [showLocationModal, setShowLocationModal] = useState(false);
     const [showBlinkDot, setShowBlinkDot] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [isNoData, setIsNoData] = useState(false);
+    
 
     const fetchProfilePicture = async () => {
         try {
@@ -195,6 +197,7 @@ function Attendance({ navigation }) {
                 employeeId: userId,
                 monthDate,
             });
+            console.log("fetchAttendanceData Response", response);
 
             if (response?.data?.data && Array.isArray(response.data.data)) {
                 const rawData = response.data.data;
@@ -204,6 +207,7 @@ function Attendance({ navigation }) {
                 };
 
                 const getColor = (shiftType, isPresent) => {
+                    console.log("Colour", response);
                     if (shiftType === 'WD') {
                         if (isPresent === true) return '#4CAF50'; // Green - Present
                         if (isPresent === false) return '#FF5252'; // Red - Absent
@@ -261,26 +265,33 @@ function Attendance({ navigation }) {
         try {
             const userId = await AsyncStorage.getItem("user_id");
             if (!userId) return showAlertModal("User ID not found", true);
-    
+
             const request = {
                 employeeId: Number(userId),
                 loginDate: dateString,
             };
             setLoading(true)
-            const response = await TaskService.getLoginByDate(request);
-            console.log('aaaaaaaaaaaa', response)
-            const format = 'D/M/YYYY, h:mm:ss a';
-    
-            if (response.status == 1) {
-                const loginTime = dayjs.tz(response.data.login, format, 'Asia/Kolkata').format('hh:mm A');
-                const logoutTime = dayjs.tz(response.data.logout, format, 'Asia/Kolkata').format('hh:mm A');
-                setCheckInCheckOut({ checkIn: loginTime, checkOut: logoutTime });
-                setAttendance(response.data);
-            } else {
-                showAlertModal(response.message || 'No data for selected date.', true);
-                setAttendance([]);
-            }
+            setTimeout(async () => {
+                const response = await TaskService.getLoginByDate(request);
+                console.log('aaaaaaaaaaaa', response)
+                const format = 'D/M/YYYY, h:mm:ss a';
+
+                if (response.status == 1) {
+                    setIsNoData(false)
+                    const loginTime = dayjs.tz(response.data.login, format, 'Asia/Kolkata').format('hh:mm A');
+                    const logoutTime = dayjs.tz(response.data.logout, format, 'Asia/Kolkata').format('hh:mm A');
+                    setCheckInCheckOut({ checkIn: loginTime, checkOut: logoutTime });
+                    setAttendance(response.data);
+                } else {
+                    setIsNoData(true)
+                    // showAlertModal(response.message || 'No data for selected date.', true);
+                    setCheckInCheckOut({ checkIn: '', checkOut: '' });
+                    setAttendance([]);
+                }
+            }, 100);
+
         } finally {
+            setIsNoData(false)
             setLoading(false)
         }
     };
@@ -307,149 +318,149 @@ function Attendance({ navigation }) {
 
     const requestLocationPermission = async () => {
         if (Platform.OS === 'android') {
-          try {
-            const granted = await PermissionsAndroid.request(
-              PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-              {
-                title: 'Geolocation Permission',
-                message: 'Can we access your location?',
-                buttonNeutral: 'Ask Me Later',
-                buttonNegative: 'Cancel',
-                buttonPositive: 'OK',
-              },
-            );
-            console.log('granted', granted);
-            if (granted === 'granted') {
-              console.log('You can use Geolocation');
-              return true;
-            } else {
-              console.log('You cannot use Geolocation');
-              return false;
+            try {
+                const granted = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                    {
+                        title: 'Geolocation Permission',
+                        message: 'Can we access your location?',
+                        buttonNeutral: 'Ask Me Later',
+                        buttonNegative: 'Cancel',
+                        buttonPositive: 'OK',
+                    },
+                );
+                console.log('granted', granted);
+                if (granted === 'granted') {
+                    console.log('You can use Geolocation');
+                    return true;
+                } else {
+                    console.log('You cannot use Geolocation');
+                    return false;
+                }
+            } catch (err) {
+                return false;
             }
-          } catch (err) {
-            return false;
-          }
         }
-      };
+    };
 
 
-      const handleEnableAndGetLocation = async () => {
+    const handleEnableAndGetLocation = async () => {
         // 1. First, check and request runtime permissions
         const hasPermission = await requestLocationPermission();
         if (!hasPermission) {
-          console.log('Location permission denied.');
-          return;
+            console.log('Location permission denied.');
+            return;
         }
-    
+
         // 2. Now, on Android, check and prompt to enable GPS if needed
         if (Platform.OS === 'android') {
-          try {
-            const enableResult = await promptForEnableLocationIfNeeded();
-            if (enableResult === 'already-enabled' || enableResult === 'enabled') {
-              console.log('GPS is enabled, fetching location...');
+            try {
+                const enableResult = await promptForEnableLocationIfNeeded();
+                if (enableResult === 'already-enabled' || enableResult === 'enabled') {
+                    console.log('GPS is enabled, fetching location...');
 
-            } else {
-              console.log('User did not enable GPS.');
+                } else {
+                    console.log('User did not enable GPS.');
+                }
+            } catch (error) {
+                console.error(error);
+                console.log('An error occurred while trying to enable GPS.');
             }
-          } catch (error) {
-            console.error(error);
-            console.log('An error occurred while trying to enable GPS.');
-          }
         } else {
-          // 3. On iOS, permissions and GPS are handled by the system
-          console.log('Fetching location on iOS...');
+            // 3. On iOS, permissions and GPS are handled by the system
+            console.log('Fetching location on iOS...');
         }
-      };
+    };
 
-      const handleEnableGPS = () => {
+    const handleEnableGPS = () => {
         setShowModal(false);
         handleEnableAndGetLocation(); // Opens device settings so user can turn on GPS manually
-      };
+    };
 
-      const handleSwipe = () => {
+    const handleSwipe = () => {
         // Defer heavy logic after swipe is released visually
         requestAnimationFrame(() => {
-          swipeRef.current?.reset(); // Always reset early for UI responsiveness
-      
-          checkGPSAndGetLocation(
-            async (latitude, longitude) => {
-              const userId = await AsyncStorage.getItem('user_id');
+            swipeRef.current?.reset(); // Always reset early for UI responsiveness
 
-              const request = {
-                employeeId: userId,
-                loginDate: new Date().toISOString().split('T')[0],
-                latitude,
-                longitude,
-              };
-      
-              try {
-                if (!isCheckedIn) {
-                  // 👇 Check-In Logic
-                  const response = await AuthService.attendanceCheckIn(request);
-                  if (response.status === 1) {
-                    const now = new Date();
-                    const isoString = now.toISOString();
-                    const formattedTime = now.toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    });
-      
-                    await AsyncStorage.multiSet([
-                      ['isCheckedIn', 'true'],
-                      ['checkInTime', isoString],
-                      ['checkInTimeDisplay', formattedTime],
-                    ]);
-      
-                    setIsCheckedIn(true);
-                    setCheckInTime(isoString);
-                    setCheckInTimeDisplay(formattedTime);
-                    startTimer(now);
-      
-                    Vibration.vibrate(300);
-                    showAlertModal('✅ Checked In Successfully', false);
-                  } else {
-                    showAlertModal('❌ Check-in failed. Try again.', true);
-                  }
-                } else {
-                  // 👇 Check-Out Logic
-                  const response = await AuthService.attendanceCheckOut(request);
-                  if (response.status === 1) {
-                    await AsyncStorage.multiRemove([
-                      'isCheckedIn',
-                      'checkInTime',
-                      'checkInTimeDisplay',
-                    ]);
-      
-                    setIsCheckedIn(false);
-                    setCheckInTimeDisplay(null);
-                    setWorkingDuration('--:--');
-                    clearInterval(timerRef.current);
-      
-                    Vibration.vibrate(300);
-                    showAlertModal('✅ Checked Out Successfully', false);
-                  } else {
-                    showAlertModal('❌ Check-out failed. Try again.', true);
-                  }
+            checkGPSAndGetLocation(
+                async (latitude, longitude) => {
+                    const userId = await AsyncStorage.getItem('user_id');
+
+                    const request = {
+                        employeeId: userId,
+                        loginDate: new Date().toISOString().split('T')[0],
+                        latitude,
+                        longitude,
+                    };
+
+                    try {
+                        if (!isCheckedIn) {
+                            // 👇 Check-In Logic
+                            const response = await AuthService.attendanceCheckIn(request);
+                            if (response.status === 1) {
+                                const now = new Date();
+                                const isoString = now.toISOString();
+                                const formattedTime = now.toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                });
+
+                                await AsyncStorage.multiSet([
+                                    ['isCheckedIn', 'true'],
+                                    ['checkInTime', isoString],
+                                    ['checkInTimeDisplay', formattedTime],
+                                ]);
+
+                                setIsCheckedIn(true);
+                                setCheckInTime(isoString);
+                                setCheckInTimeDisplay(formattedTime);
+                                startTimer(now);
+
+                                Vibration.vibrate(300);
+                                showAlertModal('✅ Checked In Successfully', false);
+                            } else {
+                                showAlertModal('❌ Check-in failed. Try again.', true);
+                            }
+                        } else {
+                            // 👇 Check-Out Logic
+                            const response = await AuthService.attendanceCheckOut(request);
+                            if (response.status === 1) {
+                                await AsyncStorage.multiRemove([
+                                    'isCheckedIn',
+                                    'checkInTime',
+                                    'checkInTimeDisplay',
+                                ]);
+
+                                setIsCheckedIn(false);
+                                setCheckInTimeDisplay(null);
+                                setWorkingDuration('--:--');
+                                clearInterval(timerRef.current);
+
+                                Vibration.vibrate(300);
+                                showAlertModal('✅ Checked Out Successfully', false);
+                            } else {
+                                showAlertModal('❌ Check-out failed. Try again.', true);
+                            }
+                        }
+
+                        // ✅ Hide message after 3s if needed
+                        setTimeout(hideAlert, 3000);
+                    } catch (err) {
+                        console.error('Attendance error:', err);
+                        Alert.alert('Error', 'Something went wrong. Please try again.');
+                    }
+                },
+                (reason) => {
+                    // 🔒 Location/GPS errors
+                    if (reason === 'gps_off') {
+                        setShowModal(true); // show modal to enable GPS
+                    } else {
+                        Alert.alert('Location Error', reason || 'Could not get location');
+                    }
                 }
-      
-                // ✅ Hide message after 3s if needed
-                setTimeout(hideAlert, 3000);
-              } catch (err) {
-                console.error('Attendance error:', err);
-                Alert.alert('Error', 'Something went wrong. Please try again.');
-              }
-            },
-            (reason) => {
-              // 🔒 Location/GPS errors
-              if (reason === 'gps_off') {
-                setShowModal(true); // show modal to enable GPS
-              } else {
-                Alert.alert('Location Error', reason || 'Could not get location');
-              }
-            }
-          );
+            );
         });
-      };
+    };
 
     // const handleSwipe = async () => {
 
@@ -545,16 +556,16 @@ function Attendance({ navigation }) {
 
     const formatDateTime = (dateString) => {
         if (!dateString) return '';
-    
+
         const date = new Date(dateString);
-    
+
         const day = date.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit' });
         const month = date.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', month: '2-digit' });
         const year = date.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', year: 'numeric' });
-    
+
         return `${day}-${month}-${year}`;
     };
-    
+
 
 
     return (
@@ -734,11 +745,19 @@ function Attendance({ navigation }) {
                 </View>
 
 
+                {isNoData && (
+                    <View style={{ alignItems: 'center' }}>
+                        <Text style={{ color: 'grey', fontSize: 16 }}>
+                            Data Not Found !
+                        </Text>
+                    </View>
+                )}
 
                 <View style={styles.card}>
                     <View style={styles.section}>
                         <Text style={styles.label}>Log In</Text>
-                        <Text style={styles.value}>{formatDateTime(attendance?.loginDate)} {checkInCheckout?.checkIn || ""}</Text>
+                        {/* <Text style={styles.value}>{formatDateTime(attendance?.loginDate)} {checkInCheckout?.checkIn || ""}</Text> */}
+                        <Text style={styles.value}>{checkInCheckout?.checkIn || ""}</Text>
                     </View>
 
                     <View style={styles.divider} />

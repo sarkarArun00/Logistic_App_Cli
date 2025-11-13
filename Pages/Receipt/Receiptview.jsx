@@ -6,6 +6,7 @@ import TaskService from '../Services/task_service';
 import { toWords } from 'number-to-words';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import Share from 'react-native-share';
+import FileViewer from 'react-native-file-viewer';
 
 
 
@@ -29,7 +30,7 @@ function Receiptview({ navigation, route }) {
       try {
 
         const response = await TaskService.getReceiptById({ receiptId });
-        console.log("status query",response.data)
+        console.log("status query", response.data)
         if (response.status == 1) {
           setReceiptData(response.data);
         } else {
@@ -105,6 +106,7 @@ function Receiptview({ navigation, route }) {
 
 
   const generateAndSharePDF = async () => {
+    
     const receiptName = `Receipt_${receiptData?.receiptId || 'Unknown'}`.replace(/[^a-zA-Z0-9_-]/g, '');
     const htmlContent = `
     <!DOCTYPE html>
@@ -283,49 +285,49 @@ body{ font-family: "Montserrat", sans-serif; background:#f0f4f8; padding:20px;  
 
   const getStatusColor = (authoriseStatus, generateStatus) => {
     if (authoriseStatus == 0 || generateStatus == 0) {
-        return '#DC3545'; // Rejected - Red
+      return '#DC3545'; // Rejected - Red
     } else if (authoriseStatus == 1) {
-        return '#28A745'; // Settled - Blue
+      return '#28A745'; // Settled - Blue
     } else if (generateStatus == 1) {
-        return '#007BFF'; // Approved - Green
+      return '#007BFF'; // Approved - Green
     } else {
-        return '#6C757D'; // Interim - Orange (default fallback)
+      return '#6C757D'; // Interim - Orange (default fallback)
     }
-};
+  };
 
 
-const getStatusLabel = (authoriseStatus, generateStatus) => {
-  console.log( 'status check', authoriseStatus, generateStatus)
-  if (authoriseStatus == 1 && generateStatus == 1) {
-      return 'Authorized';  
-  } else if (authoriseStatus == 0 || generateStatus == 0) {
+  const getStatusLabel = (authoriseStatus, generateStatus) => {
+    console.log('status check', authoriseStatus, generateStatus)
+    if (authoriseStatus == 1 && generateStatus == 1) {
+      return 'Authorized';
+    } else if (authoriseStatus == 0 || generateStatus == 0) {
       return 'Rejected';
-  } else if (generateStatus == 1 && authoriseStatus == null) {
+    } else if (generateStatus == 1 && authoriseStatus == null) {
       return 'Unauthorized';
-  } else if (generateStatus == 1 && authoriseStatus == 0) {
+    } else if (generateStatus == 1 && authoriseStatus == 0) {
       return 'Rejected';
-  } else {
+    } else {
       return 'Interim';
-  }
-};
+    }
+  };
 
 
-const formatDateTime2 = (dateString) => {
-  if (!dateString) return '';
+  const formatDateTime2 = (dateString) => {
+    if (!dateString) return '';
 
-  const date = new Date(dateString);
+    const date = new Date(dateString);
 
-  const day = String(date.getDate()).padStart(2, '0');
-  const monthName = date.toLocaleString('default', { month: 'long' }); // e.g., "June"
-  const year = date.getFullYear();
+    const day = String(date.getDate()).padStart(2, '0');
+    const monthName = date.toLocaleString('default', { month: 'long' }); // e.g., "June"
+    const year = date.getFullYear();
 
-  const hours = date.getHours();
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  const hourFormatted = String(hours % 12 === 0 ? 12 : hours % 12).padStart(2, '0');
+    const hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const hourFormatted = String(hours % 12 === 0 ? 12 : hours % 12).padStart(2, '0');
 
-  return `${monthName} ${day} ${year} at ${hourFormatted}:${minutes} ${ampm}`;
-};
+    return `${monthName} ${day} ${year} at ${hourFormatted}:${minutes} ${ampm}`;
+  };
 
 
 
@@ -340,18 +342,18 @@ const formatDateTime2 = (dateString) => {
           {/* this line has issue********* */}
           {/* <Text style={{ fontSize: 'Montserrat-SemiBold', color: '#0C0D36', paddingLeft: 5, }}>Receipt</Text> */}
         </TouchableOpacity>
-        { status != null ? (
-        <View style={styles.paymentBox}>
-          <Image style={{ width: 56, height: 56, margin: 'auto', }} source={require('../../assets/success-icon.png')} />
-          <Text style={styles.payText}>Payment Success!</Text>
-          <Text style={styles.inrText}>{formatToINR(receiptData?.amount)}</Text>
-        </View>
+        {status != null ? (
+          <View style={styles.paymentBox}>
+            <Image style={{ width: 56, height: 56, margin: 'auto', }} source={require('../../assets/success-icon.png')} />
+            <Text style={styles.payText}>Payment Success!</Text>
+            <Text style={styles.inrText}>{formatToINR(receiptData?.amount)}</Text>
+          </View>
         ) : (
           <View style={styles.paymentBox}>
-          <Image style={{ width: 56, height: 56, margin: 'auto', }} source={require('../../assets/support.png')} />
-          <Text style={styles.payText1}>Action Required!</Text>
-          <Text style={styles.inrText}>{formatToINR(receiptData?.amount)}</Text>
-        </View>
+            <Image style={{ width: 56, height: 56, margin: 'auto', }} source={require('../../assets/support.png')} />
+            <Text style={styles.payText1}>Action Required!</Text>
+            <Text style={styles.inrText}>{formatToINR(receiptData?.amount)}</Text>
+          </View>
         )
         }
 
@@ -426,12 +428,12 @@ const formatDateTime2 = (dateString) => {
         </View>
 
         <View>
-          <TouchableOpacity style={[styles.viewText,styles.pdfBtn, receiptData?.generateStatus==null && { opacity: 0.5 }]} 
-          onPress={() => {
-            if(receiptData?.generateStatus !=null) {
-              generateAndSharePDF
-            }
-          }}>
+          <TouchableOpacity style={[styles.viewText, styles.pdfBtn, receiptData?.generateStatus == null && { opacity: 0.5 }]}
+            onPress={() => {
+              if (receiptData?.generateStatus != null) {
+                generateAndSharePDF();
+              }
+            }}>
             <Image style={{ width: 24, height: 24 }} source={require('../../assets/downloadIcon.png')} />
             <Text style={styles.pdfText}>Get PDF Receipt</Text>
           </TouchableOpacity>

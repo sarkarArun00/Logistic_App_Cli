@@ -5,6 +5,12 @@ export const useSearch = (initialData = []) => {
   const [filteredData, setFilteredData] = useState(initialData);
   const [sourceData, setSourceData] = useState(initialData);
 
+  // 🔥 FIX: react to parent data updates
+  useEffect(() => {
+    setSourceData(initialData);
+    setFilteredData(initialData);
+  }, [initialData]); // when parent passes new data
+
   const search = (text, newData = sourceData) => {
     setSearchQuery(text);
     setSourceData(newData);
@@ -35,6 +41,8 @@ export const useSearch = (initialData = []) => {
         task?.preferredDate,
         task?.taskFrequency,
         task?.taskGroup,
+        task?.displayId,
+        task?.pickUpLocation?.client_name?.toLowerCase(),
         ...((task?.items || []).map(i => i?.item?.itemName)),
       ];
 

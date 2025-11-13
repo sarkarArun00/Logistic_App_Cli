@@ -52,40 +52,44 @@ function FeulVoucherRequest({ visible, onClose, onSuccess }) {
         }
     }
 
+    useFocusEffect(
+        React.useCallback(() => {
+            setRemarks([])
+            setVehicles([])
+            setAmount(0)
+            setImages([])
+        }, [])
+    );
+
     // Camera Open
     const requestPermission = async (type) => {
         try {
             if (Platform.OS === 'android') {
                 if (type === 'camera') {
                     const granted = await PermissionsAndroid.request(
-                        PermissionsAndroid.PERMISSIONS.CAMERA,
-                        {
-                            title: 'Camera Permission',
-                            message: 'App needs access to your camera to take pictures.',
-                            buttonNeutral: 'Ask Me Later',
-                            buttonNegative: 'Cancel',
-                            buttonPositive: 'OK',
-                        }
+                        PermissionsAndroid.PERMISSIONS.CAMERA
                     );
                     return granted === PermissionsAndroid.RESULTS.GRANTED;
                 } else {
-                    const granted = await PermissionsAndroid.request(
-                        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-                        {
-                            title: 'Storage Permission',
-                            message: 'App needs access to your photos.',
-                            buttonNeutral: 'Ask Me Later',
-                            buttonNegative: 'Cancel',
-                            buttonPositive: 'OK',
-                        }
-                    );
-                    return granted === PermissionsAndroid.RESULTS.GRANTED;
+                    // Gallery permission
+                    if (Platform.Version >= 33) {
+                        // Android 13+
+                        const granted = await PermissionsAndroid.request(
+                            PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
+                        );
+                        return granted === PermissionsAndroid.RESULTS.GRANTED;
+                    } else {
+                        // Android 12 and below
+                        const granted = await PermissionsAndroid.request(
+                            PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
+                        );
+                        return granted === PermissionsAndroid.RESULTS.GRANTED;
+                    }
                 }
             }
-            // iOS auto handles permissions via Info.plist
             return true;
-        } catch (error) {
-            console.error('Permission error:', error);
+        } catch (err) {
+            console.warn(err);
             return false;
         }
     };
@@ -240,6 +244,15 @@ function FeulVoucherRequest({ visible, onClose, onSuccess }) {
         const userId = await AsyncStorage.getItem('user_id');
         if (!selectedVehicle) {
             Alert.alert('Missing Information', 'Please select a valid vehicle before submitting.');
+            return;
+        }
+        if (!amount) {
+            Alert.alert('Missing Information', 'Please enter the amount.');
+            return;
+        }
+
+        if (!images || images.length === 0) {
+            Alert.alert('Missing Information', 'Please upload at least one image.');
             return;
         }
 
