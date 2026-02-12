@@ -1024,18 +1024,18 @@ function Receipt({ navigation }) {
                                 </Picker>
                             </View>
 
-                            <View style={{flexDirection:'row', alignItems:'center', justifyContent:'space-between', }}>
-                                <Text style={[styles.label, { marginBottom: 0 }]}>Amount</Text>
-                                <TouchableOpacity onPress={() => setDenominationMdl(true)} style={{ backgroundColor: '#2F81F5', borderRadius: 5, padding: 0, width: 22, height:22, alignItems: 'center', }}><Text style={{ color:'#fff', }}>+</Text></TouchableOpacity>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom:8, }}>
+                                <Text style={[styles.label, { lineHeight:16, marginBottom: 0 }]}>Amount</Text>
+                                <TouchableOpacity onPress={() => setDenominationMdl(true)} style={{ backgroundColor: '#2F81F5', borderRadius: 5, padding: 0, width: 22, height: 22, alignItems: 'center', }}><Text style={{ color: '#fff', }}>+</Text></TouchableOpacity>
                             </View>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Enter Amount"
-                                    placeholderTextColor="#0C0D36"
-                                    value={amount}
-                                    onChangeText={setAmount}
-                                    keyboardType="numeric"
-                                />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Enter Amount"
+                                placeholderTextColor="#0C0D36"
+                                value={amount}
+                                onChangeText={setAmount}
+                                keyboardType="numeric"
+                            />
 
 
                             <View>
@@ -1344,19 +1344,19 @@ const styles = StyleSheet.create({
     },
 
     // Toggle Tabs
-    toggleWrap: { flexDirection: "row", gap:4, marginBottom: 20, },
-    toggleBtn: { paddingHorizontal: 20, paddingVertical:8, borderWidth:1, borderColor:'#0C0D36', borderRadius:8, },
-    toggleBtnActive: { backgroundColor: "#2F81F5", borderColor:'#2F81F5', },
-    toggleBtnActiveText: { fontFamily: 'Montserrat-Medium', fontSize:12, color: "#fff", },
+    toggleWrap: { flexDirection: "row", gap: 4, marginBottom: 20, },
+    toggleBtn: { paddingHorizontal: 20, paddingVertical: 8, borderWidth: 1, borderColor: '#0C0D36', borderRadius: 8, },
+    toggleBtnActive: { backgroundColor: "#2F81F5", borderColor: '#2F81F5', },
+    toggleBtnActiveText: { fontFamily: 'Montserrat-Medium', fontSize: 12, color: "#fff", },
     // Denomination Rows
-    DenoRows: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom:15, },
+    DenoRows: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15, },
     amount: { fontFamily: 'Montserrat-Medium', fontSize: 16, width: 80 },
     // Counter Controls
-    counter: { flexDirection: "row", alignItems: "center", borderWidth:1, borderColor: "#ECEDF0", borderRadius: 5, padding: 5,  },
+    counter: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#ECEDF0", borderRadius: 5, padding: 5, },
     counterBtn: { width: 35, height: 35, backgroundColor: "#EFEFEF", borderRadius: 5, justifyContent: "center", alignItems: "center" },
-    countText: { fontFamily: 'Montserrat-Medium', fontSize:14, color:'#000', paddingHorizontal:24, },
+    countText: { fontFamily: 'Montserrat-Medium', fontSize: 14, color: '#000', paddingHorizontal: 24, },
     // Footer Total
-    totalBox: { padding: 15, marginBottom:20, backgroundColor: "#FAFAFA", borderWidth:1, borderColor:'#ECEDF0', borderRadius: 10,  flexDirection: "row", justifyContent: "space-between" },
+    totalBox: { padding: 15, marginBottom: 20, backgroundColor: "#FAFAFA", borderWidth: 1, borderColor: '#ECEDF0', borderRadius: 10, flexDirection: "row", justifyContent: "space-between" },
     totalText: { fontFamily: 'Montserrat-SemiBold', color: "#000", fontSize: 14, },
 
     // Deno Table End
