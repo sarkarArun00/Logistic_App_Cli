@@ -28,6 +28,7 @@ const wait = (timeout) => {
 function Receipt({ navigation }) {
     const [showMenu, setShowMenu] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
+    const [denominationMdl, setDenominationMdl] = useState(false);
     const [selectClient, setselectClient] = useState();
     const [selectPaymode, setselectPaymode] = useState();
     const [filter, setFilter] = useState(false);
@@ -695,6 +696,18 @@ function Receipt({ navigation }) {
         wait(2000).then(() => setRefreshing(false));
     }, []);
 
+
+    ///////////////////////////////
+    const DENOMS = { note: [2000, 500, 200, 100, 50, 20, 10], coin: [20, 10, 5, 2, 1] };
+    const [tab, setTab] = useState("note");
+    const [counts, setCounts] = useState({});
+
+    const update = (v, delta) =>
+        setCounts(p => ({ ...p, [v]: Math.max((p[v] || 0) + delta, 0) }));
+
+    const total = Object.entries(counts).reduce((s, [k, v]) => s + k * v, 0);
+    ///////////////////////////
+
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView
@@ -703,7 +716,7 @@ function Receipt({ navigation }) {
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
-                >
+            >
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={{ flexDirection: 'row', alignItems: 'center', }}>
@@ -951,6 +964,7 @@ function Receipt({ navigation }) {
                 </View>
             </TouchableOpacity>
 
+
             {/* Create Modal */}
             <Modal
                 animationType="slide"
@@ -959,13 +973,14 @@ function Receipt({ navigation }) {
                 onRequestClose={() => setModalVisible(false)}>
                 <View style={styles.modalBackground}>
                     <View style={styles.modalContainer}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical:15, marginBottom:15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
-                            <Text style={styles.modalText}>Create Receipt:</Text>
-                            <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                <Image style={{ width: 18, height: 18 }} source={require('../../assets/mdlclose.png')} />
-                            </TouchableOpacity>
-                        </View>
-                        {/* <Text style={styles.label}>Client Name</Text>
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15, marginBottom: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
+                                <Text style={styles.modalText}>Create Receipt:</Text>
+                                <TouchableOpacity onPress={() => setModalVisible(false)}>
+                                    <Image style={{ width: 18, height: 18 }} source={require('../../assets/mdlclose.png')} />
+                                </TouchableOpacity>
+                            </View>
+                            {/* <Text style={styles.label}>Client Name</Text>
                         <View style={styles.pickerContainer}>
                             <Picker
                                 selectedValue={selectClient} onValueChange={setselectClient}
@@ -977,59 +992,201 @@ function Receipt({ navigation }) {
                             </Picker>
                         </View> */}
 
-                        <Text style={styles.label}>Client Name</Text>
-                        <View style={styles.pickerContainer}>
-                            <Picker
-                                selectedValue={selectClient}
-                                onValueChange={setselectClient}
-                                style={styles.picker} // Apply text color here
-                                dropdownIconColor={lightTheme.inputText} // Android only
-                            >
-                                <Picker.Item label="Select Client" value="" />
-                                {allClients.map((client) => (
-                                    <Picker.Item
-                                        key={client.id}
-                                        label={client.client_name}
-                                        value={client.id}
-                                    />
-                                ))}
-                            </Picker>
+                            <Text style={styles.label}>Client Name</Text>
+                            <View style={styles.pickerContainer}>
+                                <Picker
+                                    selectedValue={selectClient}
+                                    onValueChange={setselectClient}
+                                    style={styles.picker} // Apply text color here
+                                    dropdownIconColor={lightTheme.inputText} // Android only
+                                >
+                                    <Picker.Item label="Select Client" value="" />
+                                    {allClients.map((client) => (
+                                        <Picker.Item
+                                            key={client.id}
+                                            label={client.client_name}
+                                            value={client.id}
+                                        />
+                                    ))}
+                                </Picker>
+                            </View>
+
+                            <Text style={styles.label}>Payment Mode</Text>
+                            <View style={styles.pickerContainer}>
+                                <Picker selectedValue={selectPaymode} onValueChange={setselectPaymode}
+                                    style={styles.picker} // Apply text color here
+                                    dropdownIconColor={lightTheme.inputText} // Android only
+                                >
+                                    <Picker.Item label="Select Payment Mode" value="" />
+                                    <Picker.Item label="Cash" value="Cash" />
+                                    <Picker.Item label="UPI" value="UPI" />
+                                    <Picker.Item label="Net Banking" value="Net Banking" />
+                                </Picker>
+                            </View>
+
+                            <View style={{flexDirection:'row', alignItems:'center', justifyContent:'space-between', }}>
+                                <Text style={[styles.label, { marginBottom: 0 }]}>Amount</Text>
+                                <TouchableOpacity onPress={() => setDenominationMdl(true)} style={{ backgroundColor: '#2F81F5', borderRadius: 5, padding: 0, width: 22, height:22, alignItems: 'center', }}><Text style={{ color:'#fff', }}>+</Text></TouchableOpacity>
+                            </View>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Enter Amount"
+                                    placeholderTextColor="#0C0D36"
+                                    value={amount}
+                                    onChangeText={setAmount}
+                                    keyboardType="numeric"
+                                />
+
+
+                            <View>
+                                {/* Header Row */}
+                                <View style={styles.denoBoxMain}>
+                                    <Text style={[styles.denoLabel, { flex: 2 }]}>Denomination</Text>
+                                    <Text style={[styles.denoLabel, { flex: 1 }, styles.centerColumn]}>Qty.</Text>
+                                    <Text style={[styles.denoLabel, { flex: 1 }, styles.rightColumn]}>Amount</Text>
+                                </View>
+
+                                {/* Data Row */}
+                                <View style={styles.denoBoxInn}>
+                                    <Text style={[styles.denoValue, { flex: 2 }]}>
+                                        <View style={styles.denoValue2}>
+                                            <Image style={{ width: 30, height: 17, resizeMode: 'contain', }} source={require('../../assets/money.png')} />
+                                            <Text>200</Text>
+                                        </View>
+                                    </Text>
+                                    <Text style={[styles.denoValue, { flex: 1 }, styles.centerColumn]}>1</Text>
+                                    <Text style={[styles.denoValue, { flex: 1 }, styles.rightColumn]}>₹200</Text>
+                                </View>
+                                <View style={styles.denoBoxInn}>
+                                    <Text style={[styles.denoValue, { flex: 2 }]}>
+                                        <View style={styles.denoValue2}>
+                                            <Image style={{ width: 30, height: 17, resizeMode: 'contain', }} source={require('../../assets/money.png')} />
+                                            <Text>200</Text>
+                                        </View>
+                                    </Text>
+                                    <Text style={[styles.denoValue, { flex: 1 }, styles.centerColumn]}>1</Text>
+                                    <Text style={[styles.denoValue, { flex: 1, }, styles.rightColumn]}>₹200</Text>
+                                </View>
+                                <View style={styles.sumTotal}>
+                                    <Text style={styles.sumTotalLabel}>Sum Total</Text>
+                                    <Text style={styles.sumTotaValue}>₹ 300.00</Text>
+                                </View>
+                            </View>
+                            <View>
+                                <Text style={styles.label}>Attachment</Text>
+                                {/* onPress={selectImages} */}
+                                <TouchableOpacity style={styles.uploadContainer} >
+                                    <Image style={{ width: 30, height: 28, marginHorizontal: 'auto', }} source={require('../../assets/upload-icon.png')} />
+                                    <Text style={styles.uploadTitle}>Upload</Text>
+                                    <Text style={styles.uploadSubTitle}>Supports JPG, JPEG, and PNG</Text>
+                                </TouchableOpacity>
+
+                                {/* {images.length > 0 ? (
+                                <FlatList
+                                    style={styles.flatList}
+                                    data={images}
+                                    keyExtractor={(item, index) => index.toString()}
+                                    renderItem={({ item, index }) => (
+                                        <View>
+                                            <Image source={{ uri: item.uri }} style={{ width: 60, height: 60, borderRadius: 5, marginRight: 10, }} />
+                                            <TouchableOpacity
+                                                onPress={() => handleDeleteImage(index)}
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: -5,
+                                                    right: 5,
+                                                    backgroundColor: 'red',
+                                                    borderRadius: 12,
+                                                    width: 22,
+                                                    height: 22,
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center'
+                                                }}
+                                            >
+                                                <Text style={{ color: 'white', fontSize: 12, lineHeight: 14, }}>✕</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
+                                    horizontal
+                                />
+                            ) : (
+                                <Text style={styles.noImgSelected}>No images selected</Text>
+                            )} */}
+                            </View>
+
+                            <Text style={styles.label}>Remarks</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Placeholder"
+                                placeholderTextColor="#0C0D36"
+                                value={remarks}
+                                onChangeText={setRemarks}
+                            />
+
+                            <TouchableOpacity
+                                onPress={handleGenerate}
+                                style={{
+                                    backgroundColor: '#2F81F5',
+                                    borderRadius: 28,
+                                    paddingVertical: 16,
+                                    paddingHorizontal: 10,
+                                }}>
+                                <Text style={{
+                                    fontFamily: 'Montserrat-SemiBold',
+                                    fontSize: 16,
+                                    color: 'white',
+                                    textAlign: 'center',
+                                }}>Generate</Text>
+                            </TouchableOpacity>
+
+                        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Denomination Modal */}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={denominationMdl}
+                onRequestClose={() => setDenominationMdl(false)}>
+                <View style={styles.modalBackground}>
+                    <View style={styles.modalContainer}>
+                        <View style={{
+                            flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+                            paddingVertical: 15, marginBottom: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0',
+                        }}>
+                            <Text style={styles.modalText}>Enter Denominations:</Text>
+                            <TouchableOpacity onPress={() => setDenominationMdl(false)}>
+                                <Image style={{ width: 18, height: 18 }} source={require('../../assets/mdlclose.png')} />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.toggleWrap}>
+                            {["note", "coin"].map(t => (
+                                <TouchableOpacity key={t} onPress={() => setTab(t)} style={[styles.toggleBtn, tab === t && styles.toggleBtnActive]}>
+                                    <Text style={tab === t && styles.toggleBtnActiveText}>{t.charAt(0).toUpperCase() + t.slice(1)}</Text>
+                                </TouchableOpacity>
+                            ))}
                         </View>
 
-                        <Text style={styles.label}>Payment Mode</Text>
-                        <View style={styles.pickerContainer}>
-                            <Picker selectedValue={selectPaymode} onValueChange={setselectPaymode}
-                                style={styles.picker} // Apply text color here
-                                dropdownIconColor={lightTheme.inputText} // Android only
-                            >
-                                <Picker.Item label="Select Payment Mode" value="" />
-                                <Picker.Item label="Cash" value="Cash" />
-                                <Picker.Item label="UPI" value="UPI" />
-                                <Picker.Item label="Net Banking" value="Net Banking" />
-                            </Picker>
+                        <ScrollView>
+                            {DENOMS[tab].map(val => (
+                                <View key={val} style={styles.DenoRows}>
+                                    <Text style={styles.amount}>₹{val}</Text>
+                                    <View style={styles.counter}>
+                                        <TouchableOpacity onPress={() => update(val, -1)} style={styles.counterBtn}><Text>-</Text></TouchableOpacity>
+                                        <Text style={styles.countText}>{counts[val] || 0}</Text>
+                                        <TouchableOpacity onPress={() => update(val, 1)} style={styles.counterBtn}><Text>+</Text></TouchableOpacity>
+                                    </View>
+                                </View>
+                            ))}
+                        </ScrollView>
+
+                        <View style={styles.totalBox}>
+                            <Text style={styles.totalText}>Total Amount:</Text>
+                            <Text style={styles.totalText}>₹{total}</Text>
                         </View>
-
-                        <Text style={styles.label}>Amount</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Enter Amount"
-                            placeholderTextColor="#0C0D36"
-                            value={amount}
-                            onChangeText={setAmount}
-                            keyboardType="numeric"
-                        />
-
-                        <Text style={styles.label}>Remarks</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Placeholder"
-                            placeholderTextColor="#0C0D36"
-                            value={remarks}
-                            onChangeText={setRemarks}
-                        />
-
                         <TouchableOpacity
-                            onPress={handleGenerate}
                             style={{
                                 backgroundColor: '#2F81F5',
                                 borderRadius: 28,
@@ -1041,9 +1198,8 @@ function Receipt({ navigation }) {
                                 fontSize: 16,
                                 color: 'white',
                                 textAlign: 'center',
-                            }}>Generate</Text>
+                            }}>Submit</Text>
                         </TouchableOpacity>
-
                     </View>
                 </View>
             </Modal>
@@ -1072,6 +1228,139 @@ function Receipt({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+    // Deno Table Start
+    denoBoxMain: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(0,0,0,0.25)',
+        paddingBottom: 12,
+        marginBottom: 15,
+    },
+    denoBoxInn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingBottom: 14,
+    },
+    denoLabel: {
+        fontFamily: 'Montserrat-SemiBold',
+        fontSize: 13,
+        lineHeight: 16,
+        color: '#0C0D36',
+    },
+    denoValue: {
+        fontFamily: 'Montserrat-Medium',
+        fontSize: 13,
+        lineHeight: 16,
+        color: '#0C0D36',
+    },
+    denoValue2: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: '10',
+        fontFamily: 'Montserrat-Medium',
+        fontSize: 13,
+        lineHeight: 16,
+        color: '#0C0D36',
+    },
+    centerColumn: {
+        textAlign: 'center',
+        alignSelf: 'center',
+    },
+    rightColumn: {
+        textAlign: 'right',
+    },
+    sumTotal: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingTop: 10,
+        paddingBottom: 10,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(0, 0, 0, 0.25)',
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(0, 0, 0, 0.25)',
+        marginBottom: 15,
+    },
+    sumTotalLabel: {
+        fontFamily: 'Montserrat-Medium',
+        fontSize: 13,
+        lineHeight: 16,
+        color: '#0C0D36',
+    },
+    sumTotaValue: {
+        fontFamily: 'Montserrat-SemiBold',
+        fontSize: 13,
+        lineHeight: 16,
+        color: '#0C0D36',
+    },
+
+    // Upload Attachment
+    uploadContainer: {
+        borderWidth: 1,
+        borderRadius: 12,
+        borderStyle: 'dashed',
+        backgroundColor: '#FAFAFA',
+        borderColor: '#E5E5E5',
+        marginBottom: 15,
+        padding: 12,
+        alignItems: 'center',
+    },
+    uploadTitle: {
+        fontFamily: 'Montserrat-SemiBold',
+        fontSize: 14,
+        color: '#2F81F5',
+        textAlign: 'center',
+        paddingTop: 10,
+        paddingBottom: 3,
+    },
+    uploadSubTitle: {
+        fontFamily: 'Montserrat-Regular',
+        fontSize: 13,
+        color: '#0C0D36',
+        textAlign: 'center',
+    },
+    flatList: {
+        borderWidth: 1,
+        borderRadius: 12,
+        borderStyle: 'dashed',
+        backgroundColor: '#FAFAFA',
+        borderColor: '#E5E5E5',
+        padding: 12,
+        marginBottom: 10,
+    },
+    noImgSelected: {
+        fontFamily: 'Montserrat-SemiBold',
+        fontSize: 13,
+        color: '#0C0D36',
+        textAlign: 'center',
+        borderWidth: 1,
+        borderRadius: 12,
+        borderStyle: 'dashed',
+        backgroundColor: '#FAFAFA',
+        borderColor: '#E5E5E5',
+        padding: 12,
+        marginBottom: 10,
+    },
+
+    // Toggle Tabs
+    toggleWrap: { flexDirection: "row", gap:4, marginBottom: 20, },
+    toggleBtn: { paddingHorizontal: 20, paddingVertical:8, borderWidth:1, borderColor:'#0C0D36', borderRadius:8, },
+    toggleBtnActive: { backgroundColor: "#2F81F5", borderColor:'#2F81F5', },
+    toggleBtnActiveText: { fontFamily: 'Montserrat-Medium', fontSize:12, color: "#fff", },
+    // Denomination Rows
+    DenoRows: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom:15, },
+    amount: { fontFamily: 'Montserrat-Medium', fontSize: 16, width: 80 },
+    // Counter Controls
+    counter: { flexDirection: "row", alignItems: "center", borderWidth:1, borderColor: "#ECEDF0", borderRadius: 5, padding: 5,  },
+    counterBtn: { width: 35, height: 35, backgroundColor: "#EFEFEF", borderRadius: 5, justifyContent: "center", alignItems: "center" },
+    countText: { fontFamily: 'Montserrat-Medium', fontSize:14, color:'#000', paddingHorizontal:24, },
+    // Footer Total
+    totalBox: { padding: 15, marginBottom:20, backgroundColor: "#FAFAFA", borderWidth:1, borderColor:'#ECEDF0', borderRadius: 10,  flexDirection: "row", justifyContent: "space-between" },
+    totalText: { fontFamily: 'Montserrat-SemiBold', color: "#000", fontSize: 14, },
+
+    // Deno Table End
+
     row2: {
         flexDirection: 'row',
         gap: 10,
@@ -1138,7 +1427,7 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 5,
         paddingVertical: 11,
-        zIndex:99,
+        zIndex: 99,
     },
     viewText: {
         paddingVertical: 8,
@@ -1180,6 +1469,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderTopEndRadius: 20,
         borderTopLeftRadius: 20,
+        maxHeight: '80%',
     },
     modalText: {
         fontFamily: 'Montserrat-Medium',
