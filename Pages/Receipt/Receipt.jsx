@@ -1073,17 +1073,6 @@ function Receipt({ navigation }) {
                                     <Image style={{ width: 18, height: 18 }} source={require('../../assets/mdlclose.png')} />
                                 </TouchableOpacity>
                             </View>
-                            {/* <Text style={styles.label}>Client Name</Text>
-                        <View style={styles.pickerContainer}>
-                            <Picker
-                                selectedValue={selectClient} onValueChange={setselectClient}
-                            >
-                                <Picker.Item label="Select Client" value=""  />
-                                {allClients.map((client) => (
-                                    <Picker.Item key={client.id} label={client.client_name} value={client.id} dropdownIconColor={lightTheme.inputText}/>
-                                ))}
-                            </Picker>
-                        </View> */}
 
                             <Text style={styles.label}>Client Name</Text>
                             <View style={styles.pickerContainer}>
@@ -1138,8 +1127,8 @@ function Receipt({ navigation }) {
                                 }}
                             />
 
-                            <View>
-                                <Text>Payment Details</Text>
+                            <View style={styles.payDtl}>
+                                <Text style={styles.payDtlText}>Payment Details</Text>
                                 {selectPaymode == "1" && (
                                     <>
                                         <View >
@@ -1175,34 +1164,39 @@ function Receipt({ navigation }) {
                                                 <Text style={styles.sumTotalLabel}>Sum Total</Text>
                                                 <Text style={styles.sumTotaValue}>₹ 300.00</Text>
                                             </View>
+                                            <View style={styles.amtWords}>
+                                                <Text style={styles.amountInWdLabel}>Amount in Words</Text>
+                                                <Text style={styles.amountInWdValue}>Three Hundred Only</Text>
+                                            </View>
                                         </View>
                                     </>
                                 )}
                                 {selectPaymode == "2" && (
                                     <>
-                                        <View>
-                                            <Text>Cheque No.</Text>
-                                            <Text>{chequeNo}</Text>
+                                        <View style={styles.isCheckBox}>
+                                            <Text style={styles.isCheckBoxLabel}>Cheque No.</Text>
+                                            <Text style={styles.isCheckBoxValue}>{chequeNo}</Text>
                                         </View>
-                                        <View>
-                                            <Text>Cheque Date</Text>
-                                            <Text>{formatDate(chequeDate)}</Text>
+                                        <View style={styles.isCheckBox}>
+                                            <Text style={styles.isCheckBoxLabel}>Cheque Date</Text>
+                                            <Text style={styles.isCheckBoxValue}>{formatDate(chequeDate)}</Text>
                                         </View>
-                                        <View>
-                                            <Text>Bank Name</Text>
-                                            {/* <Text>{bankName}</Text> */}
+                                        <View style={styles.isCheckBox}>
+                                            <Text style={styles.isCheckBoxLabel}>Bank Name</Text>
+                                            {/* <Text style={styles.isCheckBoxValue}>{bankName}</Text> */}
                                         </View>
-                                        <View>
-                                            <Text>Amount</Text>
-                                            <Text>{checkAmount}</Text>
+                                        <View style={[styles.isCheckBox, styles.isCheckBoxBorder]}>
+                                            <Text style={styles.isCheckBoxLabel}>Amount</Text>
+                                            <Text style={styles.isCheckBoxValue}>{checkAmount}</Text>
                                         </View>
-                                        <View>
-                                            <Text>Amount In Words</Text>
-                                            <Text>{toWords(Number(checkAmount))}</Text>
+                                        <View style={styles.isCheckBox}>
+                                            <Text style={styles.isCheckBoxLabel}>Amount In Words</Text>
+                                            <Text style={styles.isCheckBoxValue}>{toWords(Number(checkAmount))}</Text>
                                         </View>
                                     </>
                                 )}
                             </View>
+
                             <View>
                                 <Text style={styles.label}>Attachment</Text>
                                 {/* onPress={selectImages} */}
@@ -1357,15 +1351,16 @@ function Receipt({ navigation }) {
                                     onChangeText={setChequeNo} />
 
                                 <Text style={styles.label}>Select Cheque Date</Text>
+                                <View style={styles.dateContainer}>
                                 <TouchableOpacity
-                                    style={styles.input}
                                     onPress={() => showDatePicker('checkDate')}
                                 >
-                                    <Text style={{ color: chequeDate ? '#000' : '#0C0D36' }}>
+                                    <Text style={{ color: chequeDate ? '#000' : '#0C0D36', fontFamily: 'Montserrat-Medium', fontSize:15, }}>
                                         {chequeDate ? formatDate(chequeDate) : 'Select Cheque Date'}
                                     </Text>
 
                                 </TouchableOpacity>
+                                </View>
 
 
                                 {/* Date Picker Modal */}
@@ -1443,6 +1438,31 @@ function Receipt({ navigation }) {
 
 const styles = StyleSheet.create({
     // Deno Table Start
+    payDtl: {
+        backgroundColor: "#fff",
+        // iOS shadow
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4,
+        borderRadius: 12,
+        padding: 12,
+        marginHorizontal: 2,
+        marginBottom: 15,
+        overflow: 'hidden',
+    },
+    payDtlText: {
+        fontFamily: 'Montserrat-SemiBold',
+        fontSize: 15,
+        lineHeight: 18,
+        color: "#0C0D36",
+        paddingBottom: 8,
+        marginBottom: 20,
+        borderBottomColor: 'rgba(0, 0, 0, 0.25)',
+        borderBottomWidth: 1,
+    },
     denoBoxMain: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -1492,9 +1512,7 @@ const styles = StyleSheet.create({
         paddingBottom: 10,
         borderTopWidth: 1,
         borderTopColor: 'rgba(0, 0, 0, 0.25)',
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(0, 0, 0, 0.25)',
-        marginBottom: 15,
+        // marginBottom: 15,
     },
     sumTotalLabel: {
         fontFamily: 'Montserrat-Medium',
@@ -1507,6 +1525,49 @@ const styles = StyleSheet.create({
         fontSize: 13,
         lineHeight: 16,
         color: '#0C0D36',
+    },
+    amtWords: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    amountInWdLabel: {
+        fontFamily: 'Montserrat-Medium',
+        fontSize: 14,
+        lineHeight: 16,
+        color: '#0C0D36',
+    },
+    amountInWdValue: {
+        fontFamily: 'Montserrat-SemiBold',
+        fontSize: 15,
+        lineHeight: 18,
+        color: '#0C0D36',
+    },
+    isCheckBox: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 15,
+    },
+    isCheckBoxBorder: {
+        borderTopWidth: 1,
+        borderColor: 'rgba(0,0,0,0.25)',
+        paddingTop: 15,
+    },
+    isCheckBoxLabel: {
+        flex: 1,
+        fontFamily: 'Montserrat-Medium',
+        fontSize: 14,
+        lineHeight: 16,
+        color: '#0C0D36',
+        textAlign: 'left',
+    },
+    isCheckBoxValue: {
+        width:200,
+        fontFamily: 'Montserrat-SemiBold',
+        fontSize: 15,
+        lineHeight: 18,
+        color: '#0C0D36',
+        textAlign: 'right',
     },
 
     // Upload Attachment
@@ -1715,6 +1776,16 @@ const styles = StyleSheet.create({
         paddingHorizontal: 0,
         marginBottom: 15,
         borderRadius: 10,
+    },
+    dateContainer:{
+        height: 54,
+        borderWidth: 1,
+        borderColor: '#ECEDF0',
+        backgroundColor: '#FAFAFA',
+        borderRadius: 10,
+        marginBottom: 15,
+        paddingHorizontal: 15,
+        paddingTop:15,
     },
     textarea: {
         height: 54,
