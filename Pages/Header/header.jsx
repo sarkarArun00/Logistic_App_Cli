@@ -36,9 +36,10 @@ const header = ({ navigation, profileImage }) => {
       try {
         const response = await TaskService.getMyNotifications();
         if (isMounted && response?.status == 1) {
-          setNotificationCount(response.data.unseen.length || 0);
-          setNotificationCount2(response.data.unseen.length || 0);
-
+          // setNotificationCount(response.data.unseen.length || 0);
+          // setNotificationCount2(response.data.unseen.length || 0);
+          setNotificationCount(response.data.length || 0);
+          setNotificationCount2(response.data.length || 0);
           console.log('notttttttttt', response.data)
         }
       } catch (err) {
@@ -47,7 +48,7 @@ const header = ({ navigation, profileImage }) => {
     };
 
     getUserData();
-    checkNewNotifications(); 
+    checkNewNotifications();
 
     // const id = setInterval(() => {
     //   checkNewNotifications();

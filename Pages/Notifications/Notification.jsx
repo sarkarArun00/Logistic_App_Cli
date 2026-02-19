@@ -29,7 +29,7 @@ function Notification({ navigation }) {
         //         setLoading(true)
         //         const response = await TaskService.getMyNotifications();
         //         console.log('Response seenNotificationIds:', response.data);
-              
+
         //         if (response.status == 1) {
         //             const allNotifications = response.data.seen;
         //             setNotifications(allNotifications); 
@@ -64,75 +64,79 @@ function Notification({ navigation }) {
         // fetchData();
         // fetchNotifications();
         fetchEmployeeApprovals();
-    },[])
+    }, [])
 
     useFocusEffect(
         React.useCallback(() => {
-          const fetchData = async () => {
-            try {
-              setLoading(true);
-      
-              const response = await TaskService.getMyNotifications();
-              if (response.status === 1 && response.data.unseen.length > 0) {
-                const allNotifications = response.data.unseen;
-                const allIds = allNotifications.map(item => item.id);
-                console.log('allIds allIds', allIds);
-      
-                await markNotificationsAsSeen(allIds);
-              } else {
-                setLoading(false);
-                setNotificationCount(0);
-              }
-            } catch (error) {
-              console.log('Error fetching notifications:', error);
-            } finally {
-              setLoading(false);
-            }
-          };
-      
-          fetchData();
+            const fetchData = async () => {
+                try {
+                    setLoading(true);
+
+                    const response = await TaskService.getMyNotifications();
+                    //   if (response.status === 1 && response.data.unseen.length > 0) {
+                    //     const allNotifications = response.data.unseen;
+                    if (response.status === 1 && response.data.length > 0) {
+                        const allNotifications = response.data;
+                        const allIds = allNotifications.map(item => item.id);
+                        console.log('allIds allIds', allIds);
+
+                        await markNotificationsAsSeen(allIds);
+                    } else {
+                        setLoading(false);
+                        setNotificationCount(0);
+                    }
+                } catch (error) {
+                    console.log('Error fetching notifications:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            fetchData();
         }, [])
-      );
-      
+    );
+
 
     const fetchNotifications = async () => {
         const response = await TaskService.getMyNotifications();
         if (response.status === 1) {
-          setNotifications(response.data?.seen);
-          setNotificationCount(response.data?.unseen?.length);
+            // setNotifications(response.data?.seen);
+            // setNotificationCount(response.data?.unseen?.length);
+            setNotifications(response.data);
+            setNotificationCount(response.data?.length);
         } else {
-          setNotificationCount(0);
+            setNotificationCount(0);
         }
-      };
-      
-      const markNotificationsAsSeen = async (allIds) => {
+    };
+
+    const markNotificationsAsSeen = async (allIds) => {
         const res = await TaskService.updateNotificationStatus({ notifIds: allIds });
         if (res.status === 1) {
-          await fetchNotifications(); // Refresh list
+            await fetchNotifications(); // Refresh list
         }
-      };
-      
-      useFocusEffect(
-        React.useCallback(() => {
-          const init = async () => {
-            setLoading(true);
-            await fetchNotifications();
-            setLoading(false);
-          };
-          init();
-        }, [])
-      );
-      
+    };
 
-      const deleteGeneNotif = async (id) => {
-        const response = await TaskService.deleteNotification({notifId: id})
+    useFocusEffect(
+        React.useCallback(() => {
+            const init = async () => {
+                setLoading(true);
+                await fetchNotifications();
+                setLoading(false);
+            };
+            init();
+        }, [])
+    );
+
+
+    const deleteGeneNotif = async (id) => {
+        const response = await TaskService.deleteNotification({ notifId: id })
         console.log('deleting....', response)
-        if(response.status==1) {
+        if (response.status == 1) {
             fetchNotifications();
         } else {
             showAlertModal(response.data, true)
         }
-      }
+    }
 
 
 
@@ -195,12 +199,12 @@ function Notification({ navigation }) {
             <Ionicons name={item.status == '1' ? "mail-outline" : "mail-outline"} size={32}
                 color={item.status == '1' ? "#64748B" : "#1E40AF"} style={styles.icon} />
             <View style={styles.textContainer}>
-                <View style={{flex:1,}}>
+                <View style={{ flex: 1, }}>
                     <Text style={styles.name}>{item.name} <Text style={styles.message}>{item.message}</Text></Text>
                     <Text style={styles.time}>{dayjs(item.createdAt).format('MMMM D, YYYY h:mm A')}</Text>
                 </View>
-                <View style={{width:25,}}>
-                    <TouchableOpacity onPress={() => {deleteGeneNotif(item.id)}}>
+                <View style={{ width: 25, }}>
+                    <TouchableOpacity onPress={() => { deleteGeneNotif(item.id) }}>
                         <Ionicons name="trash-outline" size={24} color="#EF4444" />
                     </TouchableOpacity>
                 </View>
@@ -366,8 +370,8 @@ const styles = StyleSheet.create({
     },
     textContainer: {
         flex: 1,
-        flexDirection:'row',
-        gap:10,
+        flexDirection: 'row',
+        gap: 10,
     },
     name: {
         fontFamily: 'Montserrat-SemiBold',

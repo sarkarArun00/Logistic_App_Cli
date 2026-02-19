@@ -21,6 +21,7 @@ import _ from 'lodash';
 
 
 
+
 const wait = (timeout) => {
     return new Promise(resolve => setTimeout(resolve, timeout));
 };
@@ -30,7 +31,8 @@ function Receipt({ navigation }) {
     const [modalVisible, setModalVisible] = useState(false);
     const [denominationMdl, setDenominationMdl] = useState(false);
     const [selectClient, setselectClient] = useState();
-    const [selectPaymode, setselectPaymode] = useState();
+    const [selectPaymode, setSelectPaymode] = useState('');
+    const [selectBank, setSelectBank] = useState();
     const [filter, setFilter] = useState(false);
     // const [selectPayment, setSelectPayment] = useState(false);
     const [receiptData, setReceiptData] = useState([]);
@@ -45,6 +47,15 @@ function Receipt({ navigation }) {
 
     const [amount, setAmount] = useState('');
     const [remarks, setRemarks] = useState('');
+    // Ambar start
+    const [checkAmount, setCheckAmount] = useState('');
+    const [chequeNo, setChequeNo] = useState('');
+    const [chequeDate, setChequeDate] = useState(null);
+    const [bankName, setBankName] = useState([]);
+    const [seletedBankName, setSeletedBankName] = useState('');
+    const [coinDenomination, setCoinDenomination] = useState([]);
+    const [cashDenomination, setCashDenomination] = useState([]);
+    // Ambar End
 
     const { showAlertModal, hideAlert } = useGlobalAlert();
 
@@ -76,6 +87,9 @@ function Receipt({ navigation }) {
     const handleConfirm = (date) => {
         if (pickerMode === 'from') {
             setFromDate(date);
+        }
+        else if (pickerMode === 'checkDate') {
+            setChequeDate(date);
         } else {
             setToDate(date);
         }
@@ -90,6 +104,11 @@ function Receipt({ navigation }) {
         return `${year}-${month}-${day}`;
     };
 
+    useEffect(() => {
+        if (selectPaymode) {
+            console.log('Paymode changed to:', selectPaymode);
+        }
+    }, [selectPaymode]);
 
 
 
@@ -99,13 +118,71 @@ function Receipt({ navigation }) {
         } else {
             setModalVisible(false);
         }
-
+        getAllDenomination();
+        getAllBanks();
         getAllReceipts();
         getClientsAll();
         getAllClientByLogistic();
     }, [page]);
 
+    useEffect(() => {
+        console.log('TOTAL EFFECT RUNNING, COUNTS =', counts);
 
+        let sum = 0;
+
+        Object.keys(counts).forEach(key => {
+            const parts = key.split('_');
+            const value = Number(parts[1]);
+            const count = Number(counts[key]);
+
+            sum += value * count;
+        });
+
+        console.log('SETTING TOTAL:', sum);
+        setTotal(sum);
+    }, [counts]);
+
+
+
+    const getAllDenomination = async () => {
+        try {
+            const response = await TaskService.getAllDenomination();
+
+            if (response.status === 1) {
+                const notes = response.data
+                    .filter(item => item.type === "Note")
+                    .map(item => item.denominationName);
+
+                const coins = response.data
+                    .filter(item => item.type === "Coin")
+                    .map(item => item.denominationName);
+
+                setDenoms({
+                    note: notes,
+                    coin: coins,
+                });
+            } else {
+                setDenoms({ note: [], coin: [] });
+            }
+        } catch (error) {
+            console.error('Error fetching denominations:', error);
+        }
+    };
+
+
+    const getAllBanks = () => {
+        try {
+            TaskService.getAllBanks().then((response) => {
+                if (response.status == 1) {
+                    setBankName(response.data);
+                } else {
+                    setBankName([]);
+                }
+            });
+        } catch (error) {
+            console.error('Error fetching banks:', error);
+        }
+    }
 
     const getAllReceipts = async () => {
         setLoading(true);
@@ -616,7 +693,6 @@ function Receipt({ navigation }) {
 
 
     const getStatusLabel = (authoriseStatus, generateStatus) => {
-        console.log('status check', authoriseStatus, generateStatus)
         if (authoriseStatus == 1 && generateStatus == 1) {
             return 'Authorized';
         } else if (authoriseStatus == 0 || generateStatus == 0) {
@@ -698,14 +774,31 @@ function Receipt({ navigation }) {
 
 
     ///////////////////////////////
-    const DENOMS = { note: [2000, 500, 200, 100, 50, 20, 10], coin: [20, 10, 5, 2, 1] };
+    const [denoms, setDenoms] = useState({ note: [], coin: [] });
     const [tab, setTab] = useState("note");
     const [counts, setCounts] = useState({});
 
-    const update = (v, delta) =>
-        setCounts(p => ({ ...p, [v]: Math.max((p[v] || 0) + delta, 0) }));
+    const update = (type, value, delta) => {
+        console.log('UPDATE CALLED:', type, value, delta);
 
-    const total = Object.entries(counts).reduce((s, [k, v]) => s + k * v, 0);
+        const key = `${type}_${value}`;
+
+        setCounts(prev => {
+            const next = {
+                ...prev,
+                [key]: (prev[key] || 0) + delta,
+            };
+
+            console.log('NEW COUNTS:', next);
+            return next;
+        });
+    };
+
+
+
+
+
+    const [total, setTotal] = useState(0);
     ///////////////////////////
 
     return (
@@ -1013,20 +1106,23 @@ function Receipt({ navigation }) {
 
                             <Text style={styles.label}>Payment Mode</Text>
                             <View style={styles.pickerContainer}>
-                                <Picker selectedValue={selectPaymode} onValueChange={setselectPaymode}
+                                <Picker selectedValue={selectPaymode} onValueChange={(itemValue) => {
+                                    setSelectPaymode(itemValue);
+                                }}
                                     style={styles.picker} // Apply text color here
                                     dropdownIconColor={lightTheme.inputText} // Android only
                                 >
                                     <Picker.Item label="Select Payment Mode" value="" />
-                                    <Picker.Item label="Cash" value="Cash" />
-                                    <Picker.Item label="UPI" value="UPI" />
-                                    <Picker.Item label="Net Banking" value="Net Banking" />
+                                    <Picker.Item value="1" label="Cash" />
+                                    <Picker.Item value="2" label="Cheque" />
+                                    <Picker.Item value="3" label="UPI" />
+                                    <Picker.Item value="4" label="Debit/Credit Card" />
                                 </Picker>
                             </View>
 
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom:8, }}>
-                                <Text style={[styles.label, { lineHeight:16, marginBottom: 0 }]}>Amount</Text>
-                                <TouchableOpacity onPress={() => setDenominationMdl(true)} style={{ backgroundColor: '#2F81F5', borderRadius: 5, padding: 0, width: 22, height: 22, alignItems: 'center', }}><Text style={{ color: '#fff', }}>+</Text></TouchableOpacity>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, }}>
+                                <Text style={[styles.label, { lineHeight: 16, marginBottom: 0 }]}>Amount</Text>
+                                {/* <TouchableOpacity onPress={() => setDenominationMdl(true)} style={{ backgroundColor: '#2F81F5', borderRadius: 5, padding: 0, width: 22, height: 22, alignItems: 'center', }}><Text style={{ color: '#fff', }}>+</Text></TouchableOpacity> */}
                             </View>
                             <TextInput
                                 style={styles.input}
@@ -1035,42 +1131,77 @@ function Receipt({ navigation }) {
                                 value={amount}
                                 onChangeText={setAmount}
                                 keyboardType="numeric"
+                                onEndEditing={() => {
+                                    if (amount && Number(amount) > 0) {
+                                        setDenominationMdl(true)
+                                    }
+                                }}
                             />
 
-
                             <View>
-                                {/* Header Row */}
-                                <View style={styles.denoBoxMain}>
-                                    <Text style={[styles.denoLabel, { flex: 2 }]}>Denomination</Text>
-                                    <Text style={[styles.denoLabel, { flex: 1 }, styles.centerColumn]}>Qty.</Text>
-                                    <Text style={[styles.denoLabel, { flex: 1 }, styles.rightColumn]}>Amount</Text>
-                                </View>
+                                <Text>Payment Details</Text>
+                                {selectPaymode == "1" && (
+                                    <>
+                                        <View >
+                                            {/* Header Row */}
+                                            <View style={styles.denoBoxMain}>
+                                                <Text style={[styles.denoLabel, { flex: 2 }]}>Denomination</Text>
+                                                <Text style={[styles.denoLabel, { flex: 1 }, styles.centerColumn]}>Qty.</Text>
+                                                <Text style={[styles.denoLabel, { flex: 1 }, styles.rightColumn]}>Amount</Text>
+                                            </View>
 
-                                {/* Data Row */}
-                                <View style={styles.denoBoxInn}>
-                                    <Text style={[styles.denoValue, { flex: 2 }]}>
-                                        <View style={styles.denoValue2}>
-                                            <Image style={{ width: 30, height: 17, resizeMode: 'contain', }} source={require('../../assets/money.png')} />
-                                            <Text>200</Text>
+                                            {/* Data Row */}
+                                            <View style={styles.denoBoxInn}>
+                                                <Text style={[styles.denoValue, { flex: 2 }]}>
+                                                    <View style={styles.denoValue2}>
+                                                        <Image style={{ width: 30, height: 17, resizeMode: 'contain', }} source={require('../../assets/money.png')} />
+                                                        <Text>200</Text>
+                                                    </View>
+                                                </Text>
+                                                <Text style={[styles.denoValue, { flex: 1 }, styles.centerColumn]}>1</Text>
+                                                <Text style={[styles.denoValue, { flex: 1 }, styles.rightColumn]}>₹200</Text>
+                                            </View>
+                                            <View style={styles.denoBoxInn}>
+                                                <Text style={[styles.denoValue, { flex: 2 }]}>
+                                                    <View style={styles.denoValue2}>
+                                                        <Image style={{ width: 30, height: 17, resizeMode: 'contain', }} source={require('../../assets/money.png')} />
+                                                        <Text>200</Text>
+                                                    </View>
+                                                </Text>
+                                                <Text style={[styles.denoValue, { flex: 1 }, styles.centerColumn]}>1</Text>
+                                                <Text style={[styles.denoValue, { flex: 1, }, styles.rightColumn]}>₹200</Text>
+                                            </View>
+                                            <View style={styles.sumTotal}>
+                                                <Text style={styles.sumTotalLabel}>Sum Total</Text>
+                                                <Text style={styles.sumTotaValue}>₹ 300.00</Text>
+                                            </View>
                                         </View>
-                                    </Text>
-                                    <Text style={[styles.denoValue, { flex: 1 }, styles.centerColumn]}>1</Text>
-                                    <Text style={[styles.denoValue, { flex: 1 }, styles.rightColumn]}>₹200</Text>
-                                </View>
-                                <View style={styles.denoBoxInn}>
-                                    <Text style={[styles.denoValue, { flex: 2 }]}>
-                                        <View style={styles.denoValue2}>
-                                            <Image style={{ width: 30, height: 17, resizeMode: 'contain', }} source={require('../../assets/money.png')} />
-                                            <Text>200</Text>
+                                    </>
+                                )}
+                                {selectPaymode == "2" && (
+                                    <>
+                                        <View>
+                                            <Text>Cheque No.</Text>
+                                            <Text>{chequeNo}</Text>
                                         </View>
-                                    </Text>
-                                    <Text style={[styles.denoValue, { flex: 1 }, styles.centerColumn]}>1</Text>
-                                    <Text style={[styles.denoValue, { flex: 1, }, styles.rightColumn]}>₹200</Text>
-                                </View>
-                                <View style={styles.sumTotal}>
-                                    <Text style={styles.sumTotalLabel}>Sum Total</Text>
-                                    <Text style={styles.sumTotaValue}>₹ 300.00</Text>
-                                </View>
+                                        <View>
+                                            <Text>Cheque Date</Text>
+                                            <Text>{formatDate(chequeDate)}</Text>
+                                        </View>
+                                        <View>
+                                            <Text>Bank Name</Text>
+                                            {/* <Text>{bankName}</Text> */}
+                                        </View>
+                                        <View>
+                                            <Text>Amount</Text>
+                                            <Text>{checkAmount}</Text>
+                                        </View>
+                                        <View>
+                                            <Text>Amount In Words</Text>
+                                            <Text>{toWords(Number(checkAmount))}</Text>
+                                        </View>
+                                    </>
+                                )}
                             </View>
                             <View>
                                 <Text style={styles.label}>Attachment</Text>
@@ -1152,6 +1283,7 @@ function Receipt({ navigation }) {
                 onRequestClose={() => setDenominationMdl(false)}>
                 <View style={styles.modalBackground}>
                     <View style={styles.modalContainer}>
+
                         <View style={{
                             flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
                             paddingVertical: 15, marginBottom: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0',
@@ -1161,31 +1293,113 @@ function Receipt({ navigation }) {
                                 <Image style={{ width: 18, height: 18 }} source={require('../../assets/mdlclose.png')} />
                             </TouchableOpacity>
                         </View>
-                        <View style={styles.toggleWrap}>
-                            {["note", "coin"].map(t => (
-                                <TouchableOpacity key={t} onPress={() => setTab(t)} style={[styles.toggleBtn, tab === t && styles.toggleBtnActive]}>
-                                    <Text style={tab === t && styles.toggleBtnActiveText}>{t.charAt(0).toUpperCase() + t.slice(1)}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
+                        {selectPaymode == "1" && (
+                            <>
+                                <View style={styles.toggleWrap}>
+                                    {["note", "coin"].map(t => (
+                                        <TouchableOpacity
+                                            onPress={() => update(tab, val, 1)}
+                                            style={styles.counterBtn}
+                                        >
+                                            <Text>+</Text>
+                                        </TouchableOpacity>
 
-                        <ScrollView>
-                            {DENOMS[tab].map(val => (
-                                <View key={val} style={styles.DenoRows}>
-                                    <Text style={styles.amount}>₹{val}</Text>
-                                    <View style={styles.counter}>
-                                        <TouchableOpacity onPress={() => update(val, -1)} style={styles.counterBtn}><Text>-</Text></TouchableOpacity>
-                                        <Text style={styles.countText}>{counts[val] || 0}</Text>
-                                        <TouchableOpacity onPress={() => update(val, 1)} style={styles.counterBtn}><Text>+</Text></TouchableOpacity>
-                                    </View>
+                                    ))}
                                 </View>
-                            ))}
-                        </ScrollView>
 
-                        <View style={styles.totalBox}>
-                            <Text style={styles.totalText}>Total Amount:</Text>
-                            <Text style={styles.totalText}>₹{total}</Text>
-                        </View>
+                                <ScrollView>
+                                    {(denoms[tab] || []).map(val => {
+                                        const key = `${tab}_${val}`;
+
+                                        return (
+                                            <View key={key} style={styles.DenoRows}>
+                                                <Text style={styles.amount}>₹{val}</Text>
+
+                                                <View style={styles.counter}>
+                                                    <TouchableOpacity
+                                                        onPress={() => update(tab, val, -1)}
+                                                        style={styles.counterBtn}
+                                                    >
+                                                        <Text>-</Text>
+                                                    </TouchableOpacity>
+
+                                                    <Text style={styles.countText}>
+                                                        {counts[key] ?? 0}
+                                                    </Text>
+
+                                                    <TouchableOpacity
+                                                        onPress={() => update(tab, val, 1)}
+                                                        style={styles.counterBtn}
+                                                    >
+                                                        <Text>+</Text>
+                                                    </TouchableOpacity>
+                                                </View>
+                                            </View>
+                                        );
+                                    })}
+                                </ScrollView>
+
+                                <View style={styles.totalBox}>
+                                    <Text style={styles.totalText}>Total Amount:</Text>
+                                    <Text style={styles.totalText}>₹{total}</Text>
+                                    <Text>DEBUG TOTAL: {total}</Text>
+
+                                </View>
+
+
+                            </>
+                        )}
+                        {/* Check form start */}
+                        {selectPaymode == "2" && (
+                            <>
+                                <Text style={styles.label}>Cheque No.</Text>
+                                <TextInput style={styles.input} placeholder="Enter Cheque No." placeholderTextColor="#0C0D36" value={chequeNo}
+                                    onChangeText={setChequeNo} />
+
+                                <Text style={styles.label}>Select Cheque Date</Text>
+                                <TouchableOpacity
+                                    style={styles.input}
+                                    onPress={() => showDatePicker('checkDate')}
+                                >
+                                    <Text style={{ color: chequeDate ? '#000' : '#0C0D36' }}>
+                                        {chequeDate ? formatDate(chequeDate) : 'Select Cheque Date'}
+                                    </Text>
+
+                                </TouchableOpacity>
+
+
+                                {/* Date Picker Modal */}
+                                <DateTimePickerModal
+                                    isVisible={isDatePickerVisible}
+                                    mode="date"
+                                    onConfirm={handleConfirm}
+                                    onCancel={hideDatePicker}
+                                />
+
+                                <Text style={styles.label}>Bank Name</Text>
+                                <View style={styles.pickerContainer}>
+                                    <Picker selectedValue={selectBank} onValueChange={(itemValue, itemIndex) => {
+                                        setSelectBank(itemValue);
+                                    }}
+                                        style={styles.picker}
+                                        dropdownIconColor={lightTheme.inputText} // Android only
+                                    >
+                                        <Picker.Item label="Select banks" value="" />
+                                        {bankName.map((bank) => (
+                                            <Picker.Item
+                                                key={bank.id}
+                                                label={bank.bank_name}
+                                                value={bank.id}
+                                            />
+                                        ))}
+                                    </Picker>
+                                </View>
+                                <Text style={styles.label}>Amount</Text>
+                                <TextInput style={styles.input} placeholder="Enter Amount" placeholderTextColor="#0C0D36" value={checkAmount}
+                                    onChangeText={setCheckAmount} />
+                            </>
+                        )}
+                        {/* check form end */}
                         <TouchableOpacity
                             style={{
                                 backgroundColor: '#2F81F5',
@@ -1483,6 +1697,7 @@ const styles = StyleSheet.create({
         paddingBottom: 10,
     },
     input: {
+        fontFamily: 'Montserrat-Medium',
         height: 54,
         borderWidth: 1,
         borderColor: '#ECEDF0',
@@ -1492,6 +1707,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
     pickerContainer: {
+        fontFamily: 'Montserrat-Medium',
         height: 54,
         borderWidth: 1,
         borderColor: '#ECEDF0',
