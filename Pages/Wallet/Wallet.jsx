@@ -225,6 +225,10 @@ function Wallet({ navigation, progress = 0.5 }) {
                 showAlertModal("You can't transfer less then Rs 1", true)
                 return;
             }
+            if (amount != details.walletBalance) {
+                showAlertModal("Please transfer the total holding amount!", true);
+                return;
+            }
 
 
             const employeePayload = {
@@ -262,6 +266,10 @@ function Wallet({ navigation, progress = 0.5 }) {
             showAlertModal("You don't have sufficient balance.", true)
             return;
         }
+        if (amount != details.walletBalance) {
+            showAlertModal("Please transfer the total holding amount!", true);
+            return;
+        }
         const orgPayload = {
             centreId: Number(selectCenter),
             paymentMode: selectPaymode,
@@ -269,6 +277,7 @@ function Wallet({ navigation, progress = 0.5 }) {
             remarks
             // transactionId,
         };
+
 
         TaskService.transferToOrg(orgPayload).then((res) => {
             if (res.status == 1) {
@@ -294,6 +303,10 @@ function Wallet({ navigation, progress = 0.5 }) {
         }
         if (amount > details.walletBalance) {
             showAlertModal("You don't have sufficient balance.", true);
+            return;
+        }
+        if (amount != details.walletBalance) {
+            showAlertModal("Please transfer the total holding amount!", true);
             return;
         }
 

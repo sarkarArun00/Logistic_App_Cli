@@ -17,23 +17,59 @@ const AuthService = {
 //   },
   
   // POST Request (Login)
-  empLogin: async (userData) => {
-    try {
-      const response = await apiClient.post("auth/employeeLogin", userData); // Log the response data
-      if (response.data.access_token) {
-        await AsyncStorage.setItem("token", response.data.access_token); // Save token
-        await AsyncStorage.setItem("user_id", response.data.employee.id.toString()); // Store as string
-        await AsyncStorage.setItem("user_name", response.data.employee.employee_name);
+
+
+
+    empLogin: async (userData) => {
+      
+      try {
+        // ✅ Ensure JSON headers (also set globally in apiClient ideally)
+        const response = await apiClient.post(
+          "/auth/employeeLogin",
+          userData,
+          {
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+  
+        // ✅ Validate response
+        if (!response?.data) {
+          throw new Error("Empty response from server");
+        }
+  
+        const data = response.data;
+  
+        // ✅ Save token + user info safely
+        if (data?.access_token) {
+          await AsyncStorage.multiSet([
+            ["token", String(data.access_token)],
+            ["user_id", String(data?.employee?.id ?? "")],
+            ["user_name", String(data?.employee?.employee_name ?? "")],
+            ["user_email", String(data?.employee?.email_id ?? "")],
+          ]);
+        }
+  
+        return data;
+      } catch (error) {
+        // ✅ Better debug logs (helps identify SSL/DNS/timeout)
+        console.log("EMP LOGIN ERROR:", {
+          message: error?.message,
+          code: error?.code,
+          status: error?.response?.status,
+          data: error?.response?.data,
+          url: error?.config?.baseURL
+            ? `${error.config.baseURL}${error.config.url}`
+            : error?.config?.url,
+        });
+  
+        throw error;
       }
-      if (!response || !response.data) {
-      throw new Error('Empty response from server');
-    }
-      return response.data;
-    } catch (error) {
-      console.error("Error creating user:", error);
-      throw error;
-    }
-  },
+    },
+  
+  
 
   getToken: async () => {
     return await AsyncStorage.getItem("token");

@@ -4,7 +4,7 @@ import { globalApiClient, apiClient } from './API';
 // import * as Sharing from 'expo-sharing';
 import { Linking, Alert } from 'react-native';
 import { useGlobalAlert } from '../../Context/GlobalAlertContext';
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 const TaskService = {
@@ -29,6 +29,8 @@ const TaskService = {
     }
   },
   // Denomination Master Api Call End
+
+
 
   getAllClients: async () => {
     try {
@@ -64,6 +66,29 @@ const TaskService = {
       return response.data;
     } catch (error) {
       throw null;
+    }
+  },
+  
+  createPayment: async (fd) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const response = await apiClient.post("accounts/payment/create", fd, {
+        headers: {
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          // ✅ do not set Content-Type
+        },
+      });
+  
+      return response.data;
+    } catch (error) {
+      console.log("createPayment error:", {
+        message: error?.message,
+        code: error?.code,
+        status: error?.response?.status,
+        data: error?.response?.data,
+      });
+      throw error;
     }
   },
 

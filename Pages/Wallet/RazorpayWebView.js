@@ -9,7 +9,7 @@ const RazorpayWebView = ({ amount, user, onSuccess, onFailure }) => {
   const userName = AsyncStorage.getItem('user_name');
   const userEmail = AsyncStorage.getItem('user_email');
 
-  console.log('ddddddddddddddddddddddddddd', userName, userEmail)
+
   const htmlContent = `
     <html>
     <head>

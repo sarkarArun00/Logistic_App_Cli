@@ -1,5 +1,5 @@
 import { useRoute } from '@react-navigation/native';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet, View, Alert, Text, TouchableOpacity, Pressable, Image, RefreshControl, ActivityIndicator, ScrollView, TouchableWithoutFeedback, TextInput, Modal, PermissionsAndroid, Platform } from 'react-native';
 // import { useFonts, Montserrat-SemiBold, Montserrat-Medium } from '@expo-google-fonts/montserrat';
@@ -18,7 +18,7 @@ import { GlobalStyle, lightTheme } from '../GlobalStyles';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { imageBase64, logoBase64 } from './base64image'
 import _ from 'lodash';
-
+import PaymentReceiptModal from '../Components/PaymentReceiptModal';
 
 
 
@@ -48,7 +48,7 @@ function Receipt({ navigation }) {
     const [amount, setAmount] = useState('');
     const [remarks, setRemarks] = useState('');
     // Ambar start
-    const [checkAmount, setCheckAmount] = useState('');
+
     const [chequeNo, setChequeNo] = useState('');
     const [chequeDate, setChequeDate] = useState(null);
     const [bankName, setBankName] = useState([]);
@@ -72,7 +72,8 @@ function Receipt({ navigation }) {
 
     const [pickerMode, setPickerMode] = useState(null); // 'from' or 'to'
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-
+    const [chequeDetails, setChequeDetails] = useState(null);
+    
 
     const showDatePicker = (mode) => {
         setPickerMode(mode);
@@ -125,49 +126,48 @@ function Receipt({ navigation }) {
         getAllClientByLogistic();
     }, [page]);
 
-    useEffect(() => {
-        console.log('TOTAL EFFECT RUNNING, COUNTS =', counts);
-
-        let sum = 0;
-
-        Object.keys(counts).forEach(key => {
-            const parts = key.split('_');
-            const value = Number(parts[1]);
-            const count = Number(counts[key]);
-
-            sum += value * count;
-        });
-
-        console.log('SETTING TOTAL:', sum);
-        setTotal(sum);
-    }, [counts]);
 
 
+    const [denomMaster, setDenomMaster] = useState([]); // ✅ full API data
 
     const getAllDenomination = async () => {
         try {
             const response = await TaskService.getAllDenomination();
-
-            if (response.status === 1) {
+    
+            if (response.status === 1 && Array.isArray(response.data)) {
+    
+                // ✅ store full data for API payload mapping
+                setDenomMaster(response.data);
+    
+                // ✅ keep your existing UI binding intact (only values)
                 const notes = response.data
                     .filter(item => item.type === "Note")
-                    .map(item => item.denominationName);
-
+                    .map(item => Number(item.denominationName))
+                    .filter(n => Number.isFinite(n))
+                    .sort((a, b) => b - a); // highest first
+    
                 const coins = response.data
                     .filter(item => item.type === "Coin")
-                    .map(item => item.denominationName);
-
+                    .map(item => Number(item.denominationName))
+                    .filter(n => Number.isFinite(n))
+                    .sort((a, b) => b - a);
+    
                 setDenoms({
                     note: notes,
                     coin: coins,
                 });
+    
             } else {
+                setDenomMaster([]);
                 setDenoms({ note: [], coin: [] });
             }
         } catch (error) {
             console.error('Error fetching denominations:', error);
+            setDenomMaster([]);
+            setDenoms({ note: [], coin: [] });
         }
     };
+    
 
 
     const getAllBanks = () => {
@@ -778,27 +778,453 @@ function Receipt({ navigation }) {
     const [tab, setTab] = useState("note");
     const [counts, setCounts] = useState({});
 
+    // const [upiUtr, setUpiUtr] = useState("");      // for UPI
+    const [cardTxnId, setCardTxnId] = useState(""); // for Card (or gateway returns)
+    const [gatewayStatus, setGatewayStatus] = useState(null); // optional
+
+
+const validateBeforePay = () => {
+    const mode = String(selectPaymode);
+    const amt = Number(String(amount).replace(/,/g, "").trim());
+  
+    if (!selectClient) return { ok: false, error: "Client is required." };
+    if (!mode) return { ok: false, error: "Payment mode is required." };
+    if (!amt || amt <= 0) return { ok: false, error: "Enter a valid amount." };
+  
+    // CASH: denominations must match
+    if (mode === "1") {
+      if (total !== amt) return { ok: false, error: `Denomination total must match ₹${amt}.` };
+      if (!Object.keys(counts || {}).length) return { ok: false, error: "Please enter denominations." };
+    }
+  
+    // CHEQUE: must be submitted
+    if (mode === "2") {
+      if (!String(chequeNo || "").trim()) return { ok: false, error: "Cheque number is required." };
+      if (!chequeDate) return { ok: false, error: "Cheque date is required." };
+      if (!selectBank) return { ok: false, error: "Bank is required." };
+    }
+  
+    // UPI
+    if (mode === "3") {
+      // If gateway provides transaction_id, you may not need manual UTR.
+      // If your process requires UTR, validate here:
+    //   if (!String(upiUtr || "").trim()) return { ok: false, error: "UTR is required for UPI." };
+    }
+  
+    // CARD
+    if (mode === "4") {
+      // If gateway returns transaction_id, you may not need manual input.
+      // But if required:
+    //   if (!String(cardTxnId || "").trim()) return { ok: false, error: "Card transaction ID is required." };
+    }
+  
+    return { ok: true };
+  };
+
+  const handlePayAndSubmit = async () => {
+    const v = validateBeforePay();
+    if (!v.ok) {
+      showAlertModal(v.error, true);
+      return;
+    }
+  
+    const mode = String(selectPaymode);
+  
+    // ✅ CASH / CHEQUE: no gateway
+    if (mode === "1" || mode === "2") {
+      await submitPayment("", []); // no transaction_id
+      return;
+    }
+  
+    // ✅ UPI / CARD: open gateway first
+    await startGatewayPayment();
+  };
+
+  const startGatewayPayment = async () => {
+    try {
+      setIsSubmitting(true);
+  
+      const amt = Number(String(amount).replace(/,/g, "").trim());
+      const mode = String(selectPaymode); // "3" UPI or "4" Card
+  
+      // 1) (Optional but recommended) call your backend to create an order and get order_id
+      // const orderRes = await TaskService.createGatewayOrder({ amount: amt, mode });
+      // const orderId = orderRes.order_id;
+  
+      // 2) Open gateway UI
+      openGatewayUI(
+        { amount: amt, mode /*, orderId */ },
+        async (success) => {
+          // success should contain transaction_id / payment_id from gateway
+          const transaction_id =
+            success?.transaction_id ||
+            success?.payment_id ||
+            success?.razorpay_payment_id ||
+            "";
+  
+          if (!transaction_id) {
+            showAlertModal("Payment success but transaction id missing.", true);
+            setIsSubmitting(false);
+            return;
+          }
+  
+          // 3) After gateway success -> call local API submit
+          await submitPayment(transaction_id, []);
+          setIsSubmitting(false);
+        },
+        (failed) => {
+          console.log("Gateway failed:", failed);
+          showAlertModal("Payment failed/cancelled.", true);
+          setIsSubmitting(false);
+        }
+      );
+    } catch (e) {
+      console.log("startGatewayPayment error:", e);
+      showAlertModal("Unable to start payment.", true);
+      setIsSubmitting(false);
+    }
+  };
+
     const update = (type, value, delta) => {
-        console.log('UPDATE CALLED:', type, value, delta);
-
         const key = `${type}_${value}`;
-
+      
         setCounts(prev => {
-            const next = {
-                ...prev,
-                [key]: (prev[key] || 0) + delta,
-            };
-
-            console.log('NEW COUNTS:', next);
-            return next;
+          const current = prev[key] || 0;
+          const nextCount = Math.max(0, current + delta); // ✅ no negative qty
+      
+          // if 0, remove key (clean object)
+          if (nextCount === 0) {
+            const { [key]: _, ...rest } = prev;
+            return rest;
+          }
+      
+          return { ...prev, [key]: nextCount };
         });
-    };
+      };
+
+      const enteredAmount = useMemo(() => {
+        const n = Number(String(amount).replace(/,/g, "").trim());
+        return Number.isFinite(n) ? n : 0;
+      }, [amount]);
+      
+      const total = useMemo(() => {
+        let sum = 0;
+        for (const key of Object.keys(counts)) {
+          const [, val] = key.split("_");        // "note_200" => 200
+          const denom = Number(val);
+          const qty = Number(counts[key] || 0);
+          sum += denom * qty;
+        }
+        return sum;
+      }, [counts]);
+      
+
+      const breakup = useMemo(() => {
+        return Object.entries(counts)
+          .map(([key, qty]) => {
+            const [type, denomStr] = key.split("_"); // note_200 / coin_5
+            const denom = Number(denomStr);
+            const q = Number(qty || 0);
+            return {
+              type,         // "note" | "coin"
+              denom,        // 200, 5, etc
+              qty: q,
+              lineAmount: denom * q,
+            };
+          })
+          .filter(r => r.qty > 0)
+          .sort((a, b) => b.denom - a.denom); // highest first
+      }, [counts]);
+      
+
+      
+      const handleDenominationSubmit = () => {
+        if (!enteredAmount || enteredAmount <= 0) {
+          showAlertModal("Please enter a valid amount first.", true);
+          return;
+        }
+      
+        if (total !== enteredAmount) {
+          const diff = enteredAmount - total;
+          showAlertModal(
+            diff > 0
+              ? `Denomination total is short by ₹${diff}. Please add ₹${diff} more.`
+              : `Denomination total exceeds by ₹${Math.abs(diff)}. Please reduce it.`,
+            true
+          );
+          return;
+        }
+      
+        // ✅ valid
+        setDenominationMdl(false);
+      };
+      
+
+      useEffect(() => {
+        // whenever amount changes, clear previous denom selection
+        setCounts({});
+      }, [amount]);
 
 
 
+      const handleChequeSubmit = () => {
+        const amt = Number(String(amount).replace(/,/g, "").trim());
+      
+        if (!String(chequeNo || "").trim()) {
+          showAlertModal("Cheque number is required.", true);
+          return;
+        }
+        if (!chequeDate) {
+          showAlertModal("Cheque date is required.", true);
+          return;
+        }
+        if (!selectBank) {
+          showAlertModal("Bank is required.", true);
+          return;
+        }
+        if (!amt || amt <= 0) {
+          showAlertModal("Invalid amount.", true);
+          return;
+        }
+      
+        const bankObj = (bankName || []).find(
+          b => String(b.id) === String(selectBank)
+        );
+      
+        setChequeDetails({
+          chequeNo: String(chequeNo).trim(),
+          chequeDate,
+          bankId: selectBank,
+          bankName: bankObj?.bank_name || "",
+          amount: amt,
+        });
+      
+        setDenominationMdl(false);
+      };
+      
+      
+      
+      useEffect(() => {
+        // clear state when user changes mode
+        setCounts({});
+        setChequeDetails(null);
+      
+        setChequeNo("");
+        setChequeDate(null);
+        setSelectBank("");
+      }, [selectPaymode]);
+      
+      
+      const [isSubmitting, setIsSubmitting] = useState(false);
+      const parseAmount = (v) => {
+        const n = Number(String(v ?? "").replace(/,/g, "").trim());
+        return Number.isFinite(n) ? n : 0;
+      };
+      
+      const getDenominationId = (type, value) => {
+        const apiType = type === "note" ? "Note" : "Coin";
+        const hit = denomMaster.find(
+          d => d.type === apiType && Number(d.denominationName) === Number(value)
+        );
+        return hit?.id;
+      };
+
+      
+      const fdAppend = (fd, key, value) => {
+        if (value === undefined || value === null) return;
+        const v = typeof value === "string" ? value : String(value);
+        fd.append(key, v);
+      };
+      
+      const buildCashDenominations = () => {
+        const rows = [];
+      
+        for (const [key, qty] of Object.entries(counts)) {
+          const [type, denomStr] = key.split("_");  // note_200
+          const faceValue = Number(denomStr);
+          const count = Number(qty || 0);
+          if (!count) continue;
+      
+          const denomination_id = getDenominationId(type, faceValue);
+          if (!denomination_id) {
+            throw new Error(`Denomination ID not found for ${type} ₹${faceValue}`);
+          }
+      
+          rows.push({
+            denomination_id,
+            count,
+            amount: faceValue, // ✅ face value
+          });
+        }
+      
+        return rows;
+      };
+
+      const buildPaymentContext = async (transaction_id, invoices = []) => {
+        const client_id = Number(selectClient);
+        const payment_mode_type_id = Number(selectPaymode);
+        const received_amount = parseAmount(amount);
+      
+        if (!client_id) return { ok: false, error: "Client is required." };
+        if (!payment_mode_type_id) return { ok: false, error: "Payment mode is required." };
+        if (!received_amount) return { ok: false, error: "Amount is required." };
+      
+        const received_by = Number((await AsyncStorage.getItem("user_id")) || 0);
+        if (!received_by) return { ok: false, error: "User not found. Please login again." };
+      
+        const payment_date = formatDate(new Date());
+      
+        const ctx = {
+          ok: true,
+          client_id,
+          payment_mode_type_id,
+          payment_date,
+          received_amount,
+          received_by,
+          remarks: remarks || "",
+          transection_id: transaction_id || "",
+          invoices,
+        };
+      
+        // ✅ CASH
+        if (payment_mode_type_id === 1) {
+          if (total !== received_amount) {
+            return { ok: false, error: `Denomination total must match ₹${received_amount}.` };
+          }
+          ctx.denominations = buildCashDenominations();
+          if (!ctx.denominations.length) {
+            return { ok: false, error: "Please enter denominations." };
+          }
+        }
+      
+        // ✅ CHEQUE
+        if (payment_mode_type_id === 2) {
+          if (!String(chequeNo || "").trim()) return { ok: false, error: "Cheque number is required." };
+          if (!chequeDate) return { ok: false, error: "Cheque date is required." };
+          if (!selectBank) return { ok: false, error: "Bank is required." };
+      
+          ctx.bank = Number(selectBank);
+          ctx.cheque_number = String(chequeNo).trim();
+          ctx.cheque_date = formatDate(chequeDate);
+        }
+      
+        return ctx;
+      };
+
+      
+      const buildPaymentFormData = (ctx, extra = {}) => {
+        const fd = new FormData();
+      
+        fdAppend(fd, "client_id", ctx.client_id);
+        fdAppend(fd, "payment_mode_type_id", ctx.payment_mode_type_id);
+        fdAppend(fd, "payment_date", ctx.payment_date);
+        fdAppend(fd, "received_amount", ctx.received_amount);
+        fdAppend(fd, "received_by", ctx.received_by);
+        fdAppend(fd, "remarks", ctx.remarks || "");
+        fdAppend(fd, "transection_id", ctx.transection_id || "");
+      
+        // ✅ extra fields if backend needs
+        fdAppend(fd, "empId", extra.empId);
+        fdAppend(fd, "taskId", extra.taskId);
+      
+        (ctx.invoices || []).forEach((inv, i) => {
+          fdAppend(fd, `invoices[${i}][invoice_id]`, inv.invoice_id);
+          fdAppend(fd, `invoices[${i}][amount]`, inv.amount);
+        });
+      
+        if (ctx.payment_mode_type_id === 1) {
+          (ctx.denominations || []).forEach((d, i) => {
+            fdAppend(fd, `denominations[${i}][denomination_id]`, d.denomination_id);
+            fdAppend(fd, `denominations[${i}][count]`, d.count);
+            fdAppend(fd, `denominations[${i}][amount]`, d.amount); // face value
+          });
+        }
+      
+        if (ctx.payment_mode_type_id === 2) {
+          fdAppend(fd, "bank", ctx.bank);
+          fdAppend(fd, "cheque_number", ctx.cheque_number);
+          fdAppend(fd, "cheque_date", ctx.cheque_date);
+        }
+      
+        return fd;
+      };
+
+      
 
 
-    const [total, setTotal] = useState(0);
+      const submitPayment = async (transaction_id, invoices = []) => {
+        const ctx = await buildPaymentContext(transaction_id, invoices);
+      
+        if (!ctx?.ok) {
+          showAlertModal(ctx?.error || "Invalid data", true);
+          return;
+        }
+      
+        try {
+          setIsSubmitting(true);
+      
+          const token = await AsyncStorage.getItem("token");
+          const empId = await AsyncStorage.getItem("user_id"); // or USER_ID if you store that key
+          const taskId = null; // <-- use your real taskId variable
+      
+          const fd = buildPaymentFormData(ctx, { empId, taskId });
+      
+          console.log("========== PAYMENT CONTEXT ==========");
+          console.log(JSON.stringify(ctx, null, 2));
+      
+          console.log("========== FORMDATA ==========");
+          if (fd?._parts?.length) {
+            fd._parts.forEach(([k, v]) => console.log(k, ":", v));
+          } else {
+            console.log("No _parts found on FormData");
+          }
+      
+          const res = await fetch(
+            "https://limstest.nirnayanhealthcare.com/accounts/payment/create",
+            {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+              body: fd,
+            }
+          );
+      
+          const raw = await res.text();
+          console.log("RAW RESPONSE:", raw);
+      
+          let data;
+          try {
+            data = JSON.parse(raw);
+          } catch {
+            data = { status: 0, message: "Invalid JSON response", raw };
+          }
+      
+          console.log("PARSED RESPONSE:", data);
+      
+          if (data?.status === 1) {
+            showAlertModal("Submitted Successfully!", false);
+      
+            setAmount("");
+            setCounts({});
+            setChequeNo("");
+            setChequeDate(null);
+            setSelectBank("");
+            setRemarks("");
+            setDenominationMdl(false);
+            setModalVisible(false);
+          } else {
+            showAlertModal(data?.message || "Something went wrong", true);
+          }
+        } catch (e) {
+          console.log("submitPayment error:", e?.message, e);
+          showAlertModal("Something went wrong", true);
+        } finally {
+          setIsSubmitting(false);
+        }
+      };
+
     ///////////////////////////
 
     return (
@@ -1058,12 +1484,15 @@ function Receipt({ navigation }) {
             </TouchableOpacity>
 
 
+
+
             {/* Create Modal */}
-            <Modal
+            {/* <Modal
                 animationType="slide"
                 transparent={true}
                 visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}>
+                onRequestClose={() => setModalVisible(false)}
+                >
                 <View style={styles.modalBackground}>
                     <View style={styles.modalContainer}>
                         <ScrollView showsVerticalScrollIndicator={false}>
@@ -1111,7 +1540,6 @@ function Receipt({ navigation }) {
 
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, }}>
                                 <Text style={[styles.label, { lineHeight: 16, marginBottom: 0 }]}>Amount</Text>
-                                {/* <TouchableOpacity onPress={() => setDenominationMdl(true)} style={{ backgroundColor: '#2F81F5', borderRadius: 5, padding: 0, width: 22, height: 22, alignItems: 'center', }}><Text style={{ color: '#fff', }}>+</Text></TouchableOpacity> */}
                             </View>
                             <TextInput
                                 style={styles.input}
@@ -1121,92 +1549,129 @@ function Receipt({ navigation }) {
                                 onChangeText={setAmount}
                                 keyboardType="numeric"
                                 onEndEditing={() => {
-                                    if (amount && Number(amount) > 0) {
-                                        setDenominationMdl(true)
+                                    console.log("✅ onEndEditing fired", { amount, selectPaymode });
+                                  
+                                    const n = Number(String(amount).replace(/,/g, "").trim());
+                                    console.log("✅ parsed amount =", n);
+                                  
+                                    if (!n || n <= 0) return;
+                                  
+                                    if (selectPaymode === "2" || selectPaymode === "1") {
+                                      console.log("✅ Opening denomination modal");
+                                      setDenominationMdl(true);
                                     }
-                                }}
+                                  }}
+                                  
+                                  
+                                  
+                                  
                             />
+                            {selectPaymode == "1" && (
+                            <View style={styles.totalBox}>
+                            <Text style={styles.totalText}>Entered: ₹{enteredAmount}</Text>
+                            <Text style={styles.totalText}>Selected: ₹{total}</Text>
+                            <Text style={{ color: total === enteredAmount ? "green" : "red" }}>
+                                {total === enteredAmount ? "Matched ✅" : `Diff: ₹${enteredAmount - total}`}
+                            </Text>
+                            </View>
+                            )}
 
                             <View style={styles.payDtl}>
                                 <Text style={styles.payDtlText}>Payment Details</Text>
                                 {selectPaymode == "1" && (
                                     <>
                                         <View >
-                                            {/* Header Row */}
-                                            <View style={styles.denoBoxMain}>
-                                                <Text style={[styles.denoLabel, { flex: 2 }]}>Denomination</Text>
-                                                <Text style={[styles.denoLabel, { flex: 1 }, styles.centerColumn]}>Qty.</Text>
-                                                <Text style={[styles.denoLabel, { flex: 1 }, styles.rightColumn]}>Amount</Text>
+                                      
+                                            {breakup.length === 0 ? (
+                                            <Text style={{ paddingVertical: 12, color: "#777" }}>
+                                                No denominations selected.
+                                            </Text>
+                                            ) : (
+                                            breakup.map((row) => (
+                                                <View key={`${row.type}_${row.denom}`} style={styles.denoBoxInn}>
+                                                <View style={[styles.denoValue2, { flex: 2 }]}>
+                                                    <Image
+                                                    style={{ width: 30, height: 17, resizeMode: "contain" }}
+                                                    source={require("../../assets/money.png")}
+                                                    />
+                                                    <Text>₹{row.denom}</Text>
+
+                                               
+                                                    <Text style={{ marginLeft: 8, color: "#777", fontSize: 12 }}>
+                                                    ({row.type})
+                                                    </Text>
+                                                </View>
+
+                                                <Text style={[styles.denoValue, { flex: 1 }, styles.centerColumn]}>
+                                                    {row.qty}
+                                                </Text>
+
+                                                <Text style={[styles.denoValue, { flex: 1 }, styles.rightColumn]}>
+                                                    ₹{row.lineAmount}
+                                                </Text>
+                                                </View>
+                                            ))
+                                            )}
+
+
+                                            <View style={styles.sumTotal}>
+                                            <Text style={styles.sumTotalLabel}>Sum Total</Text>
+                                            <Text style={styles.sumTotaValue}>₹ {total.toFixed(2)}</Text>
                                             </View>
 
-                                            {/* Data Row */}
-                                            <View style={styles.denoBoxInn}>
-                                                <Text style={[styles.denoValue, { flex: 2 }]}>
-                                                    <View style={styles.denoValue2}>
-                                                        <Image style={{ width: 30, height: 17, resizeMode: 'contain', }} source={require('../../assets/money.png')} />
-                                                        <Text>200</Text>
-                                                    </View>
-                                                </Text>
-                                                <Text style={[styles.denoValue, { flex: 1 }, styles.centerColumn]}>1</Text>
-                                                <Text style={[styles.denoValue, { flex: 1 }, styles.rightColumn]}>₹200</Text>
-                                            </View>
-                                            <View style={styles.denoBoxInn}>
-                                                <Text style={[styles.denoValue, { flex: 2 }]}>
-                                                    <View style={styles.denoValue2}>
-                                                        <Image style={{ width: 30, height: 17, resizeMode: 'contain', }} source={require('../../assets/money.png')} />
-                                                        <Text>200</Text>
-                                                    </View>
-                                                </Text>
-                                                <Text style={[styles.denoValue, { flex: 1 }, styles.centerColumn]}>1</Text>
-                                                <Text style={[styles.denoValue, { flex: 1, }, styles.rightColumn]}>₹200</Text>
-                                            </View>
-                                            <View style={styles.sumTotal}>
-                                                <Text style={styles.sumTotalLabel}>Sum Total</Text>
-                                                <Text style={styles.sumTotaValue}>₹ 300.00</Text>
-                                            </View>
                                             <View style={styles.amtWords}>
-                                                <Text style={styles.amountInWdLabel}>Amount in Words</Text>
-                                                <Text style={styles.amountInWdValue}>Three Hundred Only</Text>
+                                            
                                             </View>
+
                                         </View>
                                     </>
                                 )}
                                 {selectPaymode == "2" && (
                                     <>
-                                        <View style={styles.isCheckBox}>
+                                        {!chequeDetails ? (
+                                        <Text style={{ paddingVertical: 10, color: "#777" }}>
+                                            Please submit cheque details.
+                                        </Text>
+                                        ) : (
+                                        <>
+                                            <View style={styles.isCheckBox}>
                                             <Text style={styles.isCheckBoxLabel}>Cheque No.</Text>
-                                            <Text style={styles.isCheckBoxValue}>{chequeNo}</Text>
-                                        </View>
-                                        <View style={styles.isCheckBox}>
+                                            <Text style={styles.isCheckBoxValue}>{chequeDetails.chequeNo}</Text>
+                                            </View>
+
+                                            <View style={styles.isCheckBox}>
                                             <Text style={styles.isCheckBoxLabel}>Cheque Date</Text>
-                                            <Text style={styles.isCheckBoxValue}>{formatDate(chequeDate)}</Text>
-                                        </View>
-                                        <View style={styles.isCheckBox}>
+                                            <Text style={styles.isCheckBoxValue}>{formatDate(chequeDetails.chequeDate)}</Text>
+                                            </View>
+
+                                            <View style={styles.isCheckBox}>
                                             <Text style={styles.isCheckBoxLabel}>Bank Name</Text>
-                                            {/* <Text style={styles.isCheckBoxValue}>{bankName}</Text> */}
-                                        </View>
-                                        <View style={[styles.isCheckBox, styles.isCheckBoxBorder]}>
+                                            <Text style={styles.isCheckBoxValue}>{chequeDetails.bankName || "-"}</Text>
+                                            </View>
+
+                                            <View style={[styles.isCheckBox, styles.isCheckBoxBorder]}>
                                             <Text style={styles.isCheckBoxLabel}>Amount</Text>
-                                            <Text style={styles.isCheckBoxValue}>{checkAmount}</Text>
-                                        </View>
-                                        <View style={styles.isCheckBox}>
-                                            <Text style={styles.isCheckBoxLabel}>Amount In Words</Text>
-                                            <Text style={styles.isCheckBoxValue}>{toWords(Number(checkAmount))}</Text>
-                                        </View>
+                                            <Text style={styles.isCheckBoxValue}>₹{chequeDetails.amount}</Text>
+                                            </View>
+
+                                            
+                                        </>
+                                        )}
                                     </>
-                                )}
+                                    )}
+
                             </View>
 
                             <View>
                                 <Text style={styles.label}>Attachment</Text>
-                                {/* onPress={selectImages} */}
+                             
                                 <TouchableOpacity style={styles.uploadContainer} >
                                     <Image style={{ width: 30, height: 28, marginHorizontal: 'auto', }} source={require('../../assets/upload-icon.png')} />
                                     <Text style={styles.uploadTitle}>Upload</Text>
                                     <Text style={styles.uploadSubTitle}>Supports JPG, JPEG, and PNG</Text>
                                 </TouchableOpacity>
 
-                                {/* {images.length > 0 ? (
+                                {images.length > 0 ? (
                                 <FlatList
                                     style={styles.flatList}
                                     data={images}
@@ -1236,20 +1701,20 @@ function Receipt({ navigation }) {
                                 />
                             ) : (
                                 <Text style={styles.noImgSelected}>No images selected</Text>
-                            )} */}
+                            )}
                             </View>
 
                             <Text style={styles.label}>Remarks</Text>
                             <TextInput
                                 style={styles.input}
-                                placeholder="Placeholder"
+                                placeholder="Start writing.."
                                 placeholderTextColor="#0C0D36"
                                 value={remarks}
                                 onChangeText={setRemarks}
                             />
 
                             <TouchableOpacity
-                                onPress={handleGenerate}
+                                onPress={handlePayAndSubmit}
                                 style={{
                                     backgroundColor: '#2F81F5',
                                     borderRadius: 28,
@@ -1261,20 +1726,30 @@ function Receipt({ navigation }) {
                                     fontSize: 16,
                                     color: 'white',
                                     textAlign: 'center',
-                                }}>Generate</Text>
+                                }}>Submit</Text>
+                                {isSubmitting && (
+                            <View style={styles.fullScreenLoader}>
+                                <ActivityIndicator size="large" color="#2F81F5" />
+                                <Text style={{ marginTop: 10 }}>Submitting...</Text>
+                            </View>
+)}
+
                             </TouchableOpacity>
 
                         </ScrollView>
                     </View>
                 </View>
-            </Modal>
+            </Modal> */}
+
+            
 
             {/* Denomination Modal */}
-            <Modal
+            {/* <Modal
                 animationType="slide"
                 transparent={true}
                 visible={denominationMdl}
-                onRequestClose={() => setDenominationMdl(false)}>
+                onRequestClose={() => setDenominationMdl(false)}
+                >
                 <View style={styles.modalBackground}>
                     <View style={styles.modalContainer}>
 
@@ -1290,129 +1765,215 @@ function Receipt({ navigation }) {
                         {selectPaymode == "1" && (
                             <>
                                 <View style={styles.toggleWrap}>
-                                    {["note", "coin"].map(t => (
+                                {["note", "coin"].map(t => (
+                                    <TouchableOpacity
+                                    key={t}
+                                    onPress={() => setTab(t)}
+                                    style={[styles.toggleBtn, tab === t && styles.toggleBtnActive]}
+                                    >
+                                    <Text style={tab === t && styles.toggleBtnActiveText}>
+                                        {t.charAt(0).toUpperCase() + t.slice(1)}
+                                    </Text>
+                                    </TouchableOpacity>
+                                ))}
+                                </View>
+
+                                <ScrollView>
+                                {(denoms[tab] || []).map(val => {
+                                    const key = `${tab}_${val}`;
+                                    const qty = counts[key] ?? 0;
+
+                                    return (
+                                    <View key={key} style={styles.DenoRows}>
+                                        <Text style={styles.amount}>₹{val}</Text>
+
+                                        <View style={styles.counter}>
+                                        <TouchableOpacity
+                                            onPress={() => update(tab, val, -1)}
+                                            style={styles.counterBtn}
+                                            disabled={qty === 0}
+                                        >
+                                            <Text>-</Text>
+                                        </TouchableOpacity>
+
+                                        <Text style={styles.countText}>{qty}</Text>
+
                                         <TouchableOpacity
                                             onPress={() => update(tab, val, 1)}
                                             style={styles.counterBtn}
                                         >
                                             <Text>+</Text>
                                         </TouchableOpacity>
-
-                                    ))}
-                                </View>
-
-                                <ScrollView>
-                                    {(denoms[tab] || []).map(val => {
-                                        const key = `${tab}_${val}`;
-
-                                        return (
-                                            <View key={key} style={styles.DenoRows}>
-                                                <Text style={styles.amount}>₹{val}</Text>
-
-                                                <View style={styles.counter}>
-                                                    <TouchableOpacity
-                                                        onPress={() => update(tab, val, -1)}
-                                                        style={styles.counterBtn}
-                                                    >
-                                                        <Text>-</Text>
-                                                    </TouchableOpacity>
-
-                                                    <Text style={styles.countText}>
-                                                        {counts[key] ?? 0}
-                                                    </Text>
-
-                                                    <TouchableOpacity
-                                                        onPress={() => update(tab, val, 1)}
-                                                        style={styles.counterBtn}
-                                                    >
-                                                        <Text>+</Text>
-                                                    </TouchableOpacity>
-                                                </View>
-                                            </View>
-                                        );
-                                    })}
+                                        </View>
+                                    </View>
+                                    );
+                                })}
                                 </ScrollView>
 
                                 <View style={styles.totalBox}>
-                                    <Text style={styles.totalText}>Total Amount:</Text>
-                                    <Text style={styles.totalText}>₹{total}</Text>
-                                    <Text>DEBUG TOTAL: {total}</Text>
-
+                                <Text style={styles.totalText}>Total Amount:</Text>
+                                <Text style={styles.totalText}>₹{total}</Text>
                                 </View>
-
-
                             </>
-                        )}
-                        {/* Check form start */}
+                            )}
+
+
+                        
                         {selectPaymode == "2" && (
                             <>
                                 <Text style={styles.label}>Cheque No.</Text>
-                                <TextInput style={styles.input} placeholder="Enter Cheque No." placeholderTextColor="#0C0D36" value={chequeNo}
-                                    onChangeText={setChequeNo} />
+                                <TextInput
+                                style={styles.input}
+                                placeholder="Enter Cheque No."
+                                placeholderTextColor="#0C0D36"
+                                value={chequeNo}
+                                onChangeText={setChequeNo}
+                                />
 
-                                <Text style={styles.label}>Select Cheque Date</Text>
+                                <Text style={styles.label}>Cheque Date</Text>
                                 <View style={styles.dateContainer}>
-                                <TouchableOpacity
-                                    onPress={() => showDatePicker('checkDate')}
-                                >
-                                    <Text style={{ color: chequeDate ? '#000' : '#0C0D36', fontFamily: 'Montserrat-Medium', fontSize:15, }}>
-                                        {chequeDate ? formatDate(chequeDate) : 'Select Cheque Date'}
+                                <TouchableOpacity onPress={() => showDatePicker("checkDate")}>
+                                    <Text style={{ color: chequeDate ? "#000" : "#0C0D36", fontFamily: "Montserrat-Medium", fontSize: 15 }}>
+                                    {chequeDate ? formatDate(chequeDate) : "Select Cheque Date"}
                                     </Text>
-
                                 </TouchableOpacity>
                                 </View>
 
-
-                                {/* Date Picker Modal */}
                                 <DateTimePickerModal
-                                    isVisible={isDatePickerVisible}
-                                    mode="date"
-                                    onConfirm={handleConfirm}
-                                    onCancel={hideDatePicker}
+                                isVisible={isDatePickerVisible}
+                                mode="date"
+                                onConfirm={handleConfirm}
+                                onCancel={hideDatePicker}
                                 />
 
                                 <Text style={styles.label}>Bank Name</Text>
                                 <View style={styles.pickerContainer}>
-                                    <Picker selectedValue={selectBank} onValueChange={(itemValue, itemIndex) => {
-                                        setSelectBank(itemValue);
-                                    }}
-                                        style={styles.picker}
-                                        dropdownIconColor={lightTheme.inputText} // Android only
-                                    >
-                                        <Picker.Item label="Select banks" value="" />
-                                        {bankName.map((bank) => (
-                                            <Picker.Item
-                                                key={bank.id}
-                                                label={bank.bank_name}
-                                                value={bank.id}
-                                            />
-                                        ))}
-                                    </Picker>
+                                <Picker
+                                    selectedValue={selectBank}
+                                    onValueChange={(itemValue) => setSelectBank(itemValue)}
+                                    style={styles.picker}
+                                    dropdownIconColor={lightTheme.inputText}
+                                >
+                                    <Picker.Item label="Select bank" value="" />
+                                    {(bankName || []).map((bank) => (
+                                    <Picker.Item key={bank.id} label={bank.bank_name} value={bank.id} />
+                                    ))}
+                                </Picker>
                                 </View>
+
                                 <Text style={styles.label}>Amount</Text>
-                                <TextInput style={styles.input} placeholder="Enter Amount" placeholderTextColor="#0C0D36" value={checkAmount}
-                                    onChangeText={setCheckAmount} />
+                            <TextInput
+                            style={[styles.input, { backgroundColor: "#F3F4F6" }]}
+                            placeholder="Amount"
+                            placeholderTextColor="#0C0D36"
+                            value={String(amount || "")}   // ✅ directly from main amount
+                            editable={false}
+                            />
+
+
+
+                                {chequeDetails && (
+                                <View style={{ marginTop: 10, padding: 12, borderWidth: 1, borderColor: "#ECEDF0", borderRadius: 10 }}>
+                                    <Text style={{ fontFamily: "Montserrat-SemiBold" }}>Preview</Text>
+                                    <Text>Cheque No: {chequeDetails.chequeNo}</Text>
+                                    <Text>Date: {formatDate(chequeDetails.chequeDate)}</Text>
+                                    <Text>Bank: {chequeDetails.bankName || "-"}</Text>
+                                    <Text>Amount: ₹{chequeDetails.amount}</Text>
+                                </View>
+                                )}
                             </>
-                        )}
-                        {/* check form end */}
+                            )}
+
+
+
                         <TouchableOpacity
-                            style={{
-                                backgroundColor: '#2F81F5',
-                                borderRadius: 28,
-                                paddingVertical: 16,
-                                paddingHorizontal: 10,
-                            }}>
-                            <Text style={{
-                                fontFamily: 'Montserrat-SemiBold',
-                                fontSize: 16,
-                                color: 'white',
-                                textAlign: 'center',
-                            }}>Submit</Text>
+                        onPress={() => {
+                            if (selectPaymode === "1") handleDenominationSubmit();
+                            else if (selectPaymode === "2") handleChequeSubmit();
+                        }}
+                        style={{
+                            backgroundColor: '#2F81F5',
+                            borderRadius: 28,
+                            paddingVertical: 16,
+                            paddingHorizontal: 10,
+                        }}>
+                        <Text style={{
+                            fontFamily: 'Montserrat-SemiBold',
+                            fontSize: 16,
+                            color: 'white',
+                            textAlign: 'center',
+                        }}>Submit</Text>
                         </TouchableOpacity>
+
                     </View>
                 </View>
-            </Modal>
+            </Modal> */}
 
+
+            <>
+    <TouchableOpacity onPress={() => setModalVisible(true)}>
+      <Text>Open Receipt</Text>
+    </TouchableOpacity>
+
+    <PaymentReceiptModal
+      visible={modalVisible}
+      onClose={() => setModalVisible(false)}
+
+      clients={allClients}
+      banks={bankName}
+      denominations={denomMaster}   // ✅ IMPORTANT: full API list
+
+      fetchClients={getClientsAll}
+      fetchBanks={getAllBanks}
+      fetchDenominations={getAllDenomination}
+
+      styles={styles}
+      toWords={toWords}
+      formatDate={formatDate}
+
+      showAlert={(msg, isErr) => showAlertModal(msg, isErr)}
+
+      onOpenGateway={async ({ amount, mode }) => {
+        // ✅ later integrate gateway
+        // must return: { success: true, transaction_id: "..." }
+        return { success: true, transaction_id: "DUMMY_TXN_123" };
+      }}
+
+      onSubmit={async (fd, ctx) => {
+        try {
+          const token = await AsyncStorage.getItem("token");
+      
+          console.log("Submitting Payment...");
+          fd?._parts?.forEach(([k, v]) => console.log(k, v));
+      
+          const response = await fetch(
+            "https://limstest.nirnayanhealthcare.com/accounts/payment/create",
+            {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                // ❌ DO NOT set Content-Type for FormData
+              },
+              body: fd,
+            }
+          );
+      
+          const text = await response.text();
+          console.log("RAW RESPONSE:", text);
+      
+          try {
+            return JSON.parse(text);
+          } catch {
+            return { status: 0, message: "Invalid JSON response", raw: text };
+          }
+        } catch (error) {
+          console.log("Direct API error:", error);
+          throw error;
+        }
+      }}
+    />
+    </>
 
             {loading && (
                 <View
