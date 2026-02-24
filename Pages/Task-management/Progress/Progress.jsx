@@ -12,7 +12,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import NotificationCount from '../../Notifications/NotificationCount';
 import { launchCamera } from 'react-native-image-picker';
 import { BASE_API_URL } from '../../Services/API';
-
+import { toWords } from 'number-to-words';
 // import * as ImagePicker from 'expo-image-picker';
 // import * as ImageManipulator from 'expo-image-manipulator';
 
@@ -24,6 +24,7 @@ import { readFile } from 'react-native-fs'; // For base64
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
 import { lightTheme } from '../../GlobalStyles';
 import { useSearch } from '../../../hooks/userSearch1';
+import PaymentReceiptModal from '../../Components/PaymentReceiptModal';
 
 
 const wait = (timeout) => {
@@ -62,7 +63,7 @@ function Progress({ navigation }) {
     const [fullImageUri, setFullImageUri] = useState(null);
     const [allClients, setClients] = useState([]);
     const [selectedClientId, setSelectedClientId] = useState(null);
-
+    const [modalVisible4, setModalVisible4] = useState(false);
 
     const [paymentMode, setPaymentMode] = useState('');
     const [amount, setAmount] = useState('');
@@ -78,7 +79,16 @@ function Progress({ navigation }) {
     const [refreshing, setRefreshing] = useState(false);
 
 
+    const [chequeNo, setChequeNo] = useState('');
+    const [chequeDate, setChequeDate] = useState(null);
+    const [bankName, setBankName] = useState([]);
+
+    const [selectClient, setselectClient] = useState();
+    const [selectPaymode, setSelectPaymode] = useState('');
+    const [selectBank, setSelectBank] = useState();
+    const [getUserId, setUserId] = useState(false);
     const { showAlertModal, hideAlert } = useGlobalAlert();
+    const [sharedTaskId, storeTaskId] = useState(null)
 
     useEffect(() => {
 
@@ -91,6 +101,18 @@ function Progress({ navigation }) {
             setImages([]);
             setDeliveryRemarks('');
         }
+
+        const loadUser = async () => {
+            try {
+                const userId = await AsyncStorage.getItem("user_id");
+                if (userId) setUserId(userId);
+            } catch (e) {
+                console.log("Failed to get user_id:", e);
+            }
+        };
+
+        loadUser();
+
         getClientsAll();
         fetchData();
     }, [collectModalVisible2, itemIds, itemInfo]);
@@ -212,6 +234,12 @@ function Progress({ navigation }) {
         setSelectedTaskDesc(task);
         setSelectedClientId(task.client.id);
         setItemTaskId(task.id);
+        storeTaskId(task.id)
+
+        console.log('task iddddddd', task)
+        console.log('task 00000000', task.id)
+        console.log('storedTaskId', sharedTaskId)
+
 
     };
 
@@ -418,47 +446,7 @@ function Progress({ navigation }) {
     };
 
 
-    const handleSubmit = async () => {
-        if (!selectedClientId) {
-            showAlertModal('Please select a client.', true);
-            return;
-        }
-        if (!paymentMode) {
-            showAlertModal('Please select a payment mode.', true);
-            return;
-        }
-        if (!amount || isNaN(amount)) {
-            showAlertModal('Please enter a valid amount.', true);
-            return;
-        }
 
-        const request = {
-            taskId: taskId,
-            clientId: selectedClientId,
-            paymentMode: paymentMode,
-            amount: amount,
-            remarks: remarks,
-        };
-
-        try {
-            const response = await TaskService.generateNewReceipt(request);
-
-            if (response?.data?.status === 1) {
-                showAlertModal('Payment details submitted successfully!', false);
-                setSelectedClientId('');
-                setPaymentMode('');
-                setAmount('');
-                setRemarks('');
-                setpayMdlVisible(false);
-                fetchData()
-            } else {
-                showAlertModal('Failed to submit payment details.', true);
-            }
-        } catch (error) {
-            console.error('Error while submitting payment:', error);
-            Alert.alert('Error', 'Something went wrong while submitting the payment.');
-        }
-    };
 
     const onCollectModalOpen = async (task) => {
         setTaskId(task.id);
@@ -470,12 +458,13 @@ function Progress({ navigation }) {
             setCollectModalVisible3(true);
             setItemConsignemtData(task.items)
         }
-        else if (task.taskType.taskType == 'Cash Collection') {
+        else if (task.taskType.taskType == 'Cash Collection' || task.taskType.taskType == 'Sample Pickup') {
 
             setSelectedClientId(task?.pickUpLocation?.clientId ? String(task.pickUpLocation.clientId) : "")
             setItemCashData(task?.receipts == 0 ? false : true)
             setItemTaskId(task.id);
-            setpayMdlVisible(true);
+            // setpayMdlVisible(true);
+            setModalVisible4(true);
         }
         else {
             setCollectModalVisible(true);
@@ -618,12 +607,130 @@ function Progress({ navigation }) {
     // };
 
 
+
+    const [denoms, setDenoms] = useState({ note: [], coin: [] });
+    const [denomMaster, setDenomMaster] = useState([]); // ✅ full API data
+    const [counts, setCounts] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const getAllDenomination = async () => {
+        try {
+            const response = await TaskService.getAllDenomination();
+
+            if (response.status === 1 && Array.isArray(response.data)) {
+
+                // ✅ store full data for API payload mapping
+                setDenomMaster(response.data);
+
+                // ✅ keep your existing UI binding intact (only values)
+                const notes = response.data
+                    .filter(item => item.type === "Note")
+                    .map(item => Number(item.denominationName))
+                    .filter(n => Number.isFinite(n))
+                    .sort((a, b) => b - a); // highest first
+
+                const coins = response.data
+                    .filter(item => item.type === "Coin")
+                    .map(item => Number(item.denominationName))
+                    .filter(n => Number.isFinite(n))
+                    .sort((a, b) => b - a);
+
+                setDenoms({
+                    note: notes,
+                    coin: coins,
+                });
+
+            } else {
+                setDenomMaster([]);
+                setDenoms({ note: [], coin: [] });
+            }
+        } catch (error) {
+            console.error('Error fetching denominations:', error);
+            setDenomMaster([]);
+            setDenoms({ note: [], coin: [] });
+        }
+    };
+
+
+
+    const getAllBanks = () => {
+        try {
+            TaskService.getAllBanks().then((response) => {
+                if (response.status == 1) {
+                    setBankName(response.data);
+                } else {
+                    setBankName([]);
+                }
+            });
+        } catch (error) {
+            console.error('Error fetching banks:', error);
+        }
+    }
+
     // Call Button
     const makeCall = (call) => {
         const cleaned = call.replace(/\D/g, ''); // remove spaces, dashes, etc.
         const formatted = cleaned.startsWith('+') ? cleaned : `+91${cleaned}`; // assuming India
         Linking.openURL(`tel:${formatted}`);
-      };
+    };
+
+
+    const formatDate = (date) => {
+        if (!date) return '';
+        const year = date.getFullYear();
+        const month = `${date.getMonth() + 1}`.padStart(2, '0'); // Months are 0-indexed
+        const day = `${date.getDate()}`.padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    // useEffect(() => {
+    //     if (selectPaymode) {
+    //         console.log('Paymode changed to:', selectPaymode);
+    //     }
+    // }, [selectPaymode]);
+
+    // const handleSubmit = async () => {
+    //     if (!selectedClientId) {
+    //         showAlertModal('Please select a client.', true);
+    //         return;
+    //     }
+    //     if (!paymentMode) {
+    //         showAlertModal('Please select a payment mode.', true);
+    //         return;
+    //     }
+    //     if (!amount || isNaN(amount)) {
+    //         showAlertModal('Please enter a valid amount.', true);
+    //         return;
+    //     }
+
+    //     const request = {
+    //         taskId: taskId,
+    //         clientId: selectedClientId,
+    //         paymentMode: paymentMode,
+    //         amount: amount,
+    //         remarks: remarks,
+    //     };
+
+
+    //     try {
+    //         const response = await TaskService.generateNewReceipt(request);
+
+    //         if (response?.data?.status === 1) {
+    //             showAlertModal('Payment details submitted successfully!', false);
+    //             setSelectedClientId('');
+    //             setPaymentMode('');
+    //             setAmount('');
+    //             setRemarks('');
+    //             setpayMdlVisible(false);
+    //             fetchData()
+    //         } else {
+    //             showAlertModal('Failed to submit payment details.', true);
+    //         }
+    //     } catch (error) {
+    //         console.error('Error while submitting payment:', error);
+    //         Alert.alert('Error', 'Something went wrong while submitting the payment.');
+    //     }
+    // };
 
     return (
         <SafeAreaView style={[styles.container, GlobalStyles.SafeAreaView]}>
@@ -848,7 +955,7 @@ function Progress({ navigation }) {
                                         <Text style={styles.label}>Description</Text>
                                         <TextInput
                                             style={styles.textarea}
-                                            placeholder="Placeholder"
+                                            placeholder="Write here.."
                                             multiline={true}
                                             value={selectedItem?.description}
                                         />
@@ -969,7 +1076,7 @@ function Progress({ navigation }) {
                                         </View>
                                     </View>
 
-                                    <TouchableOpacity onPress={() => { setpayMdlVisible(true); setModalVisible(false); }} style={{ backgroundColor: '#2F81F5', borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10, }}>
+                                    <TouchableOpacity onPress={() => { setModalVisible4(true); setModalVisible(false); storeTaskId(taskId) }} style={{ backgroundColor: '#2F81F5', borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10, }}>
                                         <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 16, color: 'white', textAlign: 'center', }}>Receive Payment</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -1573,6 +1680,83 @@ function Progress({ navigation }) {
                     </View>
                 </Modal>
 
+
+
+
+
+
+
+                {/* Comman Payment Modal */}
+                {/* <> */}
+                {/* <TouchableOpacity onPress={() => setModalVisible(true)}>
+                    <Text>Open Receipt</Text>
+                </TouchableOpacity> */}
+
+                <PaymentReceiptModal
+                    visible={modalVisible4}
+                    onClose={() => setModalVisible4(false)}
+
+                    clients={allClients}
+                    banks={bankName}
+                    denominations={denomMaster}   // ✅ IMPORTANT: full API list
+
+                    fetchBanks={getAllBanks}
+                    fetchDenominations={getAllDenomination}
+                    styles={styles}
+                    toWords={toWords}
+                    formatDate={formatDate}
+                    empId={getUserId}
+                    taskId={taskId}
+                    showAlert={(msg, isErr) => showAlertModal(msg, isErr)}
+                    isFromTask={true}
+                    onOpenGateway={async ({ amount, mode }) => {
+                        // ✅ later integrate gateway
+                        // must return: { success: true, transaction_id: "..." }
+                        console.log('gateway: ', amount, mode)
+                        return { success: true, transaction_id: "DUMMY_TXN_123" };
+                    }}
+
+                    onSubmit={async (fd, ctx) => {
+                        setIsSubmitting(true);
+
+                        try {
+
+                            console.log("========== PAYMENT CONTEXT ==========", sharedTaskId);
+                            console.log(JSON.stringify(ctx, null, 2));
+
+                            console.log("========== FORMDATA ==========");
+                            if (fd?._parts?.length) {
+                                fd._parts.forEach(([k, v]) => console.log(k, ":", v));
+                            } else {
+                                console.log("No _parts found on FormData");
+                            }
+
+                            // return
+                            const data = await TaskService.generateNewReceipt(fd);
+
+                            console.log("API RESPONSE:", data);
+
+                            if (data?.status === 1) {
+                                showAlertModal("Submitted Successfully!", false);
+                                setModalVisible(false);
+                                onRefresh();
+                                navigation.navigate('Receipt', { page: 'Progress' })
+                                return data;
+                            }
+
+                            showAlertModal(data?.message || "Something went wrong", true);
+                            return data;
+                        } catch (e) {
+                            console.log("submit error:", e?.message, e);
+                            showAlertModal(e?.message || "Something went wrong", true);
+                            return { status: 0, message: e?.message || "Unknown error" };
+                        } finally {
+                            setIsSubmitting(false);
+                        }
+                    }}
+                />
+                {/* </> */}
+
             </ScrollView>
 
             {loading && (
@@ -1598,6 +1782,205 @@ function Progress({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+
+    // Deno Table Start
+    payDtl: {
+        backgroundColor: "#fff",
+        // iOS shadow
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4,
+        borderRadius: 12,
+        padding: 12,
+        marginHorizontal: 2,
+        marginBottom: 15,
+        overflow: 'hidden',
+    },
+    payDtlText: {
+        fontFamily: 'Montserrat-SemiBold',
+        fontSize: 15,
+        lineHeight: 18,
+        color: "#0C0D36",
+        paddingBottom: 8,
+        marginBottom: 20,
+        borderBottomColor: 'rgba(0, 0, 0, 0.25)',
+        borderBottomWidth: 1,
+    },
+    denoBoxMain: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(0,0,0,0.25)',
+        paddingBottom: 12,
+        marginBottom: 15,
+    },
+    denoBoxInn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingBottom: 14,
+    },
+    denoLabel: {
+        fontFamily: 'Montserrat-SemiBold',
+        fontSize: 13,
+        lineHeight: 16,
+        color: '#0C0D36',
+    },
+    denoValue: {
+        fontFamily: 'Montserrat-Medium',
+        fontSize: 13,
+        lineHeight: 16,
+        color: '#0C0D36',
+    },
+    denoValue2: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: '10',
+        fontFamily: 'Montserrat-Medium',
+        fontSize: 13,
+        lineHeight: 16,
+        color: '#0C0D36',
+    },
+    centerColumn: {
+        textAlign: 'center',
+        alignSelf: 'center',
+    },
+    rightColumn: {
+        textAlign: 'right',
+    },
+    sumTotal: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingTop: 10,
+        paddingBottom: 10,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(0, 0, 0, 0.25)',
+        // marginBottom: 15,
+    },
+    sumTotalLabel: {
+        fontFamily: 'Montserrat-Medium',
+        fontSize: 13,
+        lineHeight: 16,
+        color: '#0C0D36',
+    },
+    sumTotaValue: {
+        fontFamily: 'Montserrat-SemiBold',
+        fontSize: 13,
+        lineHeight: 16,
+        color: '#0C0D36',
+    },
+    amtWords: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    amountInWdLabel: {
+        fontFamily: 'Montserrat-Medium',
+        fontSize: 14,
+        lineHeight: 16,
+        color: '#0C0D36',
+    },
+    amountInWdValue: {
+        fontFamily: 'Montserrat-SemiBold',
+        fontSize: 15,
+        lineHeight: 18,
+        color: '#0C0D36',
+    },
+    isCheckBox: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 15,
+    },
+    isCheckBoxBorder: {
+        borderTopWidth: 1,
+        borderColor: 'rgba(0,0,0,0.25)',
+        paddingTop: 15,
+    },
+    isCheckBoxLabel: {
+        flex: 1,
+        fontFamily: 'Montserrat-Medium',
+        fontSize: 14,
+        lineHeight: 16,
+        color: '#0C0D36',
+        textAlign: 'left',
+    },
+    isCheckBoxValue: {
+        width: 200,
+        fontFamily: 'Montserrat-SemiBold',
+        fontSize: 15,
+        lineHeight: 18,
+        color: '#0C0D36',
+        textAlign: 'right',
+    },
+
+    // Upload Attachment
+    uploadContainer: {
+        borderWidth: 1,
+        borderRadius: 12,
+        borderStyle: 'dashed',
+        backgroundColor: '#FAFAFA',
+        borderColor: '#E5E5E5',
+        marginBottom: 15,
+        padding: 12,
+        alignItems: 'center',
+    },
+    uploadTitle: {
+        fontFamily: 'Montserrat-SemiBold',
+        fontSize: 14,
+        color: '#2F81F5',
+        textAlign: 'center',
+        paddingTop: 10,
+        paddingBottom: 3,
+    },
+    uploadSubTitle: {
+        fontFamily: 'Montserrat-Regular',
+        fontSize: 13,
+        color: '#0C0D36',
+        textAlign: 'center',
+    },
+    flatList: {
+        borderWidth: 1,
+        borderRadius: 12,
+        borderStyle: 'dashed',
+        backgroundColor: '#FAFAFA',
+        borderColor: '#E5E5E5',
+        padding: 12,
+        marginBottom: 10,
+    },
+    noImgSelected: {
+        fontFamily: 'Montserrat-SemiBold',
+        fontSize: 13,
+        color: '#0C0D36',
+        textAlign: 'center',
+        borderWidth: 1,
+        borderRadius: 12,
+        borderStyle: 'dashed',
+        backgroundColor: '#FAFAFA',
+        borderColor: '#E5E5E5',
+        padding: 12,
+        marginBottom: 10,
+    },
+
+    // Toggle Tabs
+    toggleWrap: { flexDirection: "row", gap: 4, marginBottom: 20, },
+    toggleBtn: { paddingHorizontal: 20, paddingVertical: 8, borderWidth: 1, borderColor: '#0C0D36', borderRadius: 8, },
+    toggleBtnActive: { backgroundColor: "#2F81F5", borderColor: '#2F81F5', },
+    toggleBtnActiveText: { fontFamily: 'Montserrat-Medium', fontSize: 12, color: "#fff", },
+    // Denomination Rows
+    DenoRows: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15, },
+    amount: { fontFamily: 'Montserrat-Medium', fontSize: 16, width: 80 },
+    // Counter Controls
+    counter: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#ECEDF0", borderRadius: 5, padding: 5, },
+    counterBtn: { width: 35, height: 35, backgroundColor: "#EFEFEF", borderRadius: 5, justifyContent: "center", alignItems: "center" },
+    countText: { fontFamily: 'Montserrat-Medium', fontSize: 14, color: '#000', paddingHorizontal: 24, },
+    // Footer Total
+    totalBox: { padding: 15, marginBottom: 20, backgroundColor: "#FAFAFA", borderWidth: 1, borderColor: '#ECEDF0', borderRadius: 10, flexDirection: "row", justifyContent: "space-between" },
+    totalText: { fontFamily: 'Montserrat-SemiBold', color: "#000", fontSize: 14, },
+
+    // Deno Table End
 
     label: {
         fontSize: 16,
@@ -1652,7 +2035,7 @@ const styles = StyleSheet.create({
         elevation: 3,
         marginTop: 20,
         borderRadius: 15,
-        marginBottom:20,
+        marginBottom: 20,
     },
     oncetxt: {
         fontFamily: 'Montserrat-Medium',

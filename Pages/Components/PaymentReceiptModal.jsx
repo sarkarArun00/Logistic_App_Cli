@@ -13,6 +13,7 @@ import { Picker } from "@react-native-picker/picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import RazorpayWebView from "../Wallet/RazorpayWebView";
+import { launchImageLibrary } from "react-native-image-picker";
 
 // ---------- helpers ----------
 const parseAmount = (v) => {
@@ -25,11 +26,23 @@ const fdAppend = (fd, key, value) => {
   fd.append(key, typeof value === "string" ? value : String(value));
 };
 
+
+const paymentModes = [
+  { id: 1, label: "Cash" },
+  { id: 2, label: "Cheque" },
+  { id: 3, label: "UPI" },
+  { id: 4, label: "Debit/Credit Card" },
+];
+
+
+
 // ---------- Reusable Component ----------
 export default function PaymentReceiptModal({
+  isFromTask = false,
   visible,
   onClose,
-
+  empId,
+  taskId,
   // data / fetchers
   clients = [],
   banks = [],
@@ -42,9 +55,9 @@ export default function PaymentReceiptModal({
   initialClientId = "",
 
   // attachments
-  onPickAttachment, // async () => file or array (optional)
-  attachment,       // any (optional)
-  onRemoveAttachment, // optional
+  // onPickAttachment, // async () => file or array (optional)
+  // attachment,       // any (optional)
+  // onRemoveAttachment, // optional
 
   // gateway for upi/card
   onOpenGateway, // async ({amount, mode}) => { success:true, transaction_id } or throws
@@ -80,22 +93,22 @@ export default function PaymentReceiptModal({
   const [chequeDetails, setChequeDetails] = useState(null); // submitted cheque details
 
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const [attachment, setAttachment] = useState(null);
+  const showChequeDatePicker = () => setDatePickerVisibility(true);
+  const hideChequeDatePicker = () => setDatePickerVisibility(false);
 
-const showChequeDatePicker = () => setDatePickerVisibility(true);
-const hideChequeDatePicker = () => setDatePickerVisibility(false);
+  const [gatewayVisible, setGatewayVisible] = useState(false);
+  const [gatewayMode, setGatewayMode] = useState(null); // "3" or "4"
 
-const [gatewayVisible, setGatewayVisible] = useState(false);
-const [gatewayMode, setGatewayMode] = useState(null); // "3" or "4"
-
-const handleChequeDateConfirm = (date) => {
-  setChequeDate(date);
-  hideChequeDatePicker();
-};
+  const handleChequeDateConfirm = (date) => {
+    setChequeDate(date);
+    hideChequeDatePicker();
+  };
 
   // ---------- on open ----------
   useEffect(() => {
     if (!visible) return;
-
+    console.log('79898798987979799789879797', taskId)
     // load required lists
     fetchClients?.();
     fetchBanks?.();
@@ -184,6 +197,11 @@ const handleChequeDateConfirm = (date) => {
     setSelectBank("");
   }, [selectPaymode]);
 
+  // ✅ Apply condition
+  const visiblePaymentModes = isFromTask
+    ? paymentModes.filter(m => m.id === 1 || m.id === 2)
+    : paymentModes;
+
   // ---------- open details modal after amount entered ----------
   const openDetailsModalIfNeeded = () => {
     if (!enteredAmount || enteredAmount <= 0) return;
@@ -244,6 +262,12 @@ const handleChequeDateConfirm = (date) => {
     return rows;
   };
 
+  useEffect(() => {
+    if (isFromTask && (selectPaymode === "3" || selectPaymode === "4")) {
+      setSelectPaymode("");
+    }
+  }, [isFromTask]);
+
   const buildPaymentContext = async (transaction_id = "") => {
     const client_id = Number(selectClient);
     const payment_mode_type_id = Number(selectPaymode);
@@ -258,6 +282,28 @@ const handleChequeDateConfirm = (date) => {
 
     const payment_date = formatDate(new Date());
 
+    // ✅ Only UPI/Card require transaction_id
+    const needsTxn = payment_mode_type_id === 3 || payment_mode_type_id === 4;
+    if (needsTxn && !String(transaction_id || "").trim()) {
+      return { ok: false, error: "Transaction ID missing from payment gateway." };
+    }
+
+    // ✅ Attachment validation by mode
+    // Cheque -> required, others optional (adjust if you want)
+    const attachmentRequired =
+      payment_mode_type_id === 2 || 1; // only cheque required
+
+    if (attachmentRequired && !attachment) {
+      return { ok: false, error: "Attachment is required." };
+    }
+
+    // ✅ Optional extra: validate file object if present
+    if (attachment) {
+      if (!attachment.uri || !attachment.type || !attachment.name) {
+        return { ok: false, error: "Invalid attachment. Please re-upload." };
+      }
+    }
+
     const ctx = {
       ok: true,
       client_id,
@@ -266,26 +312,84 @@ const handleChequeDateConfirm = (date) => {
       received_amount,
       received_by,
       remarks: remarks || "",
-      transection_id: transaction_id || "",
-      invoices: [], // if you need invoices pass via props & merge here
+
+      // ✅ include file only if exists
+      file: attachment || null,
+
+      // ✅ Cash/Cheque => "" | UPI/Card => transaction_id
+      transection_id: needsTxn ? String(transaction_id).trim() : "",
+
+      invoices: [],
+      empId: empId ? Number(empId) : null,
+      taskId: taskId ? Number(taskId) : null,
     };
 
-    // CASH
+    // ✅ CASH
     if (payment_mode_type_id === 1) {
-      if (total !== received_amount) return { ok: false, error: `Denomination total must match ₹${received_amount}.` };
+      if (total !== received_amount) {
+        return { ok: false, error: `Denomination total must match ₹${received_amount}.` };
+      }
       ctx.denominations = buildCashDenominations();
-      if (!ctx.denominations.length) return { ok: false, error: "Please enter denominations." };
+      if (!ctx.denominations?.length) {
+        return { ok: false, error: "Please enter denominations." };
+      }
     }
 
-    // CHEQUE
+    // ✅ CHEQUE
     if (payment_mode_type_id === 2) {
       if (!chequeDetails) return { ok: false, error: "Please submit cheque details." };
+
+      if (!String(chequeDetails.chequeNo || "").trim())
+        return { ok: false, error: "Cheque number is required." };
+
+      if (!chequeDetails.chequeDate)
+        return { ok: false, error: "Cheque date is required." };
+
+      if (!chequeDetails.bankId)
+        return { ok: false, error: "Bank is required." };
+
       ctx.bank = Number(chequeDetails.bankId);
-      ctx.cheque_number = chequeDetails.chequeNo;
+      ctx.cheque_number = String(chequeDetails.chequeNo).trim();
       ctx.cheque_date = formatDate(chequeDetails.chequeDate);
     }
 
     return ctx;
+  };
+
+  const onPickAttachment = async () => {
+    try {
+      const result = await launchImageLibrary({
+        mediaType: "photo",
+        selectionLimit: 1,
+        includeBase64: false,
+      });
+
+      if (result.didCancel) return;
+
+      if (result.errorCode) {
+        Alert.alert("Upload failed", result.errorMessage || result.errorCode);
+        return;
+      }
+
+      const asset = result.assets?.[0];
+      if (!asset?.uri) {
+        Alert.alert("Upload failed", "No file selected.");
+        return;
+      }
+
+      const fileObj = {
+        uri: Platform.OS === "android" ? asset.uri : asset.uri.replace("file://", ""),
+        name: asset.fileName || `upload_${Date.now()}.jpg`,
+        type: asset.type || "image/jpeg",
+      };
+
+      setAttachment(fileObj);
+
+      console.log("✅ Picked attachment:", fileObj);
+    } catch (e) {
+      console.log("onPickAttachment error:", e);
+      Alert.alert("Upload failed", "Something went wrong.");
+    }
   };
 
   const buildPaymentFormData = (ctx) => {
@@ -298,6 +402,17 @@ const handleChequeDateConfirm = (date) => {
     fdAppend(fd, "received_by", ctx.received_by);
     fdAppend(fd, "remarks", ctx.remarks || "");
     fdAppend(fd, "transection_id", ctx.transection_id || "");
+    fdAppend(fd, "empId", empId || null);
+    fdAppend(fd, "taskId", taskId || null);
+
+
+    if (attachment) {
+      fd.append("file", {
+        uri: attachment.uri,
+        name: attachment.attachmentName || attachment.name || "upload.jpg",
+        type: attachment.type || "image/jpeg",
+      });
+    }
 
     (ctx.invoices || []).forEach((inv, i) => {
       fdAppend(fd, `invoices[${i}][invoice_id]`, inv.invoice_id);
@@ -403,13 +518,13 @@ const handleChequeDateConfirm = (date) => {
   const handleSubmitAfterGateway = async (transaction_id) => {
     try {
       setIsSubmitting(true);
-    
+
       const ctx = await buildPaymentContext(transaction_id);
       console.log('87788787888887', ctx)
       if (!ctx.ok) return showAlert?.(ctx.error, true);
-  
+
       const fd = buildPaymentFormData(ctx);
-  
+
       const res = await onSubmit?.(fd, ctx);
       if (res?.status === 1) {
         showAlert?.("Submitted Successfully!", false);
@@ -453,12 +568,20 @@ const handleChequeDateConfirm = (date) => {
             {/* Mode */}
             <Text style={styles.label}>Payment Mode</Text>
             <View style={styles.pickerContainer}>
-              <Picker selectedValue={selectPaymode} onValueChange={setSelectPaymode} style={styles.picker}>
+              <Picker
+                selectedValue={selectPaymode}
+                onValueChange={(value) => setSelectPaymode(value)}
+                style={styles.picker}
+              >
                 <Picker.Item label="Select Payment Mode" value="" />
-                <Picker.Item value="1" label="Cash" />
-                <Picker.Item value="2" label="Cheque" />
-                <Picker.Item value="3" label="UPI" />
-                <Picker.Item value="4" label="Debit/Credit Card" />
+
+                {visiblePaymentModes.map(mode => (
+                  <Picker.Item
+                    key={mode.id}
+                    label={mode.label}
+                    value={String(mode.id)}
+                  />
+                ))}
               </Picker>
             </View>
 
@@ -475,91 +598,91 @@ const handleChequeDateConfirm = (date) => {
 
             {/* Payment Details */}
             {(String(selectPaymode) === "1" || String(selectPaymode) === "2") && (
-            <View style={styles.payDtl}>
-              <Text style={styles.payDtlText}>Payment Details</Text>
+              <View style={styles.payDtl}>
+                <Text style={styles.payDtlText}>Payment Details</Text>
 
-              {/* Cash summary */}
-              {String(selectPaymode) === "1" && (
-                <>
-                  <View style={styles.denoBoxMain}>
-                    <Text style={[styles.denoLabel, { flex: 2 }]}>Denomination</Text>
-                    <Text style={[styles.denoLabel, { flex: 1 }, styles.centerColumn]}>Qty.</Text>
-                    <Text style={[styles.denoLabel, { flex: 1 }, styles.rightColumn]}>Amount</Text>
-                  </View>
+                {/* Cash summary */}
+                {String(selectPaymode) === "1" && (
+                  <>
+                    <View style={styles.denoBoxMain}>
+                      <Text style={[styles.denoLabel, { flex: 2 }]}>Denomination</Text>
+                      <Text style={[styles.denoLabel, { flex: 1 }, styles.centerColumn]}>Qty.</Text>
+                      <Text style={[styles.denoLabel, { flex: 1 }, styles.rightColumn]}>Amount</Text>
+                    </View>
 
-                  {breakup.length === 0 ? (
-                    <Text style={{ paddingVertical: 12, color: "#777" }}>No denominations selected.</Text>
-                  ) : (
-                    breakup.map((row) => (
-                      <View key={`${row.type}_${row.denom}`} style={styles.denoBoxInn}>
-                        <View style={[styles.denoValue2, { flex: 2 }]}>
-                          <Image style={{ width: 30, height: 17, resizeMode: "contain" }} source={require("../../assets/money.png")} />
-                          <Text>₹{row.denom}</Text>
+                    {breakup.length === 0 ? (
+                      <Text style={{ paddingVertical: 12, color: "#777" }}>No denominations selected.</Text>
+                    ) : (
+                      breakup.map((row) => (
+                        <View key={`${row.type}_${row.denom}`} style={styles.denoBoxInn}>
+                          <View style={[styles.denoValue2, { flex: 2 }]}>
+                            <Image style={{ width: 30, height: 17, resizeMode: "contain" }} source={require("../../assets/money.png")} />
+                            <Text>₹{row.denom}</Text>
+                          </View>
+                          <Text style={[styles.denoValue, { flex: 1 }, styles.centerColumn]}>{row.qty}</Text>
+                          <Text style={[styles.denoValue, { flex: 1 }, styles.rightColumn]}>₹{row.lineAmount}</Text>
                         </View>
-                        <Text style={[styles.denoValue, { flex: 1 }, styles.centerColumn]}>{row.qty}</Text>
-                        <Text style={[styles.denoValue, { flex: 1 }, styles.rightColumn]}>₹{row.lineAmount}</Text>
-                      </View>
-                    ))
-                  )}
+                      ))
+                    )}
 
-                  <View style={styles.sumTotal}>
-                    <Text style={styles.sumTotalLabel}>Sum Total</Text>
-                    <Text style={styles.sumTotaValue}>₹ {total.toFixed(2)}</Text>
-                  </View>
+                    <View style={styles.sumTotal}>
+                      <Text style={styles.sumTotalLabel}>Sum Total</Text>
+                      <Text style={styles.sumTotaValue}>₹ {total.toFixed(2)}</Text>
+                    </View>
 
-                  <View style={styles.amtWords}>
+                    {/* <View style={styles.amtWords}>
                     <Text style={styles.amountInWdLabel}>Amount in Words</Text>
                     <Text style={styles.amountInWdValue}>
                       {enteredAmount ? `${toWords(enteredAmount)} Only` : "-"}
                     </Text>
-                  </View>
+                  </View> */}
 
-                  <TouchableOpacity onPress={() => setDetailsModalVisible(true)} style={{ marginTop: 10 }}>
-                    <Text style={{ color: "#2F81F5" }}>Edit Denominations</Text>
-                  </TouchableOpacity>
-                </>
-              )}
+                    <TouchableOpacity onPress={() => setDetailsModalVisible(true)} style={{ marginTop: 10 }}>
+                      <Text style={{ color: "#2F81F5" }}>Edit Denominations</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
 
-              {/* Cheque summary */}
-              {String(selectPaymode) === "2" && (
-                <>
-                  {!chequeDetails ? (
-                    <Text style={{ paddingVertical: 12, color: "#777" }}>Cheque details not submitted.</Text>
-                  ) : (
-                    <>
-                      <View style={styles.isCheckBox}>
-                        <Text style={styles.isCheckBoxLabel}>Cheque No.</Text>
-                        <Text style={styles.isCheckBoxValue}>{chequeDetails.chequeNo}</Text>
-                      </View>
+                {/* Cheque summary */}
+                {String(selectPaymode) === "2" && (
+                  <>
+                    {!chequeDetails ? (
+                      <Text style={{ paddingVertical: 12, color: "#777" }}>Cheque details not submitted.</Text>
+                    ) : (
+                      <>
+                        <View style={styles.isCheckBox}>
+                          <Text style={styles.isCheckBoxLabel}>Cheque No.</Text>
+                          <Text style={styles.isCheckBoxValue}>{chequeDetails.chequeNo}</Text>
+                        </View>
 
-                      <View style={styles.isCheckBox}>
-                        <Text style={styles.isCheckBoxLabel}>Cheque Date</Text>
-                        <Text style={styles.isCheckBoxValue}>{formatDate(chequeDetails.chequeDate)}</Text>
-                      </View>
+                        <View style={styles.isCheckBox}>
+                          <Text style={styles.isCheckBoxLabel}>Cheque Date</Text>
+                          <Text style={styles.isCheckBoxValue}>{formatDate(chequeDetails.chequeDate)}</Text>
+                        </View>
 
-                      <View style={styles.isCheckBox}>
-                        <Text style={styles.isCheckBoxLabel}>Bank Name</Text>
-                        <Text style={styles.isCheckBoxValue}>{chequeDetails.bankName || "-"}</Text>
-                      </View>
+                        <View style={styles.isCheckBox}>
+                          <Text style={styles.isCheckBoxLabel}>Bank Name</Text>
+                          <Text style={styles.isCheckBoxValue}>{chequeDetails.bankName || "-"}</Text>
+                        </View>
 
-                      <View style={styles.isCheckBox}>
-                        <Text style={styles.isCheckBoxLabel}>Amount</Text>
-                        <Text style={styles.isCheckBoxValue}>₹{chequeDetails.amount}</Text>
-                      </View>
+                        <View style={styles.isCheckBox}>
+                          <Text style={styles.isCheckBoxLabel}>Amount</Text>
+                          <Text style={styles.isCheckBoxValue}>₹{chequeDetails.amount}</Text>
+                        </View>
 
-                      <View style={styles.isCheckBox}>
+                        {/* <View style={styles.isCheckBox}>
                         <Text style={styles.isCheckBoxLabel}>Amount In Words</Text>
                         <Text style={styles.isCheckBoxValue}>{toWords(Number(chequeDetails.amount))} Only</Text>
-                      </View>
-                    </>
-                  )}
+                      </View> */}
+                      </>
+                    )}
 
-                  <TouchableOpacity onPress={() => setDetailsModalVisible(true)} style={{ marginTop: 10 }}>
-                    <Text style={{ color: "#2F81F5" }}>Edit Cheque Details</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-            </View>
+                    <TouchableOpacity onPress={() => setDetailsModalVisible(true)} style={{ marginTop: 10 }}>
+                      <Text style={{ color: "#2F81F5" }}>Edit Cheque Details</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
             )}
 
             {/* Attachment */}
@@ -569,6 +692,14 @@ const handleChequeDateConfirm = (date) => {
               <Text style={styles.uploadTitle}>Upload</Text>
               <Text style={styles.uploadSubTitle}>Supports JPG, JPEG, and PNG</Text>
             </TouchableOpacity>
+
+            {attachment?.uri ? (
+              <View style={{ marginTop: 10 }}>
+                <Text style={{ color: "#333" }}>
+                  Selected: {attachment.name}
+                </Text>
+              </View>
+            ) : null}
 
             {/* Remarks */}
             <Text style={styles.label}>Remarks</Text>
@@ -667,21 +798,21 @@ const handleChequeDateConfirm = (date) => {
                   {/* Keep your date picker implementation outside & pass handlers if needed */}
                   <Text style={styles.label}>Cheque Date</Text>
 
-                    <TouchableOpacity
+                  <TouchableOpacity
                     style={styles.dateContainer ?? styles.input}   // use your dateContainer if exists
                     onPress={showChequeDatePicker}
-                    >
+                  >
                     <Text style={{ color: chequeDate ? "#000" : "#0C0D36", fontFamily: "Montserrat-Medium", fontSize: 15 }}>
-                        {chequeDate ? formatDate(chequeDate) : "Select Cheque Date"}
+                      {chequeDate ? formatDate(chequeDate) : "Select Cheque Date"}
                     </Text>
-                    </TouchableOpacity>
+                  </TouchableOpacity>
 
-                    <DateTimePickerModal
+                  <DateTimePickerModal
                     isVisible={isDatePickerVisible}
                     mode="date"
                     onConfirm={handleChequeDateConfirm}
                     onCancel={hideChequeDatePicker}
-                    />
+                  />
 
                   <Text style={styles.label}>Bank Name</Text>
                   <View style={styles.pickerContainer}>
@@ -708,36 +839,36 @@ const handleChequeDateConfirm = (date) => {
 
 
         <Modal
-  visible={gatewayVisible}
-  transparent={false}
-  animationType="slide"
-  onRequestClose={() => setGatewayVisible(false)}
->
-  <RazorpayWebView
-    amount={enteredAmount}
-    onSuccess={async (data) => {
-      // ✅ Razorpay returns payment_id as razorpay_payment_id
-      const transaction_id = data?.razorpay_payment_id || data?.payment_id || "";
+          visible={gatewayVisible}
+          transparent={false}
+          animationType="slide"
+          onRequestClose={() => setGatewayVisible(false)}
+        >
+          <RazorpayWebView
+            amount={enteredAmount}
+            onSuccess={async (data) => {
+              // ✅ Razorpay returns payment_id as razorpay_payment_id
+              const transaction_id = data?.razorpay_payment_id || data?.payment_id || "";
 
-      setGatewayVisible(false);
+              setGatewayVisible(false);
 
-      if (!transaction_id) {
-        showAlert?.("Payment success but transaction id missing.", true);
-        return;
-      }
+              if (!transaction_id) {
+                showAlert?.("Payment success but transaction id missing.", true);
+                return;
+              }
 
-      // ✅ after success -> call submitPayment with transaction_id
-      await handleSubmitAfterGateway(transaction_id);
-    }}
-    onFailure={(data) => {
-      setGatewayVisible(false);
-      showAlert?.("Payment cancelled/failed.", true);
-    }}
-  />
-</Modal>
+              // ✅ after success -> call submitPayment with transaction_id
+              await handleSubmitAfterGateway(transaction_id);
+            }}
+            onFailure={(data) => {
+              setGatewayVisible(false);
+              showAlert?.("Payment cancelled/failed.", true);
+            }}
+          />
+        </Modal>
       </View>
     </Modal>
 
-    
+
   );
 }

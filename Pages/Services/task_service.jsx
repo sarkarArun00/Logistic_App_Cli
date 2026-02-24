@@ -6,8 +6,37 @@ import { Linking, Alert } from 'react-native';
 import { useGlobalAlert } from '../../Context/GlobalAlertContext';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { BASE_API_URL } from "./API";
+
+const joinUrl = (base, path) =>
+  `${String(base).replace(/\/+$/, "")}/${String(path).replace(/^\/+/, "")}`;
+
+const postFormData = async (path, fd) => {
+  const token = await AsyncStorage.getItem("token");
+  const url = joinUrl(BASE_API_URL, path);
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: fd,
+  });
+
+  const text = await res.text();
+  // console.log("RAW:", url, text);
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    // if backend returns HTML or plain text error
+    return { status: 0, message: "Invalid JSON response", raw: text };
+  }
+};
 
 const TaskService = {
+
 
   //Bank Master Api Call Start
   getAllBanks: async () => {
@@ -68,7 +97,7 @@ const TaskService = {
       throw null;
     }
   },
-  
+
   createPayment: async (fd) => {
     try {
       const token = await AsyncStorage.getItem("token");
@@ -79,7 +108,7 @@ const TaskService = {
           // ✅ do not set Content-Type
         },
       });
-  
+
       return response.data;
     } catch (error) {
       console.log("createPayment error:", {
@@ -231,15 +260,17 @@ const TaskService = {
     }
   },
 
-  generateNewReceipt: async (data) => {
+  generateNewReceipt: async (fd) => {
     try {
-      const response = await apiClient.post('operation/task-receipt/generateNewReceipt', data);
-      return response;
+      return await postFormData("operation/task-receipt/generateNewReceipt", fd);
     } catch (error) {
-      Alert.alert(error.response?.data || error.message);
+      console.log("generateNewReceipt error:", error);
+      Alert.alert("Error", String(error?.message || "Network Error"));
       throw error;
     }
   },
+
+
 
   generateReceipt: async (data) => {
     try {

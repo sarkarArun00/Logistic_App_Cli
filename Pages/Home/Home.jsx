@@ -21,6 +21,7 @@ import { lightTheme } from '../GlobalStyles';
 import { checkGPSAndGetLocation } from '../../Context/location.js'
 import GPSModal from '../../Context/GPSModal.js'
 import RNAndroidLocationEnabler from 'react-native-location-enabler';
+
 import { promptForEnableLocationIfNeeded } from 'react-native-android-location-enabler';
 const { PRIORITIES: { HIGH_ACCURACY }, useLocationSettings } = RNAndroidLocationEnabler;
 import TaskScreen from '../Task-management/Task-Screen/Task-Screen.jsx';
@@ -264,37 +265,47 @@ export default function Home({ navigation }) {
     };
 
 
-    const handleSwipe = () => {
-        requestAnimationFrame(() => {
-            swipeRef.current?.reset(); // Always reset early for UI responsiveness
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-            checkGPSAndGetLocation(
+    const handleSwipe = async () => {
+
+        if (isSubmitting) return;
+
+        setIsSubmitting(true);
+
+
+        try {
+            await checkGPSAndGetLocation(
                 async (latitude, longitude) => {
-                    const userId = await AsyncStorage.getItem('user_id');
-
-                    const request = {
-                        employeeId: userId,
-                        loginDate: new Date().toISOString().split('T')[0],
-                        latitude,
-                        longitude,
-                    };
-
                     try {
+                        const userId = await AsyncStorage.getItem("user_id");
+                        if (!userId) {
+                            Alert.alert("Error", "User not found. Please login again.");
+                            return;
+                        }
+
+                        const request = {
+                            employeeId: userId,
+                            loginDate: new Date().toISOString().split("T")[0],
+                            latitude,
+                            longitude,
+                        };
+
                         if (!isCheckedIn) {
-                            // 👇 Check-In Logic
                             const response = await AuthService.attendanceCheckIn(request);
-                            if (response.status === 1) {
+
+                            if (response?.status === 1) {
                                 const now = new Date();
                                 const isoString = now.toISOString();
                                 const formattedTime = now.toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
+                                    hour: "2-digit",
+                                    minute: "2-digit",
                                 });
 
                                 await AsyncStorage.multiSet([
-                                    ['isCheckedIn', 'true'],
-                                    ['checkInTime', isoString],
-                                    ['checkInTimeDisplay', formattedTime],
+                                    ["isCheckedIn", "true"],
+                                    ["checkInTime", isoString],
+                                    ["checkInTimeDisplay", formattedTime],
                                 ]);
 
                                 setIsCheckedIn(true);
@@ -303,49 +314,67 @@ export default function Home({ navigation }) {
                                 startTimer(now);
 
                                 Vibration.vibrate(300);
-                                showAlertModal('✅ Checked In Successfully', false);
+                                showAlertModal("✅ Checked In Successfully", false);
                             } else {
-                                showAlertModal('❌ Check-in failed. Try again.', true);
+                                showAlertModal("❌ Check-in failed. Try again.", true);
                             }
                         } else {
-                            // 👇 Check-Out Logic
                             const response = await AuthService.attendanceCheckOut(request);
-                            if (response.status === 1) {
+
+                            if (response?.status === 1) {
                                 await AsyncStorage.multiRemove([
-                                    'isCheckedIn',
-                                    'checkInTime',
-                                    'checkInTimeDisplay',
+                                    "isCheckedIn",
+                                    "checkInTime",
+                                    "checkInTimeDisplay",
                                 ]);
 
                                 setIsCheckedIn(false);
                                 setCheckInTimeDisplay(null);
-                                setWorkingDuration('--:--');
+                                setWorkingDuration("--:--");
                                 clearInterval(timerRef.current);
 
                                 Vibration.vibrate(300);
-                                showAlertModal('✅ Checked Out Successfully', false);
+                                showAlertModal("✅ Checked Out Successfully", false);
                             } else {
-                                showAlertModal('❌ Check-out failed. Try again.', true);
+                                showAlertModal("❌ Check-out failed. Try again.", true);
                             }
                         }
 
-                        // ✅ Hide message after 3s if needed
                         setTimeout(hideAlert, 3000);
                     } catch (err) {
-                        console.error('Attendance error:', err);
-                        Alert.alert('Error', 'Something went wrong. Please try again.');
+                        console.error("Attendance error:", err);
+                        Alert.alert("Error", "Something went wrong. Please try again.");
                     }
                 },
                 (reason) => {
-                    // 🔒 Location/GPS errors
-                    if (reason === 'gps_off') {
-                        setShowModal(true); // show modal to enable GPS
-                    } else {
-                        Alert.alert('Location Error', reason || 'Could not get location');
+                    // ✅ Map reasons to UX
+                    if (reason === "permission_denied") {
+                        Alert.alert("Permission Required", "Location permission is required.");
+                        return;
                     }
+                    if (reason === "timeout") {
+                        Alert.alert(
+                            "Location Timeout",
+                            "Unable to fetch location. Please move to an open area and try again."
+                        );
+                        return;
+                    }
+                    if (reason === "position_unavailable") {
+                        Alert.alert(
+                            "Location Unavailable",
+                            "Could not determine location. Please check GPS/Network and try again."
+                        );
+                        return;
+                    }
+
+                    Alert.alert("Location Error", String(reason || "Could not get location"));
                 }
             );
-        });
+        } finally {
+            // ✅ reset at end for stability
+            swipeRef.current?.reset();
+            setIsSubmitting(false);
+        }
     };
 
 
@@ -718,6 +747,6 @@ const styles = StyleSheet.create({
         color: '#fff',
     },
 
-    
+
 
 })

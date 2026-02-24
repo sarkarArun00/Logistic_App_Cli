@@ -106,7 +106,7 @@ function Receiptview({ navigation, route }) {
 
 
   const generateAndSharePDF = async () => {
-    
+
     const receiptName = `Receipt_${receiptData?.receiptId || 'Unknown'}`.replace(/[^a-zA-Z0-9_-]/g, '');
     const htmlContent = `
     <!DOCTYPE html>
@@ -219,7 +219,7 @@ body{ font-family: "Montserrat", sans-serif; background:#f0f4f8; padding:20px;  
     <div class="round-box-one"></div>
     <div class="round-box-two"></div>
     <div class="dotted-line"></div>  
-</div>
+</div> 
 
 <div class="reference-code">
     <div class="reference-label">Payment Receipt</div>

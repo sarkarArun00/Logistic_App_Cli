@@ -1,0 +1,50 @@
+diff --git a/node_modules/react-native-swipe-verify/src/index.js b/node_modules/react-native-swipe-verify/src/index.js
+index 34b0740..0fc3a6a 100644
+--- a/node_modules/react-native-swipe-verify/src/index.js
++++ b/node_modules/react-native-swipe-verify/src/index.js
+@@ -104,26 +104,26 @@ export default class RNSwipeVerify extends Component {
+     });
+   }
+ 
+-  reset() {
+-    this.state.drag.setOffset({ x: 0, y: 0 });
+-    Animated.timing(this.state.drag, {
+-      toValue: { x: 0, y: 0 },
+-      duration: 300
+-    }).start();
+-    this.toggleShowAnimation(true, this.props.okButton.duration);
+-    this.setState({ moving: false, verify: false, percent: 0 });
+-  }
++reset() {
++  this.state.drag.setOffset({ x: 0, y: 0 });
+ 
+-  toggleShowAnimation(visible, duration) {
+-    Animated.timing(
+-      // Animate over time
+-      this.state.buttonOpacity, // The animated value to drive
+-      {
+-        toValue: visible ? 1 : 0, // Animate to opacity: 1 (opaque)
+-        duration: duration // Make it take a while
+-      }
+-    ).start();
+-  }
++  Animated.timing(this.state.drag, {
++    toValue: { x: 0, y: 0 },
++    duration: 300,
++    useNativeDriver: true, // ✅ ADD
++  }).start();
++
++  this.toggleShowAnimation(true, this.props.okButton.duration);
++  this.setState({ moving: false, verify: false, percent: 0 });
++}
++
++toggleShowAnimation(visible, duration) {
++  Animated.timing(this.state.buttonOpacity, {
++    toValue: visible ? 1 : 0,
++    duration: duration,
++    useNativeDriver: true, // ✅ ADD
++  }).start();
++}
+ 
+   render() {
+     const {
