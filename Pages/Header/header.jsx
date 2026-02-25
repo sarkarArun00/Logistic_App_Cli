@@ -105,7 +105,7 @@ const header = ({ navigation, profileImage }) => {
               pointerEvents="none"   // <-- let taps fall through to Pressable
               style={{
                 position: 'absolute',
-                right: -2,
+                left: -2,
                 top: -2,
                 minWidth: 15,
                 height: 15,
