@@ -1534,7 +1534,7 @@ function Receipt({ navigation }) {
                     formatDate={formatDate}
                     empId={getUserId}
                     taskId={null} // ✅ pass taskId
-                    isFromTask={false}
+                    isFromTask={true}
                     showAlert={(msg, isErr) => showAlertModal(msg, isErr)}
 
                     onOpenGateway={async ({ amount, mode }) => {
