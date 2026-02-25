@@ -2060,6 +2060,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderTopEndRadius: 20,
         borderTopLeftRadius: 20,
+        maxHeight: '80%',
     },
     modalText: {
         fontFamily: 'Montserrat-Medium',

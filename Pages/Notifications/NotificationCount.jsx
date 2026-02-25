@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import TaskService from '../Services/task_service';
 import { AuthContext } from "../../Context/AuthContext";
 import { useFocusEffect } from '@react-navigation/native';
-import {useNotification } from '../../Context/NotificationContext'
+import { useNotification } from '../../Context/NotificationContext'
 
 
 
@@ -35,11 +35,11 @@ const NotificationCount = ({ navigation }) => {
             fontSize: 10,
             lineHeight: 13,
             color: '#fff',
-            right: -2,
-            top: -2,
-            minWidth: 15,
+            left: -2,
+            top: 0,
+            minWidth: 17,
             height: 15,
-            paddingHorizontal: 2,
+            paddingHorizontal: 3,
             backgroundColor: '#F43232',
             borderRadius: 8,
             textAlign: 'center',

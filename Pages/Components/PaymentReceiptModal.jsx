@@ -547,184 +547,184 @@ export default function PaymentReceiptModal({
           <ScrollView showsVerticalScrollIndicator={false}>
 
             {/* Header */}
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 15, marginBottom: 15, borderBottomWidth: 1, borderBottomColor: "#ECEDF0" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 15, paddingHorizontal: 15, marginBottom: 15, borderBottomWidth: 1, borderBottomColor: "#ECEDF0" }}>
               <Text style={styles.modalText}>Create Receipt:</Text>
               <TouchableOpacity onPress={onClose}>
                 <Image style={{ width: 18, height: 18 }} source={require("../../assets/mdlclose.png")} />
               </TouchableOpacity>
             </View>
+            <View style={{ paddingHorizontal: 15, paddingBottom: 20, }}>
+              {/* Client */}
+              <Text style={styles.label}>Client Name</Text>
+              <View style={styles.pickerContainer}>
+                <Picker selectedValue={selectClient} onValueChange={setSelectClient} style={styles.picker}>
+                  <Picker.Item label="Select Client" value="" />
+                  {clients.map((c) => (
+                    <Picker.Item key={c.id} label={c.client_name} value={c.id} />
+                  ))}
+                </Picker>
+              </View>
 
-            {/* Client */}
-            <Text style={styles.label}>Client Name</Text>
-            <View style={styles.pickerContainer}>
-              <Picker selectedValue={selectClient} onValueChange={setSelectClient} style={styles.picker}>
-                <Picker.Item label="Select Client" value="" />
-                {clients.map((c) => (
-                  <Picker.Item key={c.id} label={c.client_name} value={c.id} />
-                ))}
-              </Picker>
-            </View>
+              {/* Mode */}
+              <Text style={styles.label}>Payment Mode</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={selectPaymode}
+                  onValueChange={(value) => setSelectPaymode(value)}
+                  style={styles.picker}
+                >
+                  <Picker.Item label="Select Payment Mode" value="" />
 
-            {/* Mode */}
-            <Text style={styles.label}>Payment Mode</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={selectPaymode}
-                onValueChange={(value) => setSelectPaymode(value)}
-                style={styles.picker}
-              >
-                <Picker.Item label="Select Payment Mode" value="" />
+                  {visiblePaymentModes.map(mode => (
+                    <Picker.Item
+                      key={mode.id}
+                      label={mode.label}
+                      value={String(mode.id)}
+                    />
+                  ))}
+                </Picker>
+              </View>
 
-                {visiblePaymentModes.map(mode => (
-                  <Picker.Item
-                    key={mode.id}
-                    label={mode.label}
-                    value={String(mode.id)}
-                  />
-                ))}
-              </Picker>
-            </View>
+              {/* Amount */}
+              <Text style={styles.label}>Amount</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter Amount"
+                value={amount}
+                onChangeText={setAmount}
+                keyboardType="numeric"
+                onEndEditing={openDetailsModalIfNeeded}
+              />
 
-            {/* Amount */}
-            <Text style={styles.label}>Amount</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter Amount"
-              value={amount}
-              onChangeText={setAmount}
-              keyboardType="numeric"
-              onEndEditing={openDetailsModalIfNeeded}
-            />
+              {/* Payment Details */}
+              {(String(selectPaymode) === "1" || String(selectPaymode) === "2") && (
+                <View style={styles.payDtl}>
+                  <Text style={styles.payDtlText}>Payment Details</Text>
 
-            {/* Payment Details */}
-            {(String(selectPaymode) === "1" || String(selectPaymode) === "2") && (
-              <View style={styles.payDtl}>
-                <Text style={styles.payDtlText}>Payment Details</Text>
+                  {/* Cash summary */}
+                  {String(selectPaymode) === "1" && (
+                    <>
+                      <View style={styles.denoBoxMain}>
+                        <Text style={[styles.denoLabel, { flex: 2 }]}>Denomination</Text>
+                        <Text style={[styles.denoLabel, { flex: 1 }, styles.centerColumn]}>Qty.</Text>
+                        <Text style={[styles.denoLabel, { flex: 1 }, styles.rightColumn]}>Amount</Text>
+                      </View>
 
-                {/* Cash summary */}
-                {String(selectPaymode) === "1" && (
-                  <>
-                    <View style={styles.denoBoxMain}>
-                      <Text style={[styles.denoLabel, { flex: 2 }]}>Denomination</Text>
-                      <Text style={[styles.denoLabel, { flex: 1 }, styles.centerColumn]}>Qty.</Text>
-                      <Text style={[styles.denoLabel, { flex: 1 }, styles.rightColumn]}>Amount</Text>
-                    </View>
-
-                    {breakup.length === 0 ? (
-                      <Text style={{ paddingVertical: 12, color: "#777" }}>No denominations selected.</Text>
-                    ) : (
-                      breakup.map((row) => (
-                        <View key={`${row.type}_${row.denom}`} style={styles.denoBoxInn}>
-                          <View style={[styles.denoValue2, { flex: 2 }]}>
-                            <Image style={{ width: 30, height: 17, resizeMode: "contain" }} source={require("../../assets/money.png")} />
-                            <Text>₹{row.denom}</Text>
+                      {breakup.length === 0 ? (
+                        <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, lineHeight: 16, paddingVertical: 12, color: "#777" }}>No denominations selected.</Text>
+                      ) : (
+                        breakup.map((row) => (
+                          <View key={`${row.type}_${row.denom}`} style={styles.denoBoxInn}>
+                            <View style={[styles.denoValue2, { flex: 2 }]}>
+                              <Image style={{ width: 30, height: 17, resizeMode: "contain" }} source={require("../../assets/money.png")} />
+                              <Text>₹{row.denom}</Text>
+                            </View>
+                            <Text style={[styles.denoValue, { flex: 1 }, styles.centerColumn]}>{row.qty}</Text>
+                            <Text style={[styles.denoValue, { flex: 1 }, styles.rightColumn]}>₹{row.lineAmount}</Text>
                           </View>
-                          <Text style={[styles.denoValue, { flex: 1 }, styles.centerColumn]}>{row.qty}</Text>
-                          <Text style={[styles.denoValue, { flex: 1 }, styles.rightColumn]}>₹{row.lineAmount}</Text>
-                        </View>
-                      ))
-                    )}
+                        ))
+                      )}
 
-                    <View style={styles.sumTotal}>
-                      <Text style={styles.sumTotalLabel}>Sum Total</Text>
-                      <Text style={styles.sumTotaValue}>₹ {total.toFixed(2)}</Text>
-                    </View>
+                      <View style={styles.sumTotal}>
+                        <Text style={styles.sumTotalLabel}>Sum Total</Text>
+                        <Text style={styles.sumTotaValue}>₹ {total.toFixed(2)}</Text>
+                      </View>
 
-                    {/* <View style={styles.amtWords}>
+                      {/* <View style={styles.amtWords}>
                     <Text style={styles.amountInWdLabel}>Amount in Words</Text>
                     <Text style={styles.amountInWdValue}>
                       {enteredAmount ? `${toWords(enteredAmount)} Only` : "-"}
                     </Text>
                   </View> */}
 
-                    <TouchableOpacity onPress={() => setDetailsModalVisible(true)} style={{ marginTop: 10 }}>
-                      <Text style={{ color: "#2F81F5" }}>Edit Denominations</Text>
-                    </TouchableOpacity>
-                  </>
-                )}
+                      <TouchableOpacity onPress={() => setDetailsModalVisible(true)} style={{ marginTop: 10 }}>
+                        <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, lineHeight: 16, color: "#2F81F5" }}>Edit Denominations</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
 
-                {/* Cheque summary */}
-                {String(selectPaymode) === "2" && (
-                  <>
-                    {!chequeDetails ? (
-                      <Text style={{ paddingVertical: 12, color: "#777" }}>Cheque details not submitted.</Text>
-                    ) : (
-                      <>
-                        <View style={styles.isCheckBox}>
-                          <Text style={styles.isCheckBoxLabel}>Cheque No.</Text>
-                          <Text style={styles.isCheckBoxValue}>{chequeDetails.chequeNo}</Text>
-                        </View>
+                  {/* Cheque summary */}
+                  {String(selectPaymode) === "2" && (
+                    <>
+                      {!chequeDetails ? (
+                        <Text style={{ paddingVertical: 12, color: "#777" }}>Cheque details not submitted.</Text>
+                      ) : (
+                        <>
+                          <View style={styles.isCheckBox}>
+                            <Text style={styles.isCheckBoxLabel}>Cheque No.</Text>
+                            <Text style={styles.isCheckBoxValue}>{chequeDetails.chequeNo}</Text>
+                          </View>
 
-                        <View style={styles.isCheckBox}>
-                          <Text style={styles.isCheckBoxLabel}>Cheque Date</Text>
-                          <Text style={styles.isCheckBoxValue}>{formatDate(chequeDetails.chequeDate)}</Text>
-                        </View>
+                          <View style={styles.isCheckBox}>
+                            <Text style={styles.isCheckBoxLabel}>Cheque Date</Text>
+                            <Text style={styles.isCheckBoxValue}>{formatDate(chequeDetails.chequeDate)}</Text>
+                          </View>
 
-                        <View style={styles.isCheckBox}>
-                          <Text style={styles.isCheckBoxLabel}>Bank Name</Text>
-                          <Text style={styles.isCheckBoxValue}>{chequeDetails.bankName || "-"}</Text>
-                        </View>
+                          <View style={styles.isCheckBox}>
+                            <Text style={styles.isCheckBoxLabel}>Bank Name</Text>
+                            <Text style={styles.isCheckBoxValue}>{chequeDetails.bankName || "-"}</Text>
+                          </View>
 
-                        <View style={styles.isCheckBox}>
-                          <Text style={styles.isCheckBoxLabel}>Amount</Text>
-                          <Text style={styles.isCheckBoxValue}>₹{chequeDetails.amount}</Text>
-                        </View>
+                          <View style={styles.isCheckBox}>
+                            <Text style={styles.isCheckBoxLabel}>Amount</Text>
+                            <Text style={styles.isCheckBoxValue}>₹{chequeDetails.amount}</Text>
+                          </View>
 
-                        {/* <View style={styles.isCheckBox}>
+                          {/* <View style={styles.isCheckBox}>
                         <Text style={styles.isCheckBoxLabel}>Amount In Words</Text>
                         <Text style={styles.isCheckBoxValue}>{toWords(Number(chequeDetails.amount))} Only</Text>
                       </View> */}
-                      </>
-                    )}
+                        </>
+                      )}
 
-                    <TouchableOpacity onPress={() => setDetailsModalVisible(true)} style={{ marginTop: 10 }}>
-                      <Text style={{ color: "#2F81F5" }}>Edit Cheque Details</Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-              </View>
-            )}
-
-            {/* Attachment */}
-            <Text style={styles.label}>Attachment</Text>
-            <TouchableOpacity style={styles.uploadContainer} onPress={onPickAttachment}>
-              <Image style={{ width: 30, height: 28 }} source={require("../../assets/upload-icon.png")} />
-              <Text style={styles.uploadTitle}>Upload</Text>
-              <Text style={styles.uploadSubTitle}>Supports JPG, JPEG, and PNG</Text>
-            </TouchableOpacity>
-
-            {attachment?.uri ? (
-              <View style={{ marginTop: 10 }}>
-                <Text style={{ color: "#333" }}>
-                  Selected: {attachment.name}
-                </Text>
-              </View>
-            ) : null}
-
-            {/* Remarks */}
-            <Text style={styles.label}>Remarks</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Remarks"
-              value={remarks}
-              onChangeText={setRemarks}
-            />
-
-            {/* Action */}
-            <TouchableOpacity
-              onPress={handleGenerateOrPay}
-              style={{ backgroundColor: "#2F81F5", borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10 }}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator />
-              ) : (
-                <Text style={{ fontSize: 16, color: "white", textAlign: "center", fontFamily: "Montserrat-SemiBold" }}>
-                  {String(selectPaymode) === "3" || String(selectPaymode) === "4" ? "Pay & Submit" : "Generate"}
-                </Text>
+                      <TouchableOpacity onPress={() => setDetailsModalVisible(true)} style={{ marginTop: 10 }}>
+                        <Text style={{ color: "#2F81F5" }}>Edit Cheque Details</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
               )}
-            </TouchableOpacity>
 
+              {/* Attachment */}
+              <Text style={styles.label}>Attachment</Text>
+              <TouchableOpacity style={styles.uploadContainer} onPress={onPickAttachment}>
+                <Image style={{ width: 30, height: 28, margin: 'auto' }} source={require("../../assets/upload-icon.png")} />
+                <Text style={styles.uploadTitle}>Upload</Text>
+                <Text style={styles.uploadSubTitle}>Supports JPG, JPEG, and PNG</Text>
+              </TouchableOpacity>
+
+              {attachment?.uri ? (
+                <View style={{ marginTop: 10 }}>
+                  <Text style={{ color: "#333" }}>
+                    Selected: {attachment.name}
+                  </Text>
+                </View>
+              ) : null}
+
+              {/* Remarks */}
+              <Text style={styles.label}>Remarks</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Remarks"
+                value={remarks}
+                onChangeText={setRemarks}
+              />
+
+              {/* Action */}
+              <TouchableOpacity
+                onPress={handleGenerateOrPay}
+                style={{ backgroundColor: "#2F81F5", borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10 }}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator />
+                ) : (
+                  <Text style={{ fontSize: 16, color: "white", textAlign: "center", fontFamily: "Montserrat-SemiBold" }}>
+                    {String(selectPaymode) === "3" || String(selectPaymode) === "4" ? "Pay & Submit" : "Generate"}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </ScrollView>
         </View>
 
@@ -733,7 +733,7 @@ export default function PaymentReceiptModal({
           <View style={styles.modalBackground}>
             <View style={styles.modalContainer}>
 
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 15, marginBottom: 15, borderBottomWidth: 1, borderBottomColor: "#ECEDF0" }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 15, paddingVertical: 15, marginBottom: 15, borderBottomWidth: 1, borderBottomColor: "#ECEDF0" }}>
                 <Text style={styles.modalText}>
                   {String(selectPaymode) === "1" ? "Enter Denominations:" : "Enter Cheque Details:"}
                 </Text>
@@ -741,98 +741,98 @@ export default function PaymentReceiptModal({
                   <Image style={{ width: 18, height: 18 }} source={require("../../assets/mdlclose.png")} />
                 </TouchableOpacity>
               </View>
-
-              {/* CASH */}
-              {String(selectPaymode) === "1" && (
-                <>
-                  <View style={styles.toggleWrap}>
-                    {["note", "coin"].map((t) => (
-                      <TouchableOpacity key={t} onPress={() => setTab(t)} style={[styles.toggleBtn, tab === t && styles.toggleBtnActive]}>
-                        <Text style={tab === t && styles.toggleBtnActiveText}>{t.charAt(0).toUpperCase() + t.slice(1)}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-
-                  <ScrollView>
-                    {(denoms[tab] || []).map((val) => {
-                      const key = `${tab}_${val}`;
-                      const qty = counts[key] ?? 0;
-
-                      return (
-                        <View key={key} style={styles.DenoRows}>
-                          <Text style={styles.amount}>₹{val}</Text>
-
-                          <View style={styles.counter}>
-                            <TouchableOpacity onPress={() => updateCount(tab, val, -1)} style={styles.counterBtn} disabled={qty === 0}>
-                              <Text>-</Text>
-                            </TouchableOpacity>
-
-                            <Text style={styles.countText}>{qty}</Text>
-
-                            <TouchableOpacity onPress={() => updateCount(tab, val, 1)} style={styles.counterBtn}>
-                              <Text>+</Text>
-                            </TouchableOpacity>
-                          </View>
-                        </View>
-                      );
-                    })}
-                  </ScrollView>
-
-                  <View style={styles.totalBox}>
-                    <Text style={styles.totalText}>Total Amount:</Text>
-                    <Text style={styles.totalText}>₹{total}</Text>
-                  </View>
-
-                  <TouchableOpacity onPress={submitCashDetails} style={{ backgroundColor: "#2F81F5", borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10 }}>
-                    <Text style={{ fontFamily: "Montserrat-SemiBold", fontSize: 16, color: "white", textAlign: "center" }}>Submit</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-
-              {/* CHEQUE */}
-              {String(selectPaymode) === "2" && (
-                <>
-                  <Text style={styles.label}>Cheque No.</Text>
-                  <TextInput style={styles.input} placeholder="Enter Cheque No." value={chequeNo} onChangeText={setChequeNo} />
-
-                  {/* Keep your date picker implementation outside & pass handlers if needed */}
-                  <Text style={styles.label}>Cheque Date</Text>
-
-                  <TouchableOpacity
-                    style={styles.dateContainer ?? styles.input}   // use your dateContainer if exists
-                    onPress={showChequeDatePicker}
-                  >
-                    <Text style={{ color: chequeDate ? "#000" : "#0C0D36", fontFamily: "Montserrat-Medium", fontSize: 15 }}>
-                      {chequeDate ? formatDate(chequeDate) : "Select Cheque Date"}
-                    </Text>
-                  </TouchableOpacity>
-
-                  <DateTimePickerModal
-                    isVisible={isDatePickerVisible}
-                    mode="date"
-                    onConfirm={handleChequeDateConfirm}
-                    onCancel={hideChequeDatePicker}
-                  />
-
-                  <Text style={styles.label}>Bank Name</Text>
-                  <View style={styles.pickerContainer}>
-                    <Picker selectedValue={selectBank} onValueChange={setSelectBank} style={styles.picker}>
-                      <Picker.Item label="Select bank" value="" />
-                      {banks.map((b) => (
-                        <Picker.Item key={b.id} label={b.bank_name} value={b.id} />
+              <View style={{ paddingHorizontal: 15, paddingBottom: 20, }}>
+                {String(selectPaymode) === "1" && (
+                  <>
+                    <View style={styles.toggleWrap}>
+                      {["note", "coin"].map((t) => (
+                        <TouchableOpacity key={t} onPress={() => setTab(t)} style={[styles.toggleBtn, tab === t && styles.toggleBtnActive]}>
+                          <Text style={tab === t && styles.toggleBtnActiveText}>{t.charAt(0).toUpperCase() + t.slice(1)}</Text>
+                        </TouchableOpacity>
                       ))}
-                    </Picker>
-                  </View>
+                    </View>
 
-                  <Text style={styles.label}>Amount</Text>
-                  <TextInput style={[styles.input, { backgroundColor: "#F3F4F6" }]} value={String(enteredAmount || "")} editable={false} />
+                    <ScrollView>
+                      {(denoms[tab] || []).map((val) => {
+                        const key = `${tab}_${val}`;
+                        const qty = counts[key] ?? 0;
 
-                  <TouchableOpacity onPress={submitChequeDetails} style={{ backgroundColor: "#2F81F5", borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10 }}>
-                    <Text style={{ fontFamily: "Montserrat-SemiBold", fontSize: 16, color: "white", textAlign: "center" }}>Submit</Text>
-                  </TouchableOpacity>
-                </>
-              )}
+                        return (
+                          <View key={key} style={styles.DenoRows}>
+                            <Text style={styles.amount}>₹{val}</Text>
 
+                            <View style={styles.counter}>
+                              <TouchableOpacity onPress={() => updateCount(tab, val, -1)} style={styles.counterBtn} disabled={qty === 0}>
+                                <Text>-</Text>
+                              </TouchableOpacity>
+
+                              <Text style={styles.countText}>{qty}</Text>
+
+                              <TouchableOpacity onPress={() => updateCount(tab, val, 1)} style={styles.counterBtn}>
+                                <Text>+</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </ScrollView>
+
+                    <View style={styles.totalBox}>
+                      <Text style={styles.totalText}>Total Amount:</Text>
+                      <Text style={styles.totalText}>₹{total}</Text>
+                    </View>
+
+                    <TouchableOpacity onPress={submitCashDetails} style={{ backgroundColor: "#2F81F5", borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10 }}>
+                      <Text style={{ fontFamily: "Montserrat-SemiBold", fontSize: 16, color: "white", textAlign: "center" }}>Submit</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+
+                {/* CHEQUE */}
+                {String(selectPaymode) === "2" && (
+                  <>
+                    <Text style={styles.label}>Cheque No.</Text>
+                    <TextInput style={styles.input} placeholder="Enter Cheque No." value={chequeNo} onChangeText={setChequeNo} />
+
+                    {/* Keep your date picker implementation outside & pass handlers if needed */}
+                    <Text style={styles.label}>Cheque Date</Text>
+
+                    <TouchableOpacity
+                      style={styles.dateContainer ?? styles.input}   // use your dateContainer if exists
+                      onPress={showChequeDatePicker}
+                    >
+                      <Text style={{ color: chequeDate ? "#000" : "#0C0D36", fontFamily: "Montserrat-Medium", fontSize: 15 }}>
+                        {chequeDate ? formatDate(chequeDate) : "Select Cheque Date"}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <DateTimePickerModal
+                      isVisible={isDatePickerVisible}
+                      mode="date"
+                      onConfirm={handleChequeDateConfirm}
+                      onCancel={hideChequeDatePicker}
+                    />
+
+                    <Text style={styles.label}>Bank Name</Text>
+                    <View style={styles.pickerContainer}>
+                      <Picker selectedValue={selectBank} onValueChange={setSelectBank} style={styles.picker}>
+                        <Picker.Item label="Select bank" value="" />
+                        {banks.map((b) => (
+                          <Picker.Item key={b.id} label={b.bank_name} value={b.id} />
+                        ))}
+                      </Picker>
+                    </View>
+
+                    <Text style={styles.label}>Amount</Text>
+                    <TextInput style={[styles.input, { backgroundColor: "#F3F4F6" }]} value={String(enteredAmount || "")} editable={false} />
+
+                    <TouchableOpacity onPress={submitChequeDetails} style={{ backgroundColor: "#2F81F5", borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10 }}>
+                      <Text style={{ fontFamily: "Montserrat-SemiBold", fontSize: 16, color: "white", textAlign: "center" }}>Submit</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+              {/* CASH */}
             </View>
           </View>
         </Modal>
