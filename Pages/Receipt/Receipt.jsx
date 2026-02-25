@@ -19,6 +19,13 @@ import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { imageBase64, logoBase64 } from './base64image'
 import _ from 'lodash';
 import PaymentReceiptModal from '../Components/PaymentReceiptModal';
+import { Linking } from "react-native";
+// import { Buffer } from "buffer";
+// import FileViewer from "react-native-file-viewer";
+
+// global.Buffer = Buffer;
+// await FileViewer.open(path);
+
 
 
 
@@ -692,6 +699,23 @@ function Receipt({ navigation }) {
         }
     };
 
+    const downloadReceipt = async (item) => {
+        try {
+            console.log("Downloading receipt:", item.receiptId);
+
+            const url = await TaskService.openReceiptInBrowser(item.receiptId);
+
+            const supported = await Linking.canOpenURL(url);
+
+            if (supported) {
+                await Linking.openURL(url);
+            } else {
+                console.log("Cannot open URL:", url);
+            }
+        } catch (error) {
+            console.log("downloadReceipt error:", error);
+        }
+    };
 
     const getStatusColor = (authoriseStatus, generateStatus) => {
         if (authoriseStatus == 0 || generateStatus == 0) {
@@ -1364,13 +1388,15 @@ function Receipt({ navigation }) {
                                                                         <Text style={styles.downloadText}>View</Text>
                                                                     </TouchableOpacity>
                                                                     <TouchableOpacity
-                                                                        style={[styles.viewText, item.generateStatus == null && { opacity: 0.5 }]}
+                                                                        // , item.generateStatus == null && { opacity: 0.5 }
+                                                                        style={[styles.viewText]}
                                                                         onPress={() => {
-                                                                            if (item.generateStatus != null) {
-                                                                                generateAndDownloadPDF(item);
-                                                                            }
+                                                                            // if (item.generateStatus != null) {
+                                                                            // generateAndDownloadPDF(item);
+                                                                            downloadReceipt(item)
+                                                                            // }
                                                                         }}
-                                                                        disabled={item.generateStatus == null}
+                                                                    // disabled={item.generateStatus == null}
                                                                     >
                                                                         <Text style={styles.downloadText}>Download</Text>
                                                                     </TouchableOpacity>

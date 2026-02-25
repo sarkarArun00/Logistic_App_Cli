@@ -5,7 +5,7 @@ import { globalApiClient, apiClient } from './API';
 import { Linking, Alert } from 'react-native';
 import { useGlobalAlert } from '../../Context/GlobalAlertContext';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import RNFS from 'react-native-fs';
 import { BASE_API_URL } from "./API";
 
 const joinUrl = (base, path) =>
@@ -246,6 +246,19 @@ const TaskService = {
     }
   },
 
+  openReceiptInBrowser: async (receiptId) => {
+    try {
+      // const encodedId = encodeURIComponent(receiptId);
+
+      const url = `${BASE_API_URL}accounts/payment/downloadReceipt/${receiptId}`;
+
+      return url; // just return URL
+    } catch (error) {
+      console.log("openReceiptInBrowser error:", error);
+      throw error;
+    }
+  },
+
   addTaskAttachment: async (data) => {
     try {
       const response = await apiClient.post('operation/task-attachment/addTaskAttachment', data, {
@@ -269,6 +282,7 @@ const TaskService = {
       throw error;
     }
   },
+
 
 
 
