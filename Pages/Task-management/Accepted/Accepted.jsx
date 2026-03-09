@@ -7,7 +7,7 @@ import {
 import TaskService from '../../Services/task_service';
 import TaskStatusTabs from '../TaskStatusTabs'
 import NotificationCount from '../../Notifications/NotificationCount';
-import {GlobalStyles} from '../../GlobalStyles';
+import { GlobalStyles } from '../../GlobalStyles';
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
 import { useSearch } from '../../../hooks/userSearch1';
 
@@ -27,9 +27,9 @@ function Accepted({ navigation }) {
     const [selectedItem, setSelectedTaskDesc] = useState('');
     // const [visibleCount, setVisibleCount] = useState(5);
     // const [visibleTasks, setVisibleTasks] = useState([]);
-    
+
     const [loadingMore, setLoadingMore] = useState(false);
-    
+
     const { showAlertModal, hideAlert } = useGlobalAlert();
     const [allTasksData, setAllTasksData] = useState([]);
     const [visibleCount, setVisibleCount] = useState(5);
@@ -63,11 +63,11 @@ function Accepted({ navigation }) {
 
                 setAllTasksData(response.data || []);
                 // setVisibleTasks(response.data?.slice(0, 5) || []);
-                search('',response.data)
+                search('', response.data)
             } else {
                 setAllTasksData([]);
                 // setVisibleTasks([]);
-                search('',[])
+                search('', [])
             }
         } catch (error) {
             // console.error('Error fetching tasks:', error);
@@ -76,7 +76,7 @@ function Accepted({ navigation }) {
         }
     };
 
-    
+
     const startTask = async (task_Id) => {
         try {
             setLoading(true)
@@ -182,7 +182,7 @@ function Accepted({ navigation }) {
         const cleaned = call.replace(/\D/g, ''); // remove spaces, dashes, etc.
         const formatted = cleaned.startsWith('+') ? cleaned : `+91${cleaned}`; // assuming India
         Linking.openURL(`tel:${formatted}`);
-      };
+    };
 
     // if (loading) {
     //     return (
@@ -212,7 +212,7 @@ function Accepted({ navigation }) {
                     </TouchableOpacity>
                     <View >
                         <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
-                        <View pointerEvents="none">
+                            <View pointerEvents="none">
                                 <NotificationCount />
                             </View>
                         </TouchableOpacity>
@@ -225,7 +225,7 @@ function Accepted({ navigation }) {
                         placeholder="Search"
                         placeholderTextColor="#0C0D36"
                         value={searchQuery}
-                        onChangeText={(text)=> search(text,allTasksData)}
+                        onChangeText={(text) => search(text, allTasksData)}
                     />
                     <Image style={{ position: 'absolute', top: 16, right: 20, width: 20, height: 20, }} source={require('../../../assets/search.png')} />
                 </View>
@@ -235,7 +235,7 @@ function Accepted({ navigation }) {
                     <TaskStatusTabs activeTab="Accepted" />
                 </ScrollView> */}
 
-                <View style={[{ paddingHorizontal: 3, paddingBottom:10, },]}>
+                <View style={[{ paddingHorizontal: 3, paddingBottom: 10, },]}>
 
                     {visibleTasks && visibleTasks.length > 0 ? (
                         visibleTasks.map((task, index) => (
@@ -245,9 +245,36 @@ function Accepted({ navigation }) {
                                         <View style={{ width: 29, height: 29, borderRadius: 50, backgroundColor: '#edfafc', alignItems: 'center', justifyContent: 'center' }}>
                                             <Image style={{ width: 17, height: 17 }} source={require('../../../assets/texticon.png')} />
                                         </View>
-                                        <Text style={{ flex: 1, paddingLeft: 7, fontFamily: 'Montserrat-Medium', fontSize: 15, color: '#2F81F5' }}>
+                                        {
+                                            task?.request_id && task?.taskType?.taskType === 'Sample Pickup' ? (
+                                                <Text
+                                                    style={{
+                                                        flex: 1,
+                                                        paddingLeft: 7,
+                                                        fontFamily: 'Montserrat-Medium',
+                                                        fontSize: 15,
+                                                        color: '#2F81F5'
+                                                    }}
+                                                >
+                                                    Pickup Request
+                                                </Text>
+                                            ) : (
+                                                <Text
+                                                    style={{
+                                                        flex: 1,
+                                                        paddingLeft: 7,
+                                                        fontFamily: 'Montserrat-Medium',
+                                                        fontSize: 15,
+                                                        color: '#2F81F5'
+                                                    }}
+                                                >
+                                                    {task?.taskType?.taskType}
+                                                </Text>
+                                            )
+                                        }
+                                        {/* <Text style={{ flex: 1, paddingLeft: 7, fontFamily: 'Montserrat-Medium', fontSize: 15, color: '#2F81F5' }}>
                                             {task.taskType?.taskType}
-                                        </Text>
+                                        </Text> */}
                                     </View>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 13 }}>
                                         <TouchableOpacity onPress={() => makeCall(task?.pickUpLocation?.contact)}>
@@ -532,7 +559,7 @@ const styles = StyleSheet.create({
         elevation: 3,
         marginTop: 20,
         borderRadius: 15,
-        marginBottom:20,
+        marginBottom: 20,
     },
     oncetxt: {
         fontFamily: 'Montserrat-Medium',

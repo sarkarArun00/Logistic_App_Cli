@@ -330,6 +330,24 @@ body{ font-family: "Montserrat", sans-serif; background:#f0f4f8; padding:20px;  
   };
 
 
+  const downloadReceipt = async (item) => {
+    try {
+      console.log("Downloading receipt:", item.receiptId);
+
+      const url = await TaskService.openReceiptInBrowser(item.receiptId);
+
+      const supported = await Linking.canOpenURL(url);
+
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.log("Cannot open URL:", url);
+      }
+    } catch (error) {
+      console.log("downloadReceipt error:", error);
+    }
+  };
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -435,7 +453,9 @@ body{ font-family: "Montserrat", sans-serif; background:#f0f4f8; padding:20px;  
               }
             }}>
             <Image style={{ width: 24, height: 24 }} source={require('../../assets/downloadIcon.png')} />
-            <Text style={styles.pdfText}>Get PDF Receipt</Text>
+            <Text style={styles.pdfText} onPress={() => {
+              downloadReceipt(receiptData)
+            }}>Get PDF Receipt</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.doneBtn} onPress={() => navigation.goBack()}>
             <Text style={styles.doneText}>Done</Text>

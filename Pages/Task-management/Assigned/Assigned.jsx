@@ -436,9 +436,36 @@ function Assigned({ navigation }) {
                                         <View style={{ width: 29, height: 29, borderRadius: 50, backgroundColor: '#edfafc', alignItems: 'center', justifyContent: 'center' }}>
                                             <Image style={{ width: 17, height: 17 }} source={require('../../../assets/texticon.png')} />
                                         </View>
-                                        <Text style={{ flex: 1, paddingLeft: 7, fontFamily: 'Montserrat-Medium', fontSize: 15, color: '#2F81F5' }}>
+                                        {
+                                            task?.request_id && task?.taskType?.taskType === 'Sample Pickup' ? (
+                                                <Text
+                                                    style={{
+                                                        flex: 1,
+                                                        paddingLeft: 7,
+                                                        fontFamily: 'Montserrat-Medium',
+                                                        fontSize: 15,
+                                                        color: '#2F81F5'
+                                                    }}
+                                                >
+                                                    Pickup Request
+                                                </Text>
+                                            ) : (
+                                                <Text
+                                                    style={{
+                                                        flex: 1,
+                                                        paddingLeft: 7,
+                                                        fontFamily: 'Montserrat-Medium',
+                                                        fontSize: 15,
+                                                        color: '#2F81F5'
+                                                    }}
+                                                >
+                                                    {task?.taskType?.taskType}
+                                                </Text>
+                                            )
+                                        }
+                                        {/* <Text style={{ flex: 1, paddingLeft: 7, fontFamily: 'Montserrat-Medium', fontSize: 15, color: '#2F81F5' }}>
                                             {task.taskType?.taskType}
-                                        </Text>
+                                        </Text> */}
                                     </View>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 13 }}>
                                         <TouchableOpacity onPress={() => makeCall(task?.pickUpLocation?.contact)}>
@@ -472,9 +499,19 @@ function Assigned({ navigation }) {
                                         </View>
                                         <View style={{ position: 'relative', marginBottom: 5 }}>
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 13, height: 13 }} source={require('../../../assets/asicon4.png')} />
-                                            <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
-                                                Assigned By: {task?.assigned?.assigner.employee_name}
-                                            </Text>
+
+                                            {task?.assigned?.assigner?.employee_name && (
+                                                <Text
+                                                    style={{
+                                                        fontFamily: 'Montserrat-Medium',
+                                                        fontSize: 13,
+                                                        color: '#0C0D36',
+                                                        paddingLeft: 20,
+                                                    }}
+                                                >
+                                                    Assigned By: {task.assigned.assigner.employee_name}
+                                                </Text>
+                                            )}
                                         </View>
                                         {/* {
                                             task?.pickUpLocation?.client_name && (
