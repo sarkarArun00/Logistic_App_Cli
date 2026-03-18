@@ -177,6 +177,19 @@ function Accepted({ navigation }) {
             .replace(',', ''); // Optional: Remove comma between date and time
     };
 
+    const formatDate = (isoString) => {
+        if (!isoString) return 'Invalid Date';
+
+        const date = new Date(isoString);
+
+        // Extract day, month, and year
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed in JS
+        const year = date.getFullYear();
+
+        return `${day}-${month}-${year}`;
+    };
+
     // Call Button
     const makeCall = (call) => {
         const cleaned = call.replace(/\D/g, ''); // remove spaces, dashes, etc.
@@ -364,7 +377,7 @@ function Accepted({ navigation }) {
                                     {
                                         task?.taskFrequency == 'Once' && (
                                             <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 15 }}>
-                                                <Text style={styles.oncetxt}>{formatDateTime(task?.preferredDate)}</Text>
+                                                <Text style={styles.oncetxt}>{formatDate(task?.preferredDate)}</Text>
                                                 <Text style={styles.oncetxt}>{task?.preferredTime?.start_time} - {task?.preferredTime?.end_time}</Text>
                                             </View>
                                         )

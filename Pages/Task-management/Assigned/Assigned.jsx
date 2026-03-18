@@ -355,6 +355,22 @@ function Assigned({ navigation }) {
         setImages(updatedImages);
     };
 
+    const formatDate = (isoString) => {
+        if (!isoString) return 'Invalid Date';
+
+        const date = new Date(isoString);
+
+        // Extract day, month, and year
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed in JS
+        const year = date.getFullYear();
+
+        return `${day}-${month}-${year}`;
+    };
+
+    // Usage:
+    // formatDate("2026-03-13T00:00:00.000Z") => "13-03-2026"
+
     // const sentNotification = async (taskId) => {
     //     const userId = await AsyncStorage.getItem('user_id');
     //     const userName = await AsyncStorage.getItem('user_name');
@@ -571,7 +587,7 @@ function Assigned({ navigation }) {
                                     {
                                         task?.taskFrequency == 'Once' && (
                                             <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 15 }}>
-                                                <Text style={styles.oncetxt}>{formatDateTime(task?.preferredDate)}</Text>
+                                                <Text style={styles.oncetxt}>{formatDate(task?.preferredDate)}</Text>
                                                 <Text style={styles.oncetxt}>{task?.preferredTime?.start_time} - {task?.preferredTime?.end_time}</Text>
                                             </View>
                                         )

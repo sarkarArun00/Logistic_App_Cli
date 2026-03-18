@@ -726,6 +726,19 @@ function Progress({ navigation }) {
         return `${year}-${month}-${day}`;
     };
 
+    const formatDate2 = (isoString) => {
+        if (!isoString) return 'Invalid Date';
+
+        const date = new Date(isoString);
+
+        // Extract day, month, and year
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed in JS
+        const year = date.getFullYear();
+
+        return `${day}-${month}-${year}`;
+    };
+
     // useEffect(() => {
     //     if (selectPaymode) {
     //         console.log('Paymode changed to:', selectPaymode);
@@ -936,7 +949,7 @@ function Progress({ navigation }) {
                                     {
                                         task?.taskFrequency == 'Once' && (
                                             <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 15 }}>
-                                                <Text style={styles.oncetxt}>{formatDateTime(task?.preferredDate)}</Text>
+                                                <Text style={styles.oncetxt}>{formatDate2(task?.preferredDate)}</Text>
                                                 <Text style={styles.oncetxt}>{task?.preferredTime?.start_time} - {task?.preferredTime?.end_time}</Text>
                                             </View>
                                         )
