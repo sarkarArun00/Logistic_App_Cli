@@ -151,7 +151,7 @@ function Completed({ navigation }) {
             };
 
             console.log('filter payload: ', payload)
-            
+
             const response = await TaskService.getMyCompletedTasks(payload);
 
             if (response.status === 1) {
@@ -205,7 +205,7 @@ function Completed({ navigation }) {
         const cleaned = call.replace(/\D/g, ''); // remove spaces, dashes, etc.
         const formatted = cleaned.startsWith('+') ? cleaned : `+91${cleaned}`; // assuming India
         Linking.openURL(`tel:${formatted}`);
-      };
+    };
 
 
     return (
@@ -275,7 +275,34 @@ function Completed({ navigation }) {
                                         <View style={{ width: 29, height: 29, borderRadius: '50%', backgroundColor: '#edfafc', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', }}>
                                             <Image style={{ width: 17, height: 17, }} source={require('../../../assets/texticon.png')} />
                                         </View>
-                                        <Text style={{ flex: 1, paddingLeft: 7, fontFamily: 'Montserrat-Medium', fontSize: 15, color: '#2F81F5', }}>{task.taskType?.taskType}</Text>
+                                        {/* <Text style={{ flex: 1, paddingLeft: 7, fontFamily: 'Montserrat-Medium', fontSize: 15, color: '#2F81F5', }}>{task.taskType?.taskType}</Text> */}
+                                        {
+                                            task?.request_id && task?.taskType?.taskType === 'Sample Pickup' ? (
+                                                <Text
+                                                    style={{
+                                                        flex: 1,
+                                                        paddingLeft: 7,
+                                                        fontFamily: 'Montserrat-Medium',
+                                                        fontSize: 15,
+                                                        color: '#2F81F5'
+                                                    }}
+                                                >
+                                                    Pickup Request
+                                                </Text>
+                                            ) : (
+                                                <Text
+                                                    style={{
+                                                        flex: 1,
+                                                        paddingLeft: 7,
+                                                        fontFamily: 'Montserrat-Medium',
+                                                        fontSize: 15,
+                                                        color: '#2F81F5'
+                                                    }}
+                                                >
+                                                    {task?.taskType?.taskType}
+                                                </Text>
+                                            )
+                                        }
                                     </View>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 13, }}>
                                         <TouchableOpacity onPress={() => makeCall(task?.pickUpLocation?.contact)}><Image style={{ width: 20, height: 20, }} source={require('../../../assets/call.png')} /></TouchableOpacity>
@@ -378,8 +405,25 @@ function Completed({ navigation }) {
                                 </ScrollView>
 
                                 <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', padding: 15, marginTop: 12, flexDirection: 'row', alignItems: 'center', }}>
-                                    <View><Image style={{ width: 22, height: 22, }} source={require('../../../assets/tick.png')} /></View>
-                                    <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 12, color: '#2F81F5', paddingLeft: 8, }}>Task Completed at {formatDateTime(task.updated_at)}</Text>
+
+                                    {
+                                        task.verifiedById != null ? (
+                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                <Image
+                                                    style={{ width: 22, height: 22 }}
+                                                    source={require('../../../assets/tick.png')}
+                                                />
+                                                <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 12, color: '#2F81F5', paddingLeft: 8 }}>
+                                                    Verified at {formatDateTime(task.updated_at)}
+                                                </Text>
+                                            </View>
+                                        ) : (
+                                            <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 12, color: '#2F81F5', paddingLeft: 8 }}>
+                                                {/* Task Completed at {formatDateTime(task.updated_at)} */}
+                                                Pending verification
+                                            </Text>
+                                        )
+                                    }
                                 </View>
                             </View>
                         ))
@@ -442,7 +486,7 @@ function Completed({ navigation }) {
                                     </View>
                                     <View style={{ flex: 1, }}>
                                         <Text style={styles.label}>To Date:</Text>
-                                        <TouchableOpacity onPress={() => setShowToDatePicker(true)} 
+                                        <TouchableOpacity onPress={() => setShowToDatePicker(true)}
                                             style={{
                                                 borderWidth: 1,
                                                 borderColor: '#ECEDF0',

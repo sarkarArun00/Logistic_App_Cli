@@ -383,7 +383,8 @@ function Progress({ navigation }) {
             let requestBody = {
                 taskId: selectedTaskId,
                 remarks: collectCommentText,
-                itemIds: []
+                itemIds: [],
+                hasItems: false
             }
 
             const response = await TaskService.collectMyTask(requestBody);
@@ -530,23 +531,51 @@ function Progress({ navigation }) {
         }
     };
 
+
+
+
+
     const collectItem = async () => {
         if (itemIds.length === 0) {
             showAlertModal('Please select at least one item to collect.', true);
             return;
         }
-        setLoading(true);
-        let request = {
+        // let request = {
+        //     taskId: selectedTaskId,
+        //     remarks: deliverRemarks,
+        //     itemIds: itemIds,
+        // };
+
+        const empId = await AsyncStorage.getItem("user_id");
+
+        const selectedIds = itemIds.map(item => item.itemId);
+
+        const notCollectedIds = (itemDetails || [])
+            .filter(info => !selectedIds.includes(info.itemId))
+            .map(info => ({
+                id: info.itemId,
+                qty: info.quantity || 0,
+            }));
+
+        const payload = {
             taskId: selectedTaskId,
-            remarks: deliverRemarks,
-            itemIds: itemIds,
+            remarks: deliverRemarks || "",
+            empId: Number(empId) || 0,
+
+            // convert itemId -> id
+            itemIds: itemIds.map(item => ({
+                id: item.itemId
+            })),
+
+            notCollectedIds
         };
 
-        console.log('heloooooo', request);
-
+        console.log('heloooooo', payload);
+        // return
         try {
-            setShowAlert(false);
-            const response = await TaskService.collectMyTask(request);
+            setLoading(true);
+            // setShowAlert(false);
+            const response = await TaskService.collectMyTask(payload);
             if (response.status == 1) {
                 addTaskAttachment(selectedTaskId);
                 fetchData();
@@ -556,7 +585,7 @@ function Progress({ navigation }) {
                 setDeliveryRemarks('');
                 setItemIds([]);
             } else {
-                showAlertModal('Failed to Deliver.', true);
+                showAlertModal('Failed to Collect.', true);
             }
         } catch (error) {
             console.error(error);
@@ -581,15 +610,14 @@ function Progress({ navigation }) {
     }
 
 
-    const toggleItemChecked = (id) => {
-        const isAlreadySelected = itemIds.some(item => item.id === id);
+    const toggleItemChecked = (itemId) => {
+        const exists = itemIds.some(item => item.itemId === itemId);
 
-        if (isAlreadySelected) {
-            setItemIds(prev => prev.filter(item => item.id !== id));
+        if (exists) {
+            setItemIds(prev => prev.filter(item => item.itemId !== itemId));
         } else {
-            setItemIds(prev => [...prev, { id }]);
+            setItemIds(prev => [...prev, { itemId }]);
         }
-
     };
 
 
@@ -1660,8 +1688,8 @@ function Progress({ navigation }) {
                                             </Text>
                                         </View>
                                         <Checkbox
-                                            status={itemIds.some((item) => item.id === info.id) ? 'checked' : 'unchecked'}
-                                            onPress={() => toggleItemChecked(info.id)}
+                                            status={itemIds.some(item => item.itemId === info.itemId) ? 'checked' : 'unchecked'}
+                                            onPress={() => toggleItemChecked(info.itemId)}
                                         />
 
                                     </View>

@@ -293,16 +293,16 @@ export default function PaymentReceiptModal({
     const attachmentRequired =
       payment_mode_type_id === 2 || 1; // only cheque required
 
-    if (attachmentRequired && !attachment) {
-      return { ok: false, error: "Attachment is required." };
-    }
+    // if (attachmentRequired && !attachment) {
+    //   return { ok: false, error: "Attachment is required." };
+    // }
 
     // ✅ Optional extra: validate file object if present
-    if (attachment) {
-      if (!attachment.uri || !attachment.type || !attachment.name) {
-        return { ok: false, error: "Invalid attachment. Please re-upload." };
-      }
-    }
+    // if (attachment) {
+    //   if (!attachment.uri || !attachment.type || !attachment.name) {
+    //     return { ok: false, error: "Invalid attachment. Please re-upload." };
+    //   }
+    // }
 
     const ctx = {
       ok: true,

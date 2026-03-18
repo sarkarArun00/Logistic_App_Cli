@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, FlatList, Alert, RefreshControl, ActivityIndicator} from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, FlatList, Alert, RefreshControl, ActivityIndicator } from 'react-native';
 // import { useFonts, Montserrat-SemiBold, Montserrat-Medium } from '@expo-google-fonts/montserrat';
 import { Picker } from '@react-native-picker/picker';
 import TaskStatusTabs from '../TaskStatusTabs';
@@ -12,10 +12,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // import * as ImagePicker from 'expo-image-picker';
 // import * as ImageManipulator from 'expo-image-manipulator';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import {GlobalStyles}  from '../../GlobalStyles';
+import { GlobalStyles } from '../../GlobalStyles';
 import { Vibration } from 'react-native';
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
-import {BASE_API_URL} from '../../Services/API';
+import { BASE_API_URL } from '../../Services/API';
 import { lightTheme } from '../../GlobalStyles';
 import { useSearch } from '../../../hooks/userSearch1';
 import { useFocusEffect } from '@react-navigation/native';
@@ -44,8 +44,8 @@ function Collected({ navigation }) {
     const [commentText, setCommentText] = useState('');
     const [modalVisible2, setModalVisible2] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
-        const { showAlertModal, hideAlert } = useGlobalAlert();
-        const [visibleCount, setVisibleCount] = useState(5);
+    const { showAlertModal, hideAlert } = useGlobalAlert();
+    const [visibleCount, setVisibleCount] = useState(5);
     const { searchQuery, filteredData, search } = useSearch(allTasksData);
     // const visibleTasks = searchQuery
     //     ? filteredData           // Show all if searching
@@ -85,23 +85,23 @@ function Collected({ navigation }) {
     //     }, [])
     // )
 
-    useEffect(  () => {
+    useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true)
-              const response = await TaskService.getMyCollectedTasks();
-              if(response.status==1) {
-                setAllTasksData(response.data);
-                setLoading(false)
-              } else {
-                setAllTasksData([]);
-                setLoading(false)
-              }
-              console.log('hhhhhhhhhhhhh', response);
+                const response = await TaskService.getMyCollectedTasks();
+                if (response.status == 1) {
+                    setAllTasksData(response.data);
+                    setLoading(false)
+                } else {
+                    setAllTasksData([]);
+                    setLoading(false)
+                }
+                console.log('hhhhhhhhhhhhh', response);
             } catch (error) {
-              console.error('Error fetching collected tasks:', error);
+                console.error('Error fetching collected tasks:', error);
             }
-          };
+        };
 
         // const fetchData = async () => {
         //     try {
@@ -166,7 +166,7 @@ function Collected({ navigation }) {
             const response = await TaskService.addNewComment(formData); // Send as FormData
 
             if (response.status == 1) {
-                 Vibration.vibrate(100);
+                Vibration.vibrate(100);
             }
 
             // Update the state with the new comment data
@@ -212,6 +212,23 @@ function Collected({ navigation }) {
 
     };
 
+    const fetchData = async () => {
+        try {
+            setLoading(true)
+            const response = await TaskService.getMyCollectedTasks();
+            if (response.status == 1) {
+                setAllTasksData(response.data);
+                setLoading(false)
+            } else {
+                setAllTasksData([]);
+                setLoading(false)
+            }
+            console.log('hhhhhhhhhhhhh', response);
+        } catch (error) {
+            console.error('Error fetching collected tasks:', error);
+        }
+    };
+
     const onRefresh = useCallback(() => {
         fetchData();
         getAllOperationEmpp();
@@ -220,7 +237,7 @@ function Collected({ navigation }) {
 
     const navigateToUserLocation = (task) => {
         const locationString = task?.pickUpLocation?.coordinates;
-        
+
         if (!locationString) {
             showAlertModal('Location not available', true);
             return;
@@ -379,7 +396,7 @@ function Collected({ navigation }) {
         const cleaned = call.replace(/\D/g, ''); // remove spaces, dashes, etc.
         const formatted = cleaned.startsWith('+') ? cleaned : `+91${cleaned}`; // assuming India
         Linking.openURL(`tel:${formatted}`);
-      };
+    };
 
     return (
         <SafeAreaView style={[styles.container, GlobalStyles.SafeAreaView]}>
@@ -398,7 +415,7 @@ function Collected({ navigation }) {
                     </TouchableOpacity>
                     <View >
                         <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
-                        <View pointerEvents="none">
+                            <View pointerEvents="none">
                                 <NotificationCount />
                             </View>
                         </TouchableOpacity>
@@ -411,7 +428,7 @@ function Collected({ navigation }) {
                         placeholder="Search"
                         placeholderTextColor="#0C0D36"
                         value={searchQuery}
-                        onChangeText={(text)=> search(text,allTasksData)}
+                        onChangeText={(text) => search(text, allTasksData)}
                     />
                     <Image style={{ position: 'absolute', top: 16, right: 20, width: 20, height: 20, }} source={require('../../../assets/search.png')} />
                 </View>
@@ -429,9 +446,36 @@ function Collected({ navigation }) {
                                         <View style={{ width: 29, height: 29, borderRadius: 50, backgroundColor: '#edfafc', alignItems: 'center', justifyContent: 'center' }}>
                                             <Image style={{ width: 17, height: 17 }} source={require('../../../assets/texticon.png')} />
                                         </View>
-                                        <Text style={{ flex: 1, paddingLeft: 7, fontFamily: 'Montserrat-Medium', fontSize: 15, color: '#2F81F5' }}>
+                                        {/* <Text style={{ flex: 1, paddingLeft: 7, fontFamily: 'Montserrat-Medium', fontSize: 15, color: '#2F81F5' }}>
                                             {task.taskType?.taskType}
-                                        </Text>
+                                        </Text> */}
+                                        {
+                                            task?.request_id && task?.taskType?.taskType === 'Sample Pickup' ? (
+                                                <Text
+                                                    style={{
+                                                        flex: 1,
+                                                        paddingLeft: 7,
+                                                        fontFamily: 'Montserrat-Medium',
+                                                        fontSize: 15,
+                                                        color: '#2F81F5'
+                                                    }}
+                                                >
+                                                    Pickup Request
+                                                </Text>
+                                            ) : (
+                                                <Text
+                                                    style={{
+                                                        flex: 1,
+                                                        paddingLeft: 7,
+                                                        fontFamily: 'Montserrat-Medium',
+                                                        fontSize: 15,
+                                                        color: '#2F81F5'
+                                                    }}
+                                                >
+                                                    {task?.taskType?.taskType}
+                                                </Text>
+                                            )
+                                        }
                                     </View>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 13 }}>
                                         <TouchableOpacity onPress={() => makeCall(task?.pickUpLocation?.contact)}>
@@ -563,15 +607,15 @@ function Collected({ navigation }) {
                                 No Data Found
                             </Text> */}
                             <Image style={{ width: 200, height: 200, marginTop: -50 }}
-                                    source={require('../../../assets/empty.png')} 
-                                    resizeMode="contain"
-                                  />
+                                source={require('../../../assets/empty.png')}
+                                resizeMode="contain"
+                            />
                         </View>
                     )}
 
                 </View>
 
-                {/* Modal Start Here */}
+                {/* Handover Modal Start Here */}
                 <Modal
                     visible={collectModalVisible}
                     transparent={true}
@@ -592,7 +636,7 @@ function Collected({ navigation }) {
                                             selectedValue={selectedValue}
                                             onValueChange={(itemValue, itemIndex) => setSelectedValue(itemValue)}
                                             style={styles.picker} // Apply text color here
-                                dropdownIconColor={lightTheme.inputText} // Android only
+                                            dropdownIconColor={lightTheme.inputText} // Android only
                                         >
                                             <Picker.Item label="-select-" value="" />
                                             {operations.map((operation) => (
@@ -635,7 +679,7 @@ function Collected({ navigation }) {
                                         <Text style={styles.label}>Description</Text>
                                         <TextInput
                                             style={styles.textarea}
-                                            placeholder="Placeholder"
+                                            placeholder="Write here.."
                                             multiline={true}
                                             value={selectedItem?.description}
                                         />
@@ -821,24 +865,24 @@ function Collected({ navigation }) {
 
 const styles = StyleSheet.create({
 
-    
-     label: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: lightTheme.text,
-  },
-  pickerContainer: {
-    backgroundColor: lightTheme.inputBackground,
-    borderWidth: 1,
-    borderColor: lightTheme.border,
-    borderRadius: 8,
-    overflow: 'hidden',
-    marginBottom: 16,
-  },
-  picker: {
-    height: 50,
-    color: lightTheme.inputText, // Works on iOS and sometimes Android
-  },
+
+    label: {
+        fontSize: 16,
+        marginBottom: 8,
+        color: lightTheme.text,
+    },
+    pickerContainer: {
+        backgroundColor: lightTheme.inputBackground,
+        borderWidth: 1,
+        borderColor: lightTheme.border,
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginBottom: 16,
+    },
+    picker: {
+        height: 50,
+        color: lightTheme.inputText, // Works on iOS and sometimes Android
+    },
 
 
     container: {
@@ -875,7 +919,7 @@ const styles = StyleSheet.create({
         elevation: 3,
         marginTop: 20,
         borderRadius: 15,
-        marginBottom:20,
+        marginBottom: 20,
     },
     oncetxt: {
         fontFamily: 'Montserrat-Medium',
