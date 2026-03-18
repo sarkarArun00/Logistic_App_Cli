@@ -71,7 +71,7 @@ const header = ({ navigation, profileImage }) => {
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', }}>
           <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={{ width: 45, height: 45, overflow: 'hidden', borderRadius: '50%', }}>
-            <Image style={{ width: '100%', height: '100%', objectFit: 'cover', }} source={
+            <Image style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 50, }} source={
               profileImage
                 ? { uri: BASE_API_URL + profileImage }
                 : require('../../assets/loading_gray.gif') // fallback image
