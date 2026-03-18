@@ -17,7 +17,7 @@ import TaskService from '../Services/task_service';
 
 import { Calendar } from 'react-native-calendars';
 import { useGlobalAlert } from '../../Context/GlobalAlertContext'
-import Geolocation from '@react-native-community/geolocation';
+import Geolocation from 'react-native-geolocation-service';
 import { lightTheme } from '../GlobalStyles';
 
 
@@ -29,9 +29,9 @@ import moment from 'moment';
 
 import { checkGPSAndGetLocation } from '../../Context/location.js'
 import GPSModal from '../../Context/GPSModal.js'
-import RNAndroidLocationEnabler from 'react-native-location-enabler';
-import { promptForEnableLocationIfNeeded } from 'react-native-android-location-enabler';
-const { PRIORITIES: { HIGH_ACCURACY }, useLocationSettings } = RNAndroidLocationEnabler;
+// import RNAndroidLocationEnabler from 'react-native-location-enabler';
+// import { promptForEnableLocationIfNeeded } from 'react-native-android-location-enabler';
+// const { PRIORITIES: { HIGH_ACCURACY }, useLocationSettings } = RNAndroidLocationEnabler;
 import ShimmerSwipeText from '../Home/ShimmerSwipeText.js';
 
 dayjs.extend(utc);
@@ -74,7 +74,7 @@ function Attendance({ navigation }) {
     const [showBlinkDot, setShowBlinkDot] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [isNoData, setIsNoData] = useState(false);
-    
+
 
     const fetchProfilePicture = async () => {
         try {

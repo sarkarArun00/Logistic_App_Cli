@@ -1,6 +1,6 @@
 // utils/location.js
 import { PermissionsAndroid, Platform, Linking, Alert } from 'react-native';
-import Geolocation from '@react-native-community/geolocation';
+import Geolocation from 'react-native-geolocation-service';
 
 export const requestLocationPermission = async () => {
   if (Platform.OS === 'android') {

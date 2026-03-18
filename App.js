@@ -43,6 +43,7 @@ import Processed from './Pages/Fuel-voucher/Processed/Processed';
 import Rejected from './Pages/Fuel-voucher/Rejected/Rejected';
 import Receiptview from './Pages/Receipt/Receiptview';
 import {NotificationProvider} from './Context/NotificationContext'
+import TestLocationScreen from './Pages/TestLocationScreen'
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -266,7 +267,7 @@ export default function App() {
             <Stack.Screen name="Tracking" component={TrackingScreen} />
             <Stack.Screen name="Profile" component={Profile} />
             <Stack.Screen name="Attendance" component={Attendance} />
-
+          <Stack.Screen name="TestLocation" component={TestLocationScreen} />
             {/* Main Tab Navigator */}
             <Stack.Screen name="MainApp" component={TabNavigator} />
           </Stack.Navigator>

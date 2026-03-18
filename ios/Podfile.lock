@@ -2406,7 +2406,7 @@ DEPENDENCIES:
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
   - react-native-date-picker (from `../node_modules/react-native-date-picker`)
-  - "react-native-geolocation (from `../node_modules/@react-native-community/geolocation`)"
+  - "react-native-geolocation (from `../node_modules/`react-native-geolocation-service)"
   - react-native-geolocation-service (from `../node_modules/react-native-geolocation-service`)
   - react-native-html-to-pdf (from `../node_modules/react-native-html-to-pdf`)
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
@@ -2565,7 +2565,7 @@ EXTERNAL SOURCES:
   react-native-date-picker:
     :path: "../node_modules/react-native-date-picker"
   react-native-geolocation:
-    :path: "../node_modules/@react-native-community/geolocation"
+    :path: "../node_modules/react-native-geolocation-service"
   react-native-geolocation-service:
     :path: "../node_modules/react-native-geolocation-service"
   react-native-html-to-pdf:

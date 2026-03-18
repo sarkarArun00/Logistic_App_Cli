@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator, Image, PermissionsAndroid } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 // import * as Location from 'expo-location';
-import Geolocation from '@react-native-community/geolocation';
+import Geolocation from 'react-native-geolocation-service';
 import MapViewDirections from 'react-native-maps-directions';
 import { useRoute } from '@react-navigation/native';
 
@@ -27,35 +27,35 @@ const MapNavigation = () => {
   }, [task]);
 
 
-async function requestLocationPermission() {
-  if (Platform.OS === 'android') {
-    const granted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-    );
-    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-      getCurrentLocation();
+  async function requestLocationPermission() {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        getCurrentLocation();
+      } else {
+        console.warn('Location permission denied');
+      }
     } else {
-      console.warn('Location permission denied');
+      getCurrentLocation(); // iOS handles permission differently
     }
-  } else {
-    getCurrentLocation(); // iOS handles permission differently
   }
-}
 
-const getCurrentLocation = () => {
-  Geolocation.getCurrentPosition(
-    position => {
-      setCurrentLocation({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-      });
-    },
-    error => {
-      console.log('Error getting current location:', error);
-    },
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-  );
-};
+  const getCurrentLocation = () => {
+    Geolocation.getCurrentPosition(
+      position => {
+        setCurrentLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      error => {
+        console.log('Error getting current location:', error);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+    );
+  };
 
   const fetchRouteDetails = async () => {
     if (currentLocation && destination && GOOGLE_MAPS_APIKEY) {
@@ -64,19 +64,19 @@ const getCurrentLocation = () => {
           `https://maps.googleapis.com/maps/api/directions/json?origin=${currentLocation.latitude},${currentLocation.longitude}&destination=${destination.latitude},${destination.longitude}&key=${GOOGLE_MAPS_APIKEY}`
         );
         const data = await response.json();
-  
+
         if (data.routes?.[0]?.legs?.[0]) {
           const route = data.routes[0].legs[0];
           const cleanedSteps = route.steps.map(step =>
             step.instructions ? step.instructions.replace(/<[^>]*>?/gm, '') : '[No instruction provided]'
           );
-  
+
           setRouteDetails({
             distance: route.distance.text,
             duration: route.duration.text,
             steps: cleanedSteps,
           });
-  
+
           setSteps(cleanedSteps);
         } else {
           console.warn('Could not fetch route details.');

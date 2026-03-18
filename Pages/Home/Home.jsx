@@ -20,12 +20,14 @@ import { lightTheme } from '../GlobalStyles';
 
 import { checkGPSAndGetLocation } from '../../Context/location.js'
 import GPSModal from '../../Context/GPSModal.js'
-import RNAndroidLocationEnabler from 'react-native-location-enabler';
+// import RNAndroidLocationEnabler from 'react-native-location-enabler';
 
-import { promptForEnableLocationIfNeeded } from 'react-native-android-location-enabler';
-const { PRIORITIES: { HIGH_ACCURACY }, useLocationSettings } = RNAndroidLocationEnabler;
+// import { promptForEnableLocationIfNeeded } from 'react-native-android-location-enabler';
+// const { PRIORITIES: { HIGH_ACCURACY }, useLocationSettings } = RNAndroidLocationEnabler;
 import TaskScreen from '../Task-management/Task-Screen/Task-Screen.jsx';
 import ShimmerSwipeText from './ShimmerSwipeText';
+import { useLocationTracker } from '../Services/geolocation-service.jsx'
+
 
 
 const wait = (timeout) => {
@@ -84,6 +86,28 @@ export default function Home({ navigation }) {
         getUserData();
 
     }, [navigation])
+
+
+    useEffect(() => {
+        const loadUser = async () => {
+            const storedId = await AsyncStorage.getItem("user_id");
+            const storedToken = await AsyncStorage.getItem("token");
+
+            if (storedId) {
+                setEmpId(Number(storedId));
+            }
+
+            if (storedToken) {
+                setToken(storedToken);
+            }
+        };
+
+        loadUser();
+    }, []);
+
+    // const storedId = AsyncStorage.getItem("user_id");
+
+    // useLocationTracker(storedId, null);
 
 
 
@@ -377,6 +401,23 @@ export default function Home({ navigation }) {
         }
     };
 
+    useEffect(() => {
+        const loadUser = async () => {
+            const storedUserId = await AsyncStorage.getItem("user_id");
+
+            if (storedUserId) {
+                setEmpId(Number(storedUserId));
+            }
+        };
+
+        loadUser();
+    }, []);
+
+    const [empId, setEmpId] = useState(null);
+    const [taskId, setTaskId] = useState(null);
+    const [token, setToken] = useState(AsyncStorage.getItem('jwt_token'))
+
+    useLocationTracker(empId, null, token);
 
 
     const startTimer = (checkInDate) => {
@@ -505,9 +546,14 @@ export default function Home({ navigation }) {
 
                 <View style={{ marginTop: 20, backgroundColor: '#ecf2fc', borderWidth: 1, borderColor: '#bdd7fc', borderRadius: 40, paddingHorizontal: 15, paddingTop: 35, paddingBottom: 24, }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25, }}>
-                        <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 14, lineHeight: 15, color: '#3085FE', }}>Manage Attendance</Text>
+                        <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 14, lineHeight: 15, color: '#3085FE', }} hr>Manage Attendance</Text>
                         {/* <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 12, lineHeight: 14, color: '#0C0D36', }}>Updated {displayTime}</Text> */}
                     </View>
+                    {/* <TouchableOpacity onPress={() => navigation.navigate("TestLocation")}>
+                        <Text style={{ color: "blue", fontSize: 18 }}>
+                            Go to Location Test
+                        </Text>
+                    </TouchableOpacity> */}
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', }}>
                         <View style={{ width: '47%', backgroundColor: '#fff', borderRadius: 15, paddingHorizontal: 15, paddingVertical: 15, }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', }}>
