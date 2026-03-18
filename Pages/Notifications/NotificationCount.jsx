@@ -24,7 +24,7 @@ const NotificationCount = ({ navigation }) => {
 
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
-      <View style={{ position: 'relative', width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
+      <View style={{ position: 'relative', width: 50, height: 50, borderRadius: 25, backgroundColor: '#F6FAFF', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
         <TouchableOpacity>
           <Image style={{ width: 18, height: 18, }} source={require('../../assets/noti.png')} />
         </TouchableOpacity>
@@ -47,7 +47,7 @@ const NotificationCount = ({ navigation }) => {
             {notificationCount}
           </Text>
         )}
-        {notificationCount >= 0 && (
+        {/* {notificationCount >= 0 && (
           <Text style={{
             position: 'absolute',
             fontFamily: 'Montserrat-Regular',
@@ -65,7 +65,7 @@ const NotificationCount = ({ navigation }) => {
           }}>
             {notificationCount}
           </Text>
-        )}
+        )} */}
         {/* <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>{notificationData}</Text> */}
       </View>
     </View>
