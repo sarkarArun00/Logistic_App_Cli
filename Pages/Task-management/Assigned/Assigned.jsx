@@ -685,7 +685,7 @@ function Assigned({ navigation }) {
                     onRequestClose={() => setModalVisible(false)}>
                     <View style={styles.modalBackground}>
                         <View style={[styles.modalContainer, styles.mdlNewContainer]}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
                                 <Text style={styles.modalText}>More Information</Text>
                                 <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
                                     <Image style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
@@ -734,8 +734,7 @@ function Assigned({ navigation }) {
                                     )}
                                 </View>
 
-
-                                <View style={{ padding: 15, }}>
+                                <View>
                                     <View>
                                         <Text style={styles.label}>Description</Text>
                                         <TextInput
@@ -776,7 +775,7 @@ function Assigned({ navigation }) {
                                                                 }}
                                                             >
                                                                 <Image
-                                                                    style={{ width: 320, height: 200, marginVertical: 5 }}
+                                                                    style={{ width: '100%', height: 200, resizeMode: 'cover', marginVertical: 5 }}
                                                                     source={{ uri: `${BASE_API_URL}/${item.attachment.path.replace(/\\/g, "/")}` }}
                                                                 />
                                                             </TouchableOpacity>
@@ -785,38 +784,35 @@ function Assigned({ navigation }) {
                                                     </View>
                                                 </View>
                                             ))}
-
-
-                                            {/* Comments Send */}
-                                            <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
-                                                {/* Comment Input */}
-                                                <View style={{ flex: 1 }}>
-                                                    <TextInput
-                                                        style={styles.input}
-                                                        placeholder="Your Comments"
-                                                        multiline={true}
-                                                        placeholderTextColor="#0C0D36"
-                                                        value={commentText}
-                                                        onChangeText={setCommentText}
-                                                    />
-                                                </View>
-
-                                                {/* Attachment Icon */}
-                                                <TouchableOpacity style={styles.attachmentBtn} onPress={selectImages}>
-                                                    <FontAwesome name="paperclip" size={24} color="#333" />
-                                                </TouchableOpacity>
-
-                                                {/* Send Button */}
-                                                <TouchableOpacity style={styles.sendBtn} onPress={sendComment}>
-                                                    <FontAwesome name="paper-plane-o" size={24} color="#fff" />
-                                                </TouchableOpacity>
-                                            </View>
-
-
                                         </View>
                                     </View>
                                 </View>
                             </ScrollView>
+
+                            {/* Comments Send */}
+                            <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingTop: 8, }}>
+                                {/* Comment Input */}
+                                <View style={{ flex: 1 }}>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Your Comments"
+                                        multiline={true}
+                                        placeholderTextColor="#0C0D36"
+                                        value={commentText}
+                                        onChangeText={setCommentText}
+                                    />
+                                </View>
+
+                                {/* Attachment Icon */}
+                                <TouchableOpacity style={styles.attachmentBtn} onPress={selectImages}>
+                                    <FontAwesome name="paperclip" size={24} color="#333" />
+                                </TouchableOpacity>
+
+                                {/* Send Button */}
+                                <TouchableOpacity style={styles.sendBtn} onPress={sendComment}>
+                                    <FontAwesome name="paper-plane-o" size={24} color="#fff" />
+                                </TouchableOpacity>
+                            </View>
 
                         </View>
                     </View>
@@ -1123,7 +1119,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     modalContainer: {
-        width: '95%',
+        width: '100%',
         backgroundColor: '#fff',
         borderRadius: 10,
         padding: 20,

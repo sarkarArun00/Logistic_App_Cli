@@ -770,30 +770,7 @@ function Collected({ navigation }) {
                                                 ))}
 
 
-                                                {/* Comments Send */}
-                                                <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
-                                                    {/* Comment Input */}
-                                                    <View style={{ flex: 1 }}>
-                                                        <TextInput
-                                                            style={styles.input}
-                                                            placeholder="Your Comments"
-                                                            multiline={true}
-                                                            placeholderTextColor="#0C0D36"
-                                                            value={commentText}
-                                                            onChangeText={setCommentText}
-                                                        />
-                                                    </View>
 
-                                                    {/* Attachment Icon */}
-                                                    <TouchableOpacity style={styles.attachmentBtn} onPress={selectImages}>
-                                                        <FontAwesome name="paperclip" size={24} color="#333" />
-                                                    </TouchableOpacity>
-
-                                                    {/* Send Button */}
-                                                    <TouchableOpacity style={styles.sendBtn} onPress={sendComment}>
-                                                        <FontAwesome name="paper-plane-o" size={24} color="#fff" />
-                                                    </TouchableOpacity>
-                                                </View>
 
 
                                             </View>
@@ -805,6 +782,30 @@ function Collected({ navigation }) {
                                     </TouchableOpacity> */}
                                 </View>
                             </ScrollView>
+                            {/* Comments Send */}
+                            <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingTop: 8, paddingHorizontal: 15, }}>
+                                {/* Comment Input */}
+                                <View style={{ flex: 1 }}>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Your Comments"
+                                        multiline={true}
+                                        placeholderTextColor="#0C0D36"
+                                        value={commentText}
+                                        onChangeText={setCommentText}
+                                    />
+                                </View>
+
+                                {/* Attachment Icon */}
+                                <TouchableOpacity style={styles.attachmentBtn} onPress={selectImages}>
+                                    <FontAwesome name="paperclip" size={24} color="#333" />
+                                </TouchableOpacity>
+
+                                {/* Send Button */}
+                                <TouchableOpacity style={styles.sendBtn} onPress={sendComment}>
+                                    <FontAwesome name="paper-plane-o" size={24} color="#fff" />
+                                </TouchableOpacity>
+                            </View>
 
                         </View>
                     </View>

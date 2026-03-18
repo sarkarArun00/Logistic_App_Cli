@@ -1115,42 +1115,41 @@ function Progress({ navigation }) {
                                                     </View>
                                                 ))}
 
-
-                                                {/* Comments Send */}
-                                                <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
-                                                    {/* Comment Input */}
-                                                    <View style={{ flex: 1 }}>
-                                                        <TextInput
-                                                            style={styles.input}
-                                                            placeholder="Your Comments"
-                                                            multiline={true}
-                                                            placeholderTextColor="#0C0D36"
-                                                            value={commentText}
-                                                            onChangeText={setCommentText}
-                                                        />
-                                                    </View>
-
-                                                    {/* Attachment Icon */}
-                                                    <TouchableOpacity style={styles.attachmentBtn} onPress={selectImages}>
-                                                        <FontAwesome name="paperclip" size={24} color="#333" />
-                                                    </TouchableOpacity>
-
-                                                    {/* Send Button */}
-                                                    <TouchableOpacity style={styles.sendBtn} onPress={sendComment}>
-                                                        <FontAwesome name="paper-plane-o" size={24} color="#fff" />
-                                                    </TouchableOpacity>
-                                                </View>
-
-
                                             </View>
                                         </View>
                                     </View>
 
-                                    <TouchableOpacity onPress={() => { setModalVisible4(true); setModalVisible(false); storeTaskId(taskId) }} style={{ backgroundColor: '#2F81F5', borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10, }}>
-                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 16, color: 'white', textAlign: 'center', }}>Receive Payment</Text>
-                                    </TouchableOpacity>
+
                                 </View>
                             </ScrollView>
+                            {/* Comments Send */}
+                            <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingTop: 8, paddingHorizontal: 15, }}>
+                                {/* Comment Input */}
+                                <View style={{ flex: 1 }}>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Your Comments"
+                                        multiline={true}
+                                        placeholderTextColor="#0C0D36"
+                                        value={commentText}
+                                        onChangeText={setCommentText}
+                                    />
+                                </View>
+
+                                {/* Attachment Icon */}
+                                <TouchableOpacity style={styles.attachmentBtn} onPress={selectImages}>
+                                    <FontAwesome name="paperclip" size={24} color="#333" />
+                                </TouchableOpacity>
+
+                                {/* Send Button */}
+                                <TouchableOpacity style={styles.sendBtn} onPress={sendComment}>
+                                    <FontAwesome name="paper-plane-o" size={24} color="#fff" />
+                                </TouchableOpacity>
+                            </View>
+
+                            <TouchableOpacity onPress={() => { setModalVisible4(true); setModalVisible(false); storeTaskId(taskId) }} style={{ backgroundColor: '#2F81F5', borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10, marginHorizontal: 15, marginBottom: 15, }}>
+                                <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 16, color: 'white', textAlign: 'center', }}>Receive Payment</Text>
+                            </TouchableOpacity>
 
                         </View>
                     </View>
