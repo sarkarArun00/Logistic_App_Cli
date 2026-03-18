@@ -41,11 +41,11 @@ const TaskScreen = () => {
           setLoading(true);
           const response = await TaskService.getAllTaskCount();
           console.log('API Response:', response.data);
-  
+
           // Handle actual data structure
           if (response && response.data) {
             setData(response.data);
-            
+
           } else if (Array.isArray(response)) {
             setData(response); // handle if response is already array
           } else {
@@ -59,12 +59,12 @@ const TaskScreen = () => {
           setLoading(false);
         }
       };
-  
+
       fetchData();
     }, [])
   );
-  
-  
+
+
 
   const tasks = [
     {
@@ -182,7 +182,7 @@ const TaskScreen = () => {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}>
             <View style={styles.cardContent}>
-              <View style={{flexDirection:'row', alignItems:'center', gap:10, marginBottom:15, }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 15, }}>
                 <Image source={item.icon} style={styles.icon} />
                 <Text style={styles.title}>{item.count}</Text>
               </View>
@@ -200,12 +200,12 @@ const TaskScreen = () => {
 
 
   return (
-    
+
     <SafeAreaView style={[
       styles.container, styles.paddingBottom
     ]}
     >
-      <StatusBar style={{ paddingTop: STATUS_BAR_HEIGHT, backgroundColor: '#5D5FEF', flex: 1 }}  barStyle="dark-content" />
+      <StatusBar style={{ paddingTop: STATUS_BAR_HEIGHT, backgroundColor: '#5D5FEF', flex: 1 }} barStyle="dark-content" />
 
 
       <FlatList
@@ -218,7 +218,7 @@ const TaskScreen = () => {
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
         ListHeaderComponent={() => (
-          <View style={[styles.headerContainer, { marginHorizontal: -20 }, { paddingTop: STATUS_BAR_HEIGHT, marginBottom:20, backgroundColor: '#5D5FEF', borderTopLeftRadius:0, borderBottomLeftRadius:20, flex: 1 }]}>
+          <View style={[styles.headerContainer, { marginHorizontal: -20 }, { paddingTop: STATUS_BAR_HEIGHT, marginBottom: 20, backgroundColor: '#5D5FEF', borderTopLeftRadius: 0, borderBottomLeftRadius: 20, flex: 1 }]}>
             <Image
               style={{
                 width: '100%',
@@ -227,12 +227,12 @@ const TaskScreen = () => {
               }}
               source={require('../../../assets/task-shape.png')}
             />
-            <View style={{ position: 'absolute', left:16, top:40, }}>
-              <TouchableOpacity  onPress={() => navigation.navigate('MainApp', { screen: 'Home' })}>
-                <View style={{ flexDirection:'row', alignItems:'center', gap:15, }}>
+            <View style={{ position: 'absolute', left: 16, top: 40, }}>
+              <TouchableOpacity onPress={() => navigation.navigate('MainApp', { screen: 'Home' })}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15, }}>
                   <Image style={{ width: 23, height: 15, tintColor: 'white' }} source={require('../../../assets/locate-back.png')} />
                   <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 16, color: '#ffffff', }}>Tasks</Text>
-              </View>
+                </View>
               </TouchableOpacity>
             </View>
             <View style={{ position: 'absolute', left: 16, bottom: 76 }}>
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
   },
 
   listContainer: {
-    paddingTop:0,
+    paddingTop: 0,
     paddingHorizontal: 20,
     paddingBottom: 80,
   },
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: '#fff',
     letterSpacing: -0.5,
-    paddingTop:0,
+    paddingTop: 0,
   },
   arrowBackground: {
     position: 'absolute',
@@ -330,9 +330,10 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-50deg' }],
   },
   icon: {
-    width:35,
-    height:35,
+    width: 35,
+    height: 35,
     objectFit: 'contain',
+    resizeMode: 'contain',
   },
 });
 
