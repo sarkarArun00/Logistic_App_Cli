@@ -145,7 +145,12 @@ function LoginScreen() {
               {/* Email Input */}
               <View style={styles.inputDv}>
                 <TextInput
-                  style={[styles.inputContainer, { borderColor: emailFocused ? '#0D0E37' : 'transparent' }]}
+                  // style={[styles.inputContainer, { borderColor: emailFocused ? '#0D0E37' : 'transparent' }]}
+                  style={[styles.inputContainer, { borderBottomColor: emailFocused ? '#0D0E37' : 'transparent' }, {
+                    backgroundColor: lightTheme.inputBackground,
+                    color: lightTheme.inputText,
+                    borderColor: lightTheme.border,
+                  },]}
                   placeholder="Email Address"
                   keyboardType="email-address"
                   autoCapitalize="none"

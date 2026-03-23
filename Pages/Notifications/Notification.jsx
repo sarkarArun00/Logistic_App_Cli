@@ -406,6 +406,7 @@ const styles = StyleSheet.create({
         fontFamily: 'Montserrat-Medium',
         fontSize: 16,
         paddingBottom: 15,
+        color: '#000',
     },
     activeTabText: {
         color: '#3082F8',
@@ -439,6 +440,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     buttonText: {
+        fontFamily: 'Montserrat-Medium',
         color: '#fff',
         fontWeight: '600',
     },

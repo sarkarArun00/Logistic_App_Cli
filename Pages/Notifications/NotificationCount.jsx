@@ -36,7 +36,7 @@ const NotificationCount = ({ navigation }) => {
             lineHeight: 13,
             color: '#fff',
             left: -2,
-            top: 0,
+            top: 2,
             minWidth: 17,
             height: 15,
             paddingHorizontal: 3,

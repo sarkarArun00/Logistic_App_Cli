@@ -36,12 +36,12 @@ const Welcome = ({ navigation }) => {
 
   useEffect(() => {
     ImmersiveMode.setImmersive(true); // Hide status & nav bar
-  
+
     return () => {
       ImmersiveMode.setImmersive(false); // Show again when leaving screen
     };
   }, []);
-  
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -55,16 +55,16 @@ const Welcome = ({ navigation }) => {
           showsHorizontalScrollIndicator={false}
           style={styles.scrollView}
         >
-          
+
           {/* Slide 1 */}
           <View style={styles.slide}>
             <Image source={require('../../assets/screen1.jpg')} style={styles.images} />
 
             <View style={styles.textBlock}>
-            <ImageBackground
-              source={require('../../assets/curvbg1.png')}
-              style={styles.imageBackground}
-              resizeMode="stretch">
+              <ImageBackground
+                source={require('../../assets/curvbg1.png')}
+                style={styles.imageBackground}
+                resizeMode="stretch">
                 <View style={styles.addImageBack}>
                   <Image source={require('../../assets/roundlogo.png')} style={styles.roundlogo} />
                   <Text style={styles.weltitle}>Welcome to</Text>
@@ -74,7 +74,7 @@ const Welcome = ({ navigation }) => {
                     <Text style={styles.btnText}>Next</Text>
                   </TouchableOpacity>
                 </View>
-            </ImageBackground>
+              </ImageBackground>
             </View>
           </View>
 
@@ -86,14 +86,14 @@ const Welcome = ({ navigation }) => {
                 source={require('../../assets/curvbg1.png')}
                 style={styles.imageBackground}
                 resizeMode="stretch">
-                  <View style={styles.addImageBack}>
-                    <Text style={styles.weltitle}>Real-time</Text>
-                    <Text style={styles.subtitle}>Secure Delivery</Text>
-                    <Text style={styles.desc}>Experience hassle-free, on-time sample delivery while maintaining all healthcare quality protocols.</Text>
-                    <TouchableOpacity style={styles.btn} onPress={handleNext}>
-                      <Text style={styles.btnText}>Next</Text>
-                    </TouchableOpacity>
-                  </View>
+                <View style={styles.addImageBack}>
+                  <Text style={styles.weltitle}>Real-time</Text>
+                  <Text style={styles.subtitle}>Secure Delivery</Text>
+                  <Text style={styles.desc}>Experience hassle-free, on-time sample delivery while maintaining all healthcare quality protocols.</Text>
+                  <TouchableOpacity style={styles.btn} onPress={handleNext}>
+                    <Text style={styles.btnText}>Next</Text>
+                  </TouchableOpacity>
+                </View>
               </ImageBackground>
             </View>
           </View>
@@ -138,14 +138,16 @@ export default Welcome;
 
 const styles = StyleSheet.create({
   imageBackground: {
-    width:'100%',
-    height:'100%',
+    // width: '100%',
+    width: width,
+    height: '100%',
+
   },
-  addImageBack:{
+  addImageBack: {
     // paddingTop:170,
     paddingTop: screenHeight <= 390 ? 170 : 160,
-    paddingBottom:85,
-    paddingHorizontal:25,
+    paddingBottom: 85,
+    paddingHorizontal: 25,
   },
   //////////////
   safeArea: {
@@ -167,72 +169,73 @@ const styles = StyleSheet.create({
   },
   images: {
     width: '100%',
-    height:'100%',
+    height: '100%',
     resizeMode: 'cover',
-    position:'absolute',
-    top:0,
+    position: 'absolute',
+    top: 0,
   },
-  textBlock:{
-    position:"absolute",
-    zIndex:2,
-    bottom:0,
-    textAlign:'center',
-    paddingHorizontal:0,
-    paddingBottom:0,
+  textBlock: {
+    position: "absolute",
+    zIndex: 2,
+    bottom: 0,
+    textAlign: 'center',
+    paddingHorizontal: 0,
+    paddingBottom: 0,
   },
-  weltitle:{
+  weltitle: {
     fontFamily: 'Montserrat-Regular',
-    fontSize:24,
-    color:"#787978",
-    letterSpacing:2,
-    textAlign:'center',
-    marginBottom:0,
+    fontSize: 24,
+    color: "#787978",
+    letterSpacing: 2,
+    textAlign: 'center',
+    marginBottom: 0,
   },
-  nirnayanText:{
+  nirnayanText: {
     // fontFamily: 'ArimaMadurai-Bold',
-    margin:'auto',
-    marginBottom:30,
+    margin: 'auto',
+    marginBottom: 30,
   },
-  desc:{
+  desc: {
     fontFamily: 'Montserrat-Medium',
-    fontSize:16,
-    color:"#656565",
-    textAlign:'center',
-    marginBottom:30,
+    fontSize: 16,
+    color: "#656565",
+    textAlign: 'center',
+    marginBottom: 30,
+
   },
-  btnText:{
+  btnText: {
     fontFamily: 'Montserrat-Bold',
-    fontSize:15,
-    color:'#FFFFFF',
-    textAlign:'center',
-    backgroundColor:'#2F81F5',
-    borderRadius:12,
-    paddingVertical:16,
+    fontSize: 15,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    backgroundColor: '#2F81F5',
+    borderRadius: 12,
+    paddingVertical: 16,
   },
-  subtitle:{
+  subtitle: {
     fontFamily: 'Montserrat-Bold',
-    fontSize:32,
-    color:'#2F81F5',
-    textAlign:'center',
-    marginBottom:25,
+    fontSize: 32,
+    color: '#2F81F5',
+    textAlign: 'center',
+    marginBottom: 25,
   },
   roundlogo: {
-    position:'absolute',
-    top:50,
-    alignSelf:'center',
+    position: 'absolute',
+    top: 50,
+    alignSelf: 'center',
   },
   pagination: {
-    position:'absolute',
-    bottom:35,
-    left:0,
-    right:0,
+    position: 'absolute',
+    bottom: 35,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'center',
-    gap:0,
-    paddingHorizontal:100,
+    gap: 0,
+    paddingHorizontal: 100,
   },
   dot: {
-    width:'33.3%',
+    width: '33.3%',
     height: 4,
     backgroundColor: '#C8DFFF',
   },

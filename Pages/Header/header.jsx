@@ -106,7 +106,7 @@ const header = ({ navigation, profileImage }) => {
               style={{
                 position: 'absolute',
                 left: -2,
-                top: -2,
+                top: 2,
                 minWidth: 15,
                 height: 15,
                 paddingHorizontal: 2,
