@@ -1919,6 +1919,7 @@ const styles = StyleSheet.create({
         fontFamily: 'Montserrat-Medium',
         height: 54,
         borderWidth: 1,
+        color: '#000',
         borderColor: '#ECEDF0',
         backgroundColor: '#FAFAFA',
         paddingHorizontal: 15,

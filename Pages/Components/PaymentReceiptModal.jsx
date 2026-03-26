@@ -590,6 +590,7 @@ export default function PaymentReceiptModal({
               <TextInput
                 style={styles.input}
                 placeholder="Enter Amount"
+                placeholderTextColor="#000"
                 value={amount}
                 onChangeText={setAmount}
                 keyboardType="numeric"
@@ -706,6 +707,7 @@ export default function PaymentReceiptModal({
               <TextInput
                 style={styles.input}
                 placeholder="Remarks"
+                placeholderTextColor="#000"
                 value={remarks}
                 onChangeText={setRemarks}
               />
@@ -799,7 +801,7 @@ export default function PaymentReceiptModal({
                 {String(selectPaymode) === "2" && (
                   <>
                     <Text style={styles.label}>Cheque No.</Text>
-                    <TextInput style={[styles.input, { color: '#000', }]} placeholder="Enter Cheque No." value={chequeNo} onChangeText={setChequeNo} />
+                    <TextInput style={[styles.input, { color: '#000', }]} placeholder="Enter Cheque No." placeholderTextColor="#000" value={chequeNo} onChangeText={setChequeNo} />
 
                     {/* Keep your date picker implementation outside & pass handlers if needed */}
                     <Text style={styles.label}>Cheque Date</Text>
