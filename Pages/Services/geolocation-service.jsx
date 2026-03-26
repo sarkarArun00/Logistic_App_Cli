@@ -7,7 +7,7 @@ const TRACKER_API_URL =
 
 const TRACKING_INTERVAL_MS = 60000;
 
-const requestLocationPermission = async () => {
+export const requestLocationPermission = async () => {
     if (Platform.OS !== "android") return true;
 
     try {
@@ -50,12 +50,19 @@ const requestLocationPermission = async () => {
     }
 };
 
-const getCurrentPositionAsync = options =>
+export const getCurrentPositionAsync = (options = {}) =>
     new Promise((resolve, reject) => {
-        Geolocation.getCurrentPosition(resolve, reject, options);
+        Geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 20000,
+            maximumAge: 10000,
+            forceRequestLocation: true,
+            showLocationDialog: true,
+            ...options,
+        });
     });
 
-const getLocationErrorMessage = error => {
+export const getLocationErrorMessage = error => {
     switch (error?.code) {
         case 1:
             return "Permission denied";
@@ -70,6 +77,27 @@ const getLocationErrorMessage = error => {
         default:
             return error?.message || "Unknown location error";
     }
+};
+
+export const getCurrentDeviceLocation = async () => {
+    const hasPermission = await requestLocationPermission();
+
+    if (!hasPermission) {
+        throw { code: 1, message: "Permission denied" };
+    }
+
+    const position = await getCurrentPositionAsync();
+
+    const { latitude, longitude } = position.coords || {};
+
+    if (latitude == null || longitude == null) {
+        throw new Error("Invalid coordinates received");
+    }
+
+    return {
+        latitude,
+        longitude,
+    };
 };
 
 export const useLocationTracker = (empId, taskId, token) => {
@@ -134,7 +162,6 @@ export const useLocationTracker = (empId, taskId, token) => {
                     body: JSON.stringify(payload),
                 });
 
-                console.log('resssss', response)
                 const data = await response.json().catch(() => null);
 
                 if (!response.ok) {

@@ -76,9 +76,41 @@ function Profile({ navigation }) {
 
     const handleLogout = async () => {
         try {
+            const userId = await AsyncStorage.getItem('user_id');
+
+            if (!userId) return;
+
+            const attendanceKeys = {
+                isCheckedIn: `isCheckedIn_${userId}`,
+                checkInTime: `checkInTime_${userId}`,
+                checkInTimeDisplay: `checkInTimeDisplay_${userId}`,
+            };
+
+            const isCheckedIn = await AsyncStorage.getItem(attendanceKeys.isCheckedIn);
+
+            // 🚫 BLOCK LOGOUT IF CHECKED-IN
+            if (isCheckedIn === 'true') {
+                Alert.alert(
+                    "Checkout Required",
+                    "Please check-out before logging out."
+                );
+                return;
+            }
+
+            // ✅ SAFE TO LOGOUT
+            await AsyncStorage.multiRemove([
+                attendanceKeys.isCheckedIn,
+                attendanceKeys.checkInTime,
+                attendanceKeys.checkInTimeDisplay,
+                'user_id',
+                'user_name',
+                'token',
+                'jwt_token',
+            ]);
+
             await logout();
+
             navigation.replace('Login');
-            AsyncStorage.removeItem('user_id')
         } catch (error) {
             console.error('Error logging out:', error);
         }
@@ -272,7 +304,7 @@ function Profile({ navigation }) {
                 showsHorizontalScrollIndicator={false}>
 
                 <TouchableOpacity onPress={() => navigation.navigate('MainApp', { screen: 'Home' })} style={{ marginBottom: 20, }}>
-                    <View style={{ flexDirection:'row', alignItems:'center', gap:15, }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15, }}>
                         <Image style={{ width: 23, height: 15, }} source={require('../../assets/locate-back.png')} />
                         <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 16, color: '#0C0D36' }}>Profile</Text>
                     </View>

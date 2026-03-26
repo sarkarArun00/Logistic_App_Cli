@@ -16,9 +16,9 @@ import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Feather';
 import TaskService from '../../Services/task_service';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
-
+import { Alert, Vibration } from 'react-native';
 
 
 
@@ -147,6 +147,35 @@ const TaskScreen = () => {
     }
   };
 
+  const checkAttendanceBeforeNavigate = async (item) => {
+    try {
+      const userId = await AsyncStorage.getItem('user_id');
+
+      if (!userId) {
+        Alert.alert("Login Required", "Please login again.");
+        return;
+      }
+
+      const isCheckedIn = await AsyncStorage.getItem(`isCheckedIn_${userId}`);
+      console.log('isCheckedIn', isCheckedIn)
+      if (isCheckedIn !== 'true') {
+        Vibration.vibrate(200);
+
+        Alert.alert(
+          "Attendance Required",
+          "Please check-in before accessing this feature."
+        );
+        return;
+      }
+
+      // ✅ allowed
+      navigation.navigate(item.screen);
+
+    } catch (error) {
+      console.error("Attendance check error:", error);
+    }
+  };
+
   const renderTaskCard = ({ item, index }) => {
     const cardHeight = getCardHeight(index);
     const marginTop = getCardMarginTop(index);
@@ -171,7 +200,7 @@ const TaskScreen = () => {
       <View style={[styles.cardWrapper, { marginTop }]}>
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={() => navigation.navigate(item.screen)}>
+          onPress={() => checkAttendanceBeforeNavigate(item)}>
           <LinearGradient
             colors={item.gradient}
             style={[

@@ -77,6 +77,7 @@ function FeulStackScreen() {
 
 function TabNavigator() {
   const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       screenOptions={{
