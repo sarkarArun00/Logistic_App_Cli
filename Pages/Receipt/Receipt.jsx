@@ -1780,9 +1780,10 @@ const styles = StyleSheet.create({
     toggleBtn: { paddingHorizontal: 20, paddingVertical: 8, borderWidth: 1, borderColor: '#0C0D36', borderRadius: 8, },
     toggleBtnActive: { backgroundColor: "#2F81F5", borderColor: '#2F81F5', },
     toggleBtnActiveText: { fontFamily: 'Montserrat-Medium', fontSize: 12, color: "#fff", },
+    toggleBtnText: { fontFamily: 'Montserrat-Medium', fontSize: 12, color: "#000", },
     // Denomination Rows
     DenoRows: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15, },
-    amount: { fontFamily: 'Montserrat-Medium', fontSize: 16, width: 80 },
+    amount: { fontFamily: 'Montserrat-Medium', fontSize: 16, color: '#000', width: 80 },
     // Counter Controls
     counter: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#ECEDF0", borderRadius: 5, padding: 5, },
     counterBtn: { width: 35, height: 35, backgroundColor: "#EFEFEF", borderRadius: 5, justifyContent: "center", alignItems: "center" },

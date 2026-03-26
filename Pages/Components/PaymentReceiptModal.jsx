@@ -747,12 +747,19 @@ export default function PaymentReceiptModal({
                     <View style={styles.toggleWrap}>
                       {["note", "coin"].map((t) => (
                         <TouchableOpacity key={t} onPress={() => setTab(t)} style={[styles.toggleBtn, tab === t && styles.toggleBtnActive]}>
-                          <Text style={tab === t && styles.toggleBtnActiveText}>{t.charAt(0).toUpperCase() + t.slice(1)}</Text>
+                          <Text
+                            style={[
+                              styles.toggleBtnText,
+                              tab === t && styles.toggleBtnActiveText
+                            ]}
+                          >
+                            {t.charAt(0).toUpperCase() + t.slice(1)}
+                          </Text>
                         </TouchableOpacity>
                       ))}
                     </View>
 
-                    <ScrollView>
+                    <ScrollView style={{ flexGrow: 0, maxHeight: 350 }}>
                       {(denoms[tab] || []).map((val) => {
                         const key = `${tab}_${val}`;
                         const qty = counts[key] ?? 0;
@@ -763,13 +770,13 @@ export default function PaymentReceiptModal({
 
                             <View style={styles.counter}>
                               <TouchableOpacity onPress={() => updateCount(tab, val, -1)} style={styles.counterBtn} disabled={qty === 0}>
-                                <Text>-</Text>
+                                <Text style={{ color: '#000', }}>-</Text>
                               </TouchableOpacity>
 
                               <Text style={styles.countText}>{qty}</Text>
 
                               <TouchableOpacity onPress={() => updateCount(tab, val, 1)} style={styles.counterBtn}>
-                                <Text>+</Text>
+                                <Text style={{ color: '#000', }}>+</Text>
                               </TouchableOpacity>
                             </View>
                           </View>
@@ -792,7 +799,7 @@ export default function PaymentReceiptModal({
                 {String(selectPaymode) === "2" && (
                   <>
                     <Text style={styles.label}>Cheque No.</Text>
-                    <TextInput style={styles.input} placeholder="Enter Cheque No." value={chequeNo} onChangeText={setChequeNo} />
+                    <TextInput style={[styles.input, { color: '#000', }]} placeholder="Enter Cheque No." value={chequeNo} onChangeText={setChequeNo} />
 
                     {/* Keep your date picker implementation outside & pass handlers if needed */}
                     <Text style={styles.label}>Cheque Date</Text>
