@@ -616,7 +616,7 @@ export default function PaymentReceiptModal({
                       ) : (
                         breakup.map((row) => (
                           <View key={`${row.type}_${row.denom}`} style={styles.denoBoxInn}>
-                            <View style={[styles.denoValue2, { flex: 2 }]}>
+                            <View style={[styles.denoValue2, { flex: 2, gap: 10, }]}>
                               <Image style={{ width: 30, height: 17, resizeMode: "contain" }} source={require("../../assets/money.png")} />
                               <Text>₹{row.denom}</Text>
                             </View>
@@ -791,7 +791,7 @@ export default function PaymentReceiptModal({
                       <Text style={styles.totalText}>₹{total}</Text>
                     </View>
 
-                    <TouchableOpacity onPress={submitCashDetails} style={{ backgroundColor: "#2F81F5", borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10 }}>
+                    <TouchableOpacity onPress={submitCashDetails} style={{ backgroundColor: "#2F81F5", borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10, marginBottom: 15, }}>
                       <Text style={{ fontFamily: "Montserrat-SemiBold", fontSize: 16, color: "white", textAlign: "center" }}>Submit</Text>
                     </TouchableOpacity>
                   </>
