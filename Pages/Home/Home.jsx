@@ -482,6 +482,7 @@ export default function Home({ navigation }) {
     };
 
     const checkAttendanceBeforeNavigate = () => {
+        console.log('checkAttendanceBeforeNavigate', isCheckedIn)
         if (!isCheckedIn) {
             Vibration.vibrate(200);
 
@@ -640,10 +641,7 @@ export default function Home({ navigation }) {
                         <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 14, lineHeight: 15, color: '#3085FE', paddingBottom: 20, }}>My Shortcuts</Text>
 
                         <TouchableOpacity style={[styles.box, { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', borderRadius: 15, paddingHorizontal: 15, paddingVertical: 15, marginBottom: 12, }]}
-                            onPress={() => {
-                                if (!checkAttendanceBeforeNavigate()) return;
-                                navigation.navigate('MyTasks');
-                            }}>
+                            onPress={() => navigation.navigate("TaskStack", { screen: "TaskScreen" })}>
                             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', }}>
                                 <View style={{ width: 34, }}>
                                     <Image style={{ width: 34, height: 34, }} source={require('../../assets/task1.png')} />
