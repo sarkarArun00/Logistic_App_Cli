@@ -118,6 +118,7 @@ function Wallet({ navigation, progress = 0.5 }) {
             if (res.status == 1) {
                 setDetails(res.data);
                 console.log('Wallet Details:', res.data);
+                setAmount(res.data.walletBalance || 0)
             } else {
                 setDetails([]);
                 console.log('Error fetching wallet details:', res.message);
@@ -535,10 +536,21 @@ function Wallet({ navigation, progress = 0.5 }) {
                                             <View style={styles.flexBox}>
                                                 <View style={styles.arrowBtn}>
                                                     {item.transactionType === 'debit' ? (
-                                                        <Image style={{ width: 18, height: 18 }} source={require('../../assets/dibitedarrow.png')} />
-                                                    ) : (
-                                                        <Image style={{ width: 18, height: 18 }} source={require('../../assets/creditarrow.png')} />
-                                                    )}
+                                                        <Image
+                                                            style={{ width: 18, height: 18 }}
+                                                            source={require('../../assets/dibitedarrow.png')}
+                                                        />
+                                                    ) : item.transactionType === 'credit' ? (
+                                                        <Image
+                                                            style={{ width: 18, height: 18 }}
+                                                            source={require('../../assets/creditarrow.png')}
+                                                        />
+                                                    ) : item.transactionType === 'Limit Increase' ? (
+                                                        <Image
+                                                            style={{ width: 18, height: 18 }}
+                                                            source={require('../../assets/pass2.png')} // 👈 add your image
+                                                        />
+                                                    ) : null}
                                                 </View>
                                                 <View style={styles.flexText}>
                                                     <Text
@@ -549,6 +561,7 @@ function Wallet({ navigation, progress = 0.5 }) {
                                                     >
                                                         {item.transactionType === 'debit' ? 'Transfer Amount' : 'Received Amount'}
                                                     </Text>
+                                                    <Text>{item.remarks}</Text>
                                                     <Text style={styles.clientName}>{item.sender_or_receiver}</Text>
                                                 </View>
                                             </View>
@@ -702,10 +715,11 @@ function Wallet({ navigation, progress = 0.5 }) {
 
 
                                 <Text style={styles.label}>Enter Amount</Text>
+
                                 <TextInput
                                     style={styles.input}
-                                    value={amount}
-                                    onChangeText={setAmount}
+                                    value={String(amount)}   // 🔥 always keep string
+                                    editable={false}         // ✅ readonly in React Native
                                     placeholder="Enter Amount"
                                     placeholderTextColor="#0C0D36"
                                     keyboardType="numeric"

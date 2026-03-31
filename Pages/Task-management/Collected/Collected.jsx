@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, FlatList, Alert, RefreshControl, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, FlatList, Alert, RefreshControl, ActivityIndicator, PermissionsAndroid, Platform } from 'react-native';
 // import { useFonts, Montserrat-SemiBold, Montserrat-Medium } from '@expo-google-fonts/montserrat';
 import { Picker } from '@react-native-picker/picker';
 import TaskStatusTabs from '../TaskStatusTabs';
@@ -19,6 +19,10 @@ import { BASE_API_URL } from '../../Services/API';
 import { lightTheme } from '../../GlobalStyles';
 import { useSearch } from '../../../hooks/userSearch1';
 import { useFocusEffect } from '@react-navigation/native';
+
+import { launchCamera } from 'react-native-image-picker';
+import ImageResizer from 'react-native-image-resizer';
+import RNFS from 'react-native-fs';
 
 
 
@@ -146,38 +150,39 @@ function Collected({ navigation }) {
         if (!commentText.trim()) return;
 
         try {
-            const user_id = await AsyncStorage.getItem("user_id");
+            const user_id = await AsyncStorage.getItem('user_id');
+
+            if (!user_id) {
+                console.error('User id not found');
+                return;
+            }
+
             const formData = new FormData();
+            formData.append('taskId', String(selectedItem.id));
+            formData.append('comment', commentText.trim());
+            formData.append('commentorId', String(user_id));
 
-            formData.append('taskId', selectedItem.id);
-            formData.append('comment', commentText);
-            formData.append('commentorId', user_id);
-
-            // Append attachment only if there's an image
-            if (images.length > 0 && images[0].base64) {
+            if (images.length > 0 && images[0]?.uri) {
                 formData.append('attachment', {
-                    uri: 'data:image/jpeg;base64,' + images[0].base64,
-                    type: 'image/jpeg',
-                    name: 'attachment.jpg',
+                    uri: images[0].uri,
+                    type: images[0].type || 'image/jpeg',
+                    name: images[0].name || 'attachment.jpg',
                 });
             }
 
-            // Send the formData via TaskService
-            const response = await TaskService.addNewComment(formData); // Send as FormData
+            const response = await TaskService.addNewComment(formData);
 
-            if (response.status == 1) {
+            if (response?.status == 1) {
                 Vibration.vibrate(100);
+
+                setCommentText('');
+                setImages([]);
+
+                const res = await TaskService.getTaskComments({ taskId: selectedItem.id });
+                setSelectedTask(res.data || []);
+            } else {
+                console.error('Add comment failed:', response?.message);
             }
-
-            // Update the state with the new comment data
-            setSelectedTask(prev => [...prev, response.data]);
-            setCommentText('');
-            setImages([]); // Clear images after submission
-
-            // Optionally, fetch the latest task comments
-            const res = await TaskService.getTaskComments({ taskId: selectedItem.id });
-            setSelectedTask(res.data);
-
         } catch (error) {
             console.error('Error sending comment:', error);
         }
@@ -223,7 +228,6 @@ function Collected({ navigation }) {
                 setAllTasksData([]);
                 setLoading(false)
             }
-            console.log('hhhhhhhhhhhhh', response);
         } catch (error) {
             console.error('Error fetching collected tasks:', error);
         }
@@ -298,75 +302,100 @@ function Collected({ navigation }) {
         }
     }
 
-    const requestPermission = async (type) => {
+    const requestPermission = async () => {
         try {
-            let permission;
-            if (type === 'camera') {
-                permission = await ImagePicker.requestCameraPermissionsAsync();
-                console.log("Camera permission response:", permission);
-            } else {
-                permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-                console.log("Gallery permission response:", permission);
-            }
+            if (Platform.OS !== 'android') return true;
 
-            return permission.granted === true;
+            const cameraGranted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.CAMERA,
+                {
+                    title: 'Camera Permission',
+                    message: 'App needs camera access to take pictures.',
+                    buttonPositive: 'OK',
+                    buttonNegative: 'Cancel',
+                }
+            );
+
+            return cameraGranted === PermissionsAndroid.RESULTS.GRANTED;
         } catch (error) {
-            console.error("Permission error:", error);
+            console.error('Permission error:', error);
             return false;
         }
     };
 
-
     const openCamera = async () => {
-        const hasPermission = await requestPermission('camera');
+        const hasPermission = await requestPermission();
 
         if (!hasPermission) {
-            showAlertModal('Permission Required, Camera access is needed to take pictures', true)
+            showAlertModal('Permission Required, Camera access is needed to take pictures', true);
             return;
         }
 
-        const result = await ImagePicker.launchCameraAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            quality: 1,  // Start with high quality to get the original image
-            base64: true,  // Required for base64 upload
-        });
+        launchCamera(
+            {
+                mediaType: 'photo',
+                cameraType: 'back',
+                quality: 1,
+                includeBase64: false,
+                saveToPhotos: false,
+            },
+            async (response) => {
+                if (response.didCancel) {
+                    return;
+                }
 
-        if (!result.canceled && result.assets?.length > 0) {
-            const image = result.assets[0];
+                if (response.errorCode) {
+                    console.error('Camera Error:', response.errorMessage);
+                    showAlertModal(response.errorMessage || 'Failed to open camera', true);
+                    return;
+                }
 
-            // Compress the image to under 50KB
-            const compressedImage = await compressImage(image.uri);
-
-            // Update state with the compressed image
-            setImages([compressedImage]);
-        }
+                if (response.assets && response.assets.length > 0) {
+                    try {
+                        const image = response.assets[0];
+                        const compressedImage = await compressImage(image.uri);
+                        setImages([compressedImage]);
+                    } catch (error) {
+                        console.error('Image processing error:', error);
+                        showAlertModal('Failed to process image', true);
+                    }
+                }
+            }
+        );
     };
 
     const compressImage = async (uri) => {
-        let sizeInKB = Infinity;
-        let compressedImage = { uri };
+        try {
+            let currentUri = uri;
+            let quality = 80;
+            let fileSizeKB = Infinity;
+            let resizedImage = null;
 
-        while (sizeInKB > 50) {
-            const manipulated = await ImageManipulator.manipulateAsync(
-                uri,
-                [{ resize: { width: 500 } }],
-                {
-                    compress: 0.5,
-                    format: ImageManipulator.SaveFormat.JPEG,
-                    base64: true,
-                }
-            );
+            while (fileSizeKB > 50 && quality >= 10) {
+                resizedImage = await ImageResizer.createResizedImage(
+                    currentUri,
+                    500,
+                    500,
+                    'JPEG',
+                    quality
+                );
 
-            sizeInKB = manipulated.base64.length * (3 / 4) / 1024;
+                const fileStat = await RNFS.stat(resizedImage.uri);
+                fileSizeKB = Number(fileStat.size) / 1024;
 
-            if (sizeInKB <= 50) {
-                compressedImage = manipulated;
-                break;
+                currentUri = resizedImage.uri;
+                quality -= 10;
             }
-            uri = manipulated.uri;
+
+            return {
+                uri: resizedImage.uri,
+                name: 'compressed_image.jpg',
+                type: 'image/jpeg',
+            };
+        } catch (error) {
+            console.error('Compression error:', error);
+            throw error;
         }
-        return compressedImage;
     };
 
     const formatDateTime = (dateString) => {
@@ -692,6 +721,7 @@ function Collected({ navigation }) {
                                         <Text style={styles.label}>Description</Text>
                                         <TextInput
                                             style={styles.textarea}
+                                            readOnly
                                             placeholder="Write here.."
                                             multiline={true}
                                             value={selectedItem?.description}

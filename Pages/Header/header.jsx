@@ -38,9 +38,9 @@ const header = ({ navigation, profileImage }) => {
         if (isMounted && response?.status == 1) {
           // setNotificationCount(response.data.unseen.length || 0);
           // setNotificationCount2(response.data.unseen.length || 0);
-          setNotificationCount(response.data.length || 0);
-          setNotificationCount2(response.data.length || 0);
-          console.log('notttttttttt', response.data)
+          setNotificationCount(response.data.filter(item => item.isRead == false).length || 0);
+          setNotificationCount2(response.data.filter(item => item.isRead == false).length || 0);
+          console.log('notttttttttt', response.data.filter(item => item.isRead == false).length)
         }
       } catch (err) {
         console.log("Notification check error:", err);
@@ -74,7 +74,7 @@ const header = ({ navigation, profileImage }) => {
             <Image style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 50, }} source={
               profileImage
                 ? { uri: BASE_API_URL + profileImage }
-                : require('../../assets/loading_gray.gif') // fallback image
+                : require('../../assets/user.png') // fallback image
             } />
           </TouchableOpacity>
           <Text numberOfLines={1} ellipsizeMode="tail" style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 19, color: '#3085FE', paddingLeft: 8, width: 180, }}>Hi {userName} !</Text>

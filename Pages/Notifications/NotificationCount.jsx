@@ -18,7 +18,7 @@ const NotificationCount = ({ navigation }) => {
 
   // if (notificationCount === 0) return null; // Hide when no notifications
 
-
+  console.log('notificationCount', notificationCount)
 
 
 

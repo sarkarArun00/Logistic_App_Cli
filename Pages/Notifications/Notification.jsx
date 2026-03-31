@@ -103,14 +103,15 @@ function Notification({ navigation }) {
             // setNotifications(response.data?.seen);
             // setNotificationCount(response.data?.unseen?.length);
             setNotifications(response.data);
-            setNotificationCount(response.data?.length);
+            setNotificationCount(response.data?.filter(item => item.isRead == false).length);
         } else {
             setNotificationCount(0);
         }
     };
 
     const markNotificationsAsSeen = async (allIds) => {
-        const res = await TaskService.updateNotificationStatus({ notifIds: allIds });
+        // notifIds: allIds
+        const res = await TaskService.updateNotificationStatus({});
         if (res.status === 1) {
             await fetchNotifications(); // Refresh list
         }

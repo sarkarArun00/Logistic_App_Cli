@@ -5,7 +5,7 @@ import Geolocation from "react-native-geolocation-service";
 const TRACKER_API_URL =
     "https://lims-testing-api.nirnayanhealthcare.com/operation/tracker/updateEmpLocation";
 
-const TRACKING_INTERVAL_MS = 60000;
+const TRACKING_INTERVAL_MS = 100000;
 
 export const requestLocationPermission = async () => {
     if (Platform.OS !== "android") return true;
