@@ -74,7 +74,7 @@ const header = ({ navigation, profileImage }) => {
             <Image style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 50, }} source={
               profileImage
                 ? { uri: BASE_API_URL + profileImage }
-                : require('../../assets/user.png') // fallback image
+                : require('../../assets/user1.png') // fallback image
             } />
           </TouchableOpacity>
           <Text numberOfLines={1} ellipsizeMode="tail" style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 19, color: '#3085FE', paddingLeft: 8, width: 180, }}>Hi {userName} !</Text>

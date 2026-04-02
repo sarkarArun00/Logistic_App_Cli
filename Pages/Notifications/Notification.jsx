@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image, ActivityIndicator, FlatList } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ActivityIndicator, FlatList, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // import { Ionicons } from '@expo/vector-icons';
 // import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium } from '@expo-google-fonts/montserrat';
@@ -170,9 +170,11 @@ function Notification({ navigation }) {
             console.log('response:', response)
             if (response.status == 1) {
                 console.log('Approval successful:', response);
+                Alert.alert('Approval successful')
                 setApprovals(prev => prev.filter(item => item.id !== id));
             } else {
                 console.log('Approval failed:', response);
+                Alert.alert(response.message)
             }
         } catch (error) {
             console.error('Error approving employee:', error);

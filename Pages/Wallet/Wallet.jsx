@@ -123,6 +123,8 @@ function Wallet({ navigation, progress = 0.5 }) {
                 setDetails([]);
                 console.log('Error fetching wallet details:', res.message);
             }
+
+            console.log('refreshing..... details')
         });
     }
 
@@ -244,7 +246,7 @@ function Wallet({ navigation, progress = 0.5 }) {
                     showAlertModal('Transfer to employee successful.', false);
                     setModalVisible(false);
                     resetForm();
-
+                    onRefresh();
                     fetchWalletDetails();
                     getTransactionHistory();
                     setLoading(false);
