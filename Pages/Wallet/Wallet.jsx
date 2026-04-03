@@ -529,7 +529,7 @@ function Wallet({ navigation, progress = 0.5 }) {
                             {/* <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>2</Text> */}
                         </TouchableOpacity>
                     </View>
-                    <View style={{ backgroundColor: '#F6FAFF', borderRadius: 20, padding: 15, marginTop: 10 }}>
+                    <View style={{ backgroundColor: '#F6FAFF', borderRadius: 20, padding: 14, marginTop: 10 }}>
                         {transactions.length > 0 ? (
                             transactions.map((item) => (
                                 <TouchableWithoutFeedback key={item.id} onPress={() => isActiveTrans(item.id)}>
@@ -539,17 +539,17 @@ function Wallet({ navigation, progress = 0.5 }) {
                                                 <View style={styles.arrowBtn}>
                                                     {item.transactionType === 'debit' ? (
                                                         <Image
-                                                            style={{ width: 18, height: 18 }}
+                                                            style={{ width: 15, height: 15 }}
                                                             source={require('../../assets/dibitedarrow.png')}
                                                         />
                                                     ) : item.transactionType === 'credit' ? (
                                                         <Image
-                                                            style={{ width: 18, height: 18 }}
+                                                            style={{ width: 15, height: 15 }}
                                                             source={require('../../assets/creditarrow.png')}
                                                         />
                                                     ) : item.transactionType === 'Limit Increase' ? (
                                                         <Image
-                                                            style={{ width: 18, height: 18 }}
+                                                            style={{ width: 15, height: 15 }}
                                                             source={require('../../assets/pass2.png')} // 👈 add your image
                                                         />
                                                     ) : null}
@@ -563,7 +563,7 @@ function Wallet({ navigation, progress = 0.5 }) {
                                                     >
                                                         {item.transactionType === 'debit' ? 'Transfer Amount' : 'Received Amount'}
                                                     </Text>
-                                                    <Text>{item.remarks}</Text>
+                                                    <Text style={{ fontFamily: 'Montserrat-Regular', fontSize: 13, lineHeight: 15, color: '#000', }}>{item.remarks}</Text>
                                                     <Text style={styles.clientName}>{item.sender_or_receiver}</Text>
                                                 </View>
                                             </View>
@@ -577,7 +577,7 @@ function Wallet({ navigation, progress = 0.5 }) {
                                         {activeTransactionId === item.id && (
                                             <View
                                                 style={{
-                                                    marginTop: 10,
+                                                    marginTop: 0,
                                                     fontSize: 8,
                                                     borderTopWidth: 1,
                                                     borderTopColor: '#d8dbe0',
@@ -1079,13 +1079,13 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         // Android Shadow
         elevation: 2,
-        padding: 15,
+        padding: 12,
         marginBottom: 12,
     },
     amtInnbox: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        // alignItems: 'center',
     },
     transactionDtl: {
         flexDirection: 'row',
@@ -1095,6 +1095,7 @@ const styles = StyleSheet.create({
     tranIdd: {
         fontFamily: 'Montserrat-Medium',
         fontSize: 12,
+        lineHeight: 15,
         color: "#000000",
         width: 115,
     },
@@ -1102,6 +1103,7 @@ const styles = StyleSheet.create({
         flex: 1,
         fontFamily: 'Montserrat-Medium',
         fontSize: 12,
+        lineHeight: 15,
         color: '#3085FE',
         flexWrap: 'wrap',
         overflow: 'hidden',
@@ -1110,12 +1112,12 @@ const styles = StyleSheet.create({
     flexBox: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        // alignItems: 'center',
         flex: 1,
     },
     arrowBtn: {
-        width: 34,
-        height: 34,
+        width: 30,
+        height: 30,
         backgroundColor: '#F4F9FF',
         borderRadius: 7,
         flexDirection: 'row',
@@ -1137,15 +1139,20 @@ const styles = StyleSheet.create({
         color: '#0C0D36',
         paddingTop: 3,
     },
+    rightBlock: {
+        width: 115,
+    },
     creditAmnt: {
         fontFamily: 'Montserrat-Medium',
-        fontSize: 14,
+        fontSize: 13,
+        lineHeight: 16,
         color: '#0C0D36',
         textAlign: 'right',
     },
     dates: {
         fontFamily: 'Montserrat-Medium',
-        fontSize: 12,
+        fontSize: 11,
+        lineHeight: 14,
         color: '#0C0D36',
         textAlign: 'right',
         paddingTop: 6,
