@@ -424,7 +424,7 @@ body{ font-family: "Montserrat", sans-serif; background:#f0f4f8; padding:20px;  
               <Text style={styles.sndTitle}>Receipt Status</Text>
               <Text style={styles.sndSubTitle}>
                 <View style={{
-                  alignSelf: 'flex-start',
+                  // alignSelf: 'flex-start',
                   backgroundColor: getStatusColor(receiptData?.authoriseStatus, receiptData?.generateStatus),
                   paddingVertical: 2,
                   paddingHorizontal: 8,
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sndSubTitle: {
-    width: 170,
+    maxWidth: 200,
     fontFamily: 'Montserrat-SemiBold',
     fontSize: 12,
     color: '#0C0D36',
