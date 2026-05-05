@@ -103,7 +103,12 @@ function TabNavigator() {
         component={Home}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} icon="home" label="Home" />
+            // <TabIcon focused={focused} icon="home" label="Home" />
+            <TabIcon
+          focused={focused}
+          icon={focused ? "home" : "home-outline"}
+          label="Home"
+        />
           ),
         }}
       />
@@ -150,13 +155,29 @@ function TabNavigator() {
 
 const TabIcon = ({ focused, icon, label }) => (
   <View style={{ alignItems: 'center' }}>
-    {focused && <View style={{ height: 2, backgroundColor: 'white', width:50, marginBottom: 5 }} />}
+    {focused && (
+      <View
+        style={{
+          height: 2,
+          backgroundColor: 'white',
+          width: 50,
+          marginBottom: 5,
+        }}
+      />
+    )}
     <Ionicons
-      name={focused ? icon : `${icon}-outline`}
+      name={icon}
       size={22}
       color={focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF'}
     />
-    <Text style={{ color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF', fontSize: 12, width:65, textAlign:'center', paddingTop:2, }}>
+    <Text
+      style={{
+        color: focused ? 'rgba(255,255,255,0.5)' : '#FFFFFF',
+        fontSize: 12,
+        width: 65,
+        textAlign: 'center',
+        paddingTop: 2,
+      }}>
       {label}
     </Text>
   </View>

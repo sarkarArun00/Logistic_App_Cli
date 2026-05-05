@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import ImmersiveMode from 'react-native-immersive';
 import { ImageBackground } from 'react-native';
+import { Platform } from 'react-native';
+import Immersive from 'react-native-immersive';
 
 const { width, height } = Dimensions.get('window');
 const { height: screenHeight } = Dimensions.get('window');
@@ -35,11 +37,10 @@ const Welcome = ({ navigation }) => {
   };
 
   useEffect(() => {
-    ImmersiveMode.setImmersive(true); // Hide status & nav bar
-
-    return () => {
-      ImmersiveMode.setImmersive(false); // Show again when leaving screen
-    };
+    if (Platform.OS === 'android') {
+      Immersive.on();
+      Immersive.setImmersive(true);
+    }
   }, []);
 
 

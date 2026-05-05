@@ -10,6 +10,7 @@ import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import ImageResizer from 'react-native-image-resizer';
 import { readFile } from 'react-native-fs';
 import TaskService from '../Services/task_service';
+import AppPicker from '../Components/AppPicker';
 
 function FeulVoucherRequest({ visible, onClose, onSuccess }) {
 
@@ -340,7 +341,19 @@ function FeulVoucherRequest({ visible, onClose, onSuccess }) {
                             <View>
                                 <Text style={styles.label}>Select Vehicle</Text>
                                 <View style={styles.pickerContainer}>
-                                    <Picker
+                                    <AppPicker
+                                        value={selectedVehicle || ''}
+                                        onValueChange={(value) => {
+                                            const selected = vehicles.find(v => v.id === value);
+                                            setSelectedVehicle(selected); // store full object (recommended)
+                                        }}
+                                        placeholder="Select Vehicle"
+                                        items={vehicles.map((v) => ({
+                                            label: v.vehicle?.modelName || 'Unnamed Vehicle',
+                                            value: v.id,
+                                        }))}
+                                    />
+                                    {/* <Picker
                                         style={styles.picker}
                                         dropdownIconColor={lightTheme.inputText}
                                         selectedValue={selectedVehicle?.id || ''} // Make sure to use .id (trackingId) from selectedVehicle
@@ -358,7 +371,7 @@ function FeulVoucherRequest({ visible, onClose, onSuccess }) {
                                                 value={v.id} // trackingId
                                             />
                                         ))}
-                                    </Picker>
+                                    </Picker> */}
 
 
 

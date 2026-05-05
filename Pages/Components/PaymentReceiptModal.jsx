@@ -7,13 +7,15 @@ import {
   TextInput,
   ScrollView,
   Image,
-  ActivityIndicator, Alert
+  ActivityIndicator, Alert, Platform
+
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import RazorpayWebView from "../Wallet/RazorpayWebView";
 import { launchImageLibrary } from "react-native-image-picker";
+import AppPicker from './AppPicker';
 
 // ---------- helpers ----------
 const parseAmount = (v) => {
@@ -108,7 +110,6 @@ export default function PaymentReceiptModal({
   // ---------- on open ----------
   useEffect(() => {
     if (!visible) return;
-    console.log('79898798987979799789879797', taskId)
     // load required lists
     fetchClients?.();
     fetchBanks?.();
@@ -557,19 +558,55 @@ export default function PaymentReceiptModal({
               {/* Client */}
               <Text style={styles.label}>Client Name</Text>
               <View style={styles.pickerContainer}>
-                <Picker selectedValue={selectClient} onValueChange={setSelectClient} style={styles.picker}>
+                {/* <Picker selectedValue={selectClient} onValueChange={setSelectClient} mode="dropdown" style={styles.picker}>
                   <Picker.Item label="Select Client" value="" />
                   {clients.map((c) => (
                     <Picker.Item key={c.id} label={c.client_name} value={c.id} />
                   ))}
-                </Picker>
+                </Picker> */}
+                <AppPicker
+                  value={selectClient}
+                  onValueChange={setSelectClient}
+                  placeholder="Select Client"
+                  items={clients.map((c) => ({
+                    label: c.client_name,
+                    value: c.id,
+                  }))}
+                />
+                {/* <RNPickerSelect
+                  value={selectClient}
+                  onValueChange={(value) => setSelectClient(value)}
+                  placeholder={{ label: 'Select Client', value: '' }}
+                  items={clients.map((c) => ({
+                    label: c.client_name,
+                    value: c.id,
+                  }))}
+                  useNativeAndroidPickerStyle={true}
+                  style={{
+                    inputIOS: styles.iosPickerInput,
+                    inputAndroid: styles.androidPickerInput,
+                    placeholder: {
+                      color: '#999',
+                    },
+                  }}
+                /> */}
               </View>
 
               {/* Mode */}
               <Text style={styles.label}>Payment Mode</Text>
               <View style={styles.pickerContainer}>
-                <Picker
+                <AppPicker
+                  value={selectPaymode}
+                  onValueChange={(value) => setSelectPaymode(value)}
+                  placeholder="Select Payment Mode"
+                  items={visiblePaymentModes.map((mode) => ({
+                    label: mode.label,
+                    value: String(mode.id),
+                  }))}
+                />
+                {/* <Picker
                   selectedValue={selectPaymode}
+                  mode="dropdown"
                   onValueChange={(value) => setSelectPaymode(value)}
                   style={styles.picker}
                 >
@@ -582,7 +619,7 @@ export default function PaymentReceiptModal({
                       value={String(mode.id)}
                     />
                   ))}
-                </Picker>
+                </Picker> */}
               </View>
 
               {/* Amount */}

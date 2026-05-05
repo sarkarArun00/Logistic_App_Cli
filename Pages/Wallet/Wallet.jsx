@@ -15,6 +15,7 @@ import dayjs from 'dayjs';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { lightTheme } from '../GlobalStyles'
 import NotificationCount from '../Notifications/NotificationCount';
+import AppPicker from '../Components/AppPicker'
 
 const wait = (timeout) => {
     return new Promise(resolve => setTimeout(resolve, timeout));
@@ -637,80 +638,73 @@ function Wallet({ navigation, progress = 0.5 }) {
                                 <View>
                                     <Text style={styles.label}>Transfer Type</Text>
                                     <View style={styles.pickerContainer}>
-                                        <Picker
+                                        {/* <Picker
                                             selectedValue={selectType}
                                             onValueChange={(itemValue, itemIndex) =>
                                                 setselectType(itemValue)
                                             }
                                             style={styles.picker} // Apply text color here
-                                            dropdownIconColor={lightTheme.inputText} // Android only 
+                                            dropdownIconColor={lightTheme.inputText} // Android only
                                         >
                                             <Picker.Item label="-Select-" value="" />
                                             <Picker.Item label="Employee" value="Employee" />
                                             <Picker.Item label="Organization" value="Organization" />
-                                        </Picker>
+                                        </Picker> */}
+                                        <AppPicker
+                                            value={selectType}
+                                            onValueChange={(value) => setselectType(value)}
+                                            placeholder="-Select-"
+                                            items={[
+                                                { label: 'Employee', value: 'Employee' },
+                                                { label: 'Organization', value: 'Organization' },
+                                            ]}
+                                        />
                                     </View>
                                 </View>
 
                                 {selectType === 'Employee' && (
                                     <>
                                         <Text style={styles.label}>Select Employee</Text>
-                                        <View style={styles.pickerContainer}>
-                                            <Picker
-                                                selectedValue={selectEmployee}
-                                                onValueChange={(value) => setSelectEmployee(value)}
-                                                style={styles.picker} // Apply text color here
-                                                dropdownIconColor={lightTheme.inputText} // Android only 
-                                            >
-                                                <Picker.Item label="-Select-" value="" />
-                                                {
-                                                    employees.map((item) => (
-                                                        <Picker.Item key={item.id} label={item.employee_name} value={item.id} />
-                                                    ))
-                                                }
-                                            </Picker>
-                                        </View>
+                                        <AppPicker
+                                            value={selectEmployee}
+                                            onValueChange={(value) => setSelectEmployee(value)}
+                                            placeholder="-Select-"
+                                            items={employees.map((item) => ({
+                                                label: item.employee_name,
+                                                value: item.id,
+                                            }))}
+                                        />
                                     </>
                                 )}
 
                                 <Text style={styles.label}>Payment Mode</Text>
-                                <View style={[styles.pickerContainer, selectType === 'Employee' && { opacity: 0.5 }]}>
-                                    <Picker
-                                        selectedValue={selectPaymode}
-                                        enabled={selectType !== 'Employee'}
+                                <View style={selectType === 'Employee' && { opacity: 0.5 }}>
+                                    <AppPicker
+                                        value={selectPaymode}
                                         onValueChange={(value) => setSelectPaymode(value)}
-                                        style={styles.picker} // Apply text color here
-                                        dropdownIconColor={lightTheme.inputText} // Android only 
-                                    >
-                                        <Picker.Item label="-select-" value="" />
-                                        <Picker.Item label="Cash" value="cash" />
-                                        <Picker.Item label="Online" value="online" />
-                                    </Picker>
+                                        placeholder="-select-"
+                                        disabled={selectType === 'Employee'}
+                                        items={[
+                                            { label: 'Cash', value: 'cash' },
+                                            { label: 'Online', value: 'online' },
+                                        ]}
+                                    />
                                 </View>
 
                                 {selectType === 'Organization' && selectPaymode === 'cash' && (
                                     <>
                                         <Text style={styles.label}>Select Center</Text>
-                                        <View style={styles.pickerContainer}>
-                                            <Picker
-                                                selectedValue={selectCenter}
-                                                onValueChange={(value) => setSelectCenter(value)}
-                                                style={styles.picker} // Apply text color here
-                                                dropdownIconColor={lightTheme.inputText} // Android only 
-                                            >
-                                                <Picker.Item label="-Select-" value="" />
-                                                {allCenters
-                                                    .filter(item => item.status === true)
-                                                    .map(item => (
-                                                        <Picker.Item
-                                                            key={item.id}
-                                                            label={item.centreName}
-                                                            value={item.id}
-                                                        />
-                                                    ))
-                                                }
-                                            </Picker>
-                                        </View>
+                                        <AppPicker
+                                            value={selectCenter}
+                                            onValueChange={(value) => setSelectCenter(value)}
+                                            placeholder="-Select-"
+                                            items={allCenters
+                                                .filter((item) => item.status === true)
+                                                .map((item) => ({
+                                                    label: item.centreName,
+                                                    value: item.id,
+                                                }))}
+                                        />
                                     </>
                                 )}
 

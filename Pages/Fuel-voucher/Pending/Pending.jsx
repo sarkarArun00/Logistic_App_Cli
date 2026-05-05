@@ -380,105 +380,81 @@ function Pending({ navigation }) {
                     </View>
                 </ScrollView>
 
-                {fuelVoucherList.map((allVehicles) => (
-                    <View key={allVehicles.id}>
-                        <Text style={styles.title}>{formatDateTime(allVehicles.createdAt)}</Text>
+                {fuelVoucherList && fuelVoucherList.length > 0 ? (
+                    fuelVoucherList.map((allVehicles) => (
+                        <View key={allVehicles.id}>
+                            <Text style={styles.title}>{formatDateTime(allVehicles.createdAt)}</Text>
 
-                        <View
-                            style={{
-                                flexDirection: 'row',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                marginBottom: 15,
-                            }}
-                        >
-                            <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
-                                <Image
-                                    style={{ width: 28, height: 20 }}
-                                    source={require('../../../assets/voucher.png')}
-                                />
-                                <View style={{ paddingLeft: 6 }}>
-                                    <Text
-                                        style={{
-                                            fontFamily: 'Montserrat-Medium',
-                                            fontSize: 16,
-                                            color: '#0C0D36',
-                                            paddingBottom: 2,
-                                        }}
-                                    >
-                                        {allVehicles?.fuelVoucherNo}
-                                    </Text>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        <View style={styles.bgborder}>
-                                            <Animated.View style={[styles.animatebg, { backgroundColor }]} />
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginBottom: 15,
+                                }}
+                            >
+                                <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
+                                    <Image
+                                        style={{ width: 28, height: 20 }}
+                                        source={require('../../../assets/voucher.png')}
+                                    />
+                                    <View style={{ paddingLeft: 6 }}>
+                                        <Text
+                                            style={{
+                                                fontFamily: 'Montserrat-Medium',
+                                                fontSize: 16,
+                                                color: '#0C0D36',
+                                                paddingBottom: 2,
+                                            }}
+                                        >
+                                            {allVehicles?.fuelVoucherNo}
+                                        </Text>
+
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <View style={styles.bgborder}>
+                                                <Animated.View style={[styles.animatebg, { backgroundColor }]} />
+                                            </View>
+                                            <Text
+                                                style={{
+                                                    fontFamily: 'Montserrat-SemiBold',
+                                                    fontSize: 11,
+                                                    color: '#0C0D36',
+                                                }}
+                                            >
+                                                Payment Pending
+                                            </Text>
                                         </View>
+                                    </View>
+                                </View>
+
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <View style={{ paddingRight: 15 }}>
                                         <Text
                                             style={{
                                                 fontFamily: 'Montserrat-SemiBold',
-                                                fontSize: 11,
-                                                color: '#0C0D36',
+                                                fontSize: 14,
+                                                color: '#FFBB00',
                                             }}
                                         >
-                                            Payment Pending
+                                            {formatToINR(allVehicles.amount)}
                                         </Text>
                                     </View>
                                 </View>
                             </View>
-
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <View style={{ paddingRight: 15 }}>
-                                    <Text
-                                        style={{
-                                            fontFamily: 'Montserrat-SemiBold',
-                                            fontSize: 14,
-                                            color: '#FFBB00',
-                                        }}
-                                    >
-                                        {formatToINR(allVehicles.amount)}
-                                    </Text>
-                                </View>
-
-                                {/* <TouchableOpacity
-                        style={[styles.touchBtn, { paddingHorizontal: 4 }]}
-                        onPress={() =>
-                            setActiveMenuId(
-                            activeMenuId === allVehicles.id ? null : allVehicles.id
-                            )
-                        }
-                        >
+                        </View>
+                    ))
+                ) : (
+                    <View style={styles.emptyContainer}>
                         <Image
-                            style={{ width: 4, height: 23 }}
-                            source={require('../../../assets/dotimg1.png')}
+                            source={require('../../../assets/no_data.png')} // optional image
+                            style={styles.emptyImage}
                         />
-                        </TouchableOpacity> */}
-
-                                {/* {activeMenuId === allVehicles.id && (
-                        <View style={styles.viewBx}>
-                            <TouchableOpacity
-                            style={styles.viewText}
-                            
-                            onPress={() => navigation.navigate("VoucherDetails", { fuelVoucherId: allVehicles.id })}
-                            >
-                            <Text style={styles.downloadText}>View</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                            style={styles.viewText}
-                            onPress={() => setActiveMenuId(null)}
-                            >
-                            <Text style={styles.downloadText}>Download</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                            style={styles.viewText}
-                            onPress={() => setActiveMenuId(null)}
-                            >
-                            <Text style={styles.downloadText}>Share</Text>
-                            </TouchableOpacity>
-                        </View>
-                        )} */}
-                            </View>
-                        </View>
+                        <Text style={styles.emptyTitle}>No Request Found</Text>
+                        <Text style={styles.emptySubText}>
+                            There are no fuel vouchers available at the moment.
+                        </Text>
                     </View>
-                ))}
+                )}
 
 
 
@@ -618,6 +594,32 @@ function Pending({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 40,
+    },
+
+    emptyImage: {
+        width: 120,
+        height: 120,
+        marginBottom: 10,
+        resizeMode: 'contain',
+    },
+
+    emptyTitle: {
+        fontSize: 16,
+        fontFamily: 'Montserrat-SemiBold',
+        color: '#0C0D36',
+        marginBottom: 4,
+    },
+
+    emptySubText: {
+        fontSize: 13,
+        fontFamily: 'Montserrat-Regular',
+        color: '#777',
+        textAlign: 'center',
+    },
     ScrollView: {
         paddingBottom: 185,
     },

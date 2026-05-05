@@ -159,23 +159,23 @@ function Accepted({ navigation }) {
         });
     };
 
-    const formatDateTime = (dateString) => {
-        if (!dateString) return '';
+    // const formatDateTime = (dateString) => {
+    //     if (!dateString) return '';
 
-        const date = new Date(dateString);
+    //     const date = new Date(dateString);
 
-        return date
-            .toLocaleString('en-IN', {
-                timeZone: 'Asia/Kolkata',
-                month: 'short',       // "Feb"
-                day: '2-digit',       // "20"
-                year: 'numeric',      // "2025"
-                hour: 'numeric',      // "4"
-                minute: '2-digit',    // "01"
-                hour12: true          // "PM"
-            })
-            .replace(',', ''); // Optional: Remove comma between date and time
-    };
+    //     return date
+    //         .toLocaleString('en-IN', {
+    //             timeZone: 'Asia/Kolkata',
+    //             month: 'short',       // "Feb"
+    //             day: '2-digit',       // "20"
+    //             year: 'numeric',      // "2025"
+    //             hour: 'numeric',      // "4"
+    //             minute: '2-digit',    // "01"
+    //             hour12: true          // "PM"
+    //         })
+    //         .replace(',', ''); // Optional: Remove comma between date and time
+    // };
 
     const formatDate = (isoString) => {
         if (!isoString) return 'Invalid Date';
@@ -192,9 +192,11 @@ function Accepted({ navigation }) {
 
     // Call Button
     const makeCall = (call) => {
-        const cleaned = call.replace(/\D/g, ''); // remove spaces, dashes, etc.
-        const formatted = cleaned.startsWith('+') ? cleaned : `+91${cleaned}`; // assuming India
-        Linking.openURL(`tel:${formatted}`);
+        if (call) {
+            const cleaned = call.replace(/\D/g, ''); // remove spaces, dashes, etc.
+            const formatted = cleaned.startsWith('+') ? cleaned : `+91${cleaned}`; // assuming India
+            Linking.openURL(`tel:${formatted}`);
+        }
     };
 
     // if (loading) {

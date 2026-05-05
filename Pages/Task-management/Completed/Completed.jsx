@@ -202,9 +202,11 @@ function Completed({ navigation }) {
         }
     }
     const makeCall = (call) => {
-        const cleaned = call.replace(/\D/g, ''); // remove spaces, dashes, etc.
-        const formatted = cleaned.startsWith('+') ? cleaned : `+91${cleaned}`; // assuming India
-        Linking.openURL(`tel:${formatted}`);
+        if (call) {
+            const cleaned = call.replace(/\D/g, ''); // remove spaces, dashes, etc.
+            const formatted = cleaned.startsWith('+') ? cleaned : `+91${cleaned}`; // assuming India
+            Linking.openURL(`tel:${formatted}`);
+        }
     };
 
     const formatDate2 = (isoString) => {

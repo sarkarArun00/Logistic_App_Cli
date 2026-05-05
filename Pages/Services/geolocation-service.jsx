@@ -8,34 +8,52 @@ const TRACKER_API_URL =
 const TRACKING_INTERVAL_MS = 100000;
 
 export const requestLocationPermission = async () => {
-    if (Platform.OS !== "android") return true;
-
     try {
-        const alreadyGranted = await PermissionsAndroid.check(
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-        );
+        if (Platform.OS === "android") {
+            const alreadyGranted = await PermissionsAndroid.check(
+                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+            );
 
-        if (alreadyGranted) return true;
+            if (alreadyGranted) return true;
 
-        const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-            {
-                title: "Location Permission",
-                message: "This app needs access to your location to track movement.",
-                buttonNeutral: "Ask Me Later",
-                buttonNegative: "Cancel",
-                buttonPositive: "OK",
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                {
+                    title: "Location Permission",
+                    message: "This app needs access to your location to track movement.",
+                    buttonNeutral: "Ask Me Later",
+                    buttonNegative: "Cancel",
+                    buttonPositive: "OK",
+                }
+            );
+
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) return true;
+
+            if (granted === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+                Alert.alert(
+                    "Permission Required",
+                    "Location permission is permanently denied. Please enable it from app settings.",
+                    [
+                        { text: "Cancel", style: "cancel" },
+                        { text: "Open Settings", onPress: () => Linking.openSettings() },
+                    ]
+                );
             }
-        );
 
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            return false;
+        }
+
+        // iOS
+        const auth = await Geolocation.requestAuthorization("whenInUse");
+
+        if (auth === "granted") {
             return true;
         }
 
-        if (granted === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+        if (auth === "denied" || auth === "disabled") {
             Alert.alert(
                 "Permission Required",
-                "Location permission is permanently denied. Please enable it from app settings.",
+                "Location permission is required to check in or check out.",
                 [
                     { text: "Cancel", style: "cancel" },
                     { text: "Open Settings", onPress: () => Linking.openSettings() },
@@ -54,10 +72,17 @@ export const getCurrentPositionAsync = (options = {}) =>
     new Promise((resolve, reject) => {
         Geolocation.getCurrentPosition(resolve, reject, {
             enableHighAccuracy: true,
-            timeout: 20000,
+            timeout: 25000,
             maximumAge: 10000,
-            forceRequestLocation: true,
-            showLocationDialog: true,
+
+            // Android only
+            ...(Platform.OS === "android"
+                ? {
+                    forceRequestLocation: true,
+                    showLocationDialog: true,
+                }
+                : {}),
+
             ...options,
         });
     });
