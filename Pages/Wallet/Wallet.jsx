@@ -16,6 +16,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { lightTheme } from '../GlobalStyles'
 import NotificationCount from '../Notifications/NotificationCount';
 import AppPicker from '../Components/AppPicker'
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const wait = (timeout) => {
     return new Promise(resolve => setTimeout(resolve, timeout));
@@ -56,7 +57,7 @@ function Wallet({ navigation, progress = 0.5 }) {
     const [showToPicker, setShowToPicker] = useState(false);
     const [selectTransactiontype, setTransactiontype] = useState(false);
 
-
+    const [showBalance, setShowBalance] = useState(false);
     const [activeTransactionId, setActiveTransactionId] = useState(null);
     const [userId, setUserId] = useState(null)
 
@@ -241,9 +242,11 @@ function Wallet({ navigation, progress = 0.5 }) {
                 remarks,
             };
 
+            // console.log('resssssss', employeePayload)
+            // return
             setLoading(true);
             await TaskService.transferToEmp(employeePayload).then((res) => {
-                if (res.status == 1) {
+                if (res[0].status == 1) {
                     showAlertModal('Transfer to employee successful.', false);
                     setModalVisible(false);
                     resetForm();
@@ -486,9 +489,30 @@ function Wallet({ navigation, progress = 0.5 }) {
 
                 {/* Wallet Details */}
                 <View style={styles.walletContainer}>
-                    <Text style={styles.balance}>
-                        ₹{new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }).format(details.walletBalance || 0)}
-                    </Text>
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8,
+                        }}
+                    >
+                        <Text style={styles.balance}>
+                            {showBalance
+                                ? `₹${new Intl.NumberFormat('en-IN', {
+                                    maximumFractionDigits: 2,
+                                }).format(details.walletBalance || 0)}`
+                                : '₹ ••••'}
+                        </Text>
+
+                        <TouchableOpacity onPress={() => setShowBalance(!showBalance)}>
+                            <Ionicons
+                                name={showBalance ? 'eye-off-outline' : 'eye-outline'}
+                                size={20}
+                                color="#0C0D36"
+                            />
+                        </TouchableOpacity>
+                    </View>
                     <Text style={styles.balancelabel}>Amount Collected</Text>
 
                     <View style={styles.progressBar}>
@@ -508,9 +532,43 @@ function Wallet({ navigation, progress = 0.5 }) {
                         />
                     </View>
 
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
+                    {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
                         <Text style={styles.labelText}>₹0</Text>
                         <Text style={styles.labelText}>₹{new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }).format(details.walletMaxLimit)}</Text>
+                    </View> */}
+
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginTop: 12,
+                        }}
+                    >
+                        <Text style={styles.labelText}>₹0</Text>
+
+                        <TouchableOpacity
+                            onPress={() => setShowBalance(!showBalance)}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 6,
+                            }}
+                        >
+                            <Text style={styles.labelText}>
+                                {showBalance
+                                    ? `₹${new Intl.NumberFormat('en-IN', {
+                                        maximumFractionDigits: 2,
+                                    }).format(details.walletMaxLimit)}`
+                                    : '₹ ••••'}
+                            </Text>
+
+                            {/* <Ionicons
+                                name={showBalance ? 'eye-off-outline' : 'eye-outline'}
+                                size={18}
+                                color="#0C0D36"
+                            /> */}
+                        </TouchableOpacity>
                     </View>
 
                     <TouchableOpacity onPress={() => transferModal()} style={styles.amountBtn}>

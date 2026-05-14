@@ -484,6 +484,16 @@ const TaskService = {
     }
   },
 
+  getLogisticDenomination: async (data) => {
+    try {
+      const response = await apiClient.post('operation/logistics/getLogisticDenomination', data);
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   getVehicleByEmpId: async (data) => {
     try {
       const response = await apiClient.post('tracking/tracking/getTrackingByEmployeeIds', data);

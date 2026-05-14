@@ -1768,11 +1768,6 @@ function Progress({ navigation }) {
                 </Modal>
 
 
-
-
-
-
-
                 {/* Comman Payment Modal */}
                 {/* <> */}
                 {/* <TouchableOpacity onPress={() => setModalVisible(true)}>
@@ -1789,6 +1784,7 @@ function Progress({ navigation }) {
 
                     fetchBanks={getAllBanks}
                     fetchDenominations={getAllDenomination}
+                    initialClientId={selectedClientId}
                     styles={styles}
                     toWords={toWords}
                     formatDate={formatDate}

@@ -54,7 +54,7 @@ export default function PaymentReceiptModal({
   fetchDenominations, // async () => void (optional)
 
   // optional preselected client
-  initialClientId = "",
+  initialClientId,
 
   // attachments
   // onPickAttachment, // async () => file or array (optional)
@@ -74,7 +74,9 @@ export default function PaymentReceiptModal({
   showAlert,    // function (msg, isError)
 }) {
   // ---------- main states ----------
-  const [selectClient, setSelectClient] = useState(initialClientId);
+  const [selectClient, setSelectClient] = useState(
+    initialClientId ? String(initialClientId) : ''
+  );
   const [selectPaymode, setSelectPaymode] = useState(""); // "1" "2" "3" "4"
   const [amount, setAmount] = useState("");
   const [remarks, setRemarks] = useState("");
@@ -109,6 +111,7 @@ export default function PaymentReceiptModal({
 
   // ---------- on open ----------
   useEffect(() => {
+    console.log('fetchDenominations', fetchDenominations)
     if (!visible) return;
     // load required lists
     fetchClients?.();
@@ -565,12 +568,12 @@ export default function PaymentReceiptModal({
                   ))}
                 </Picker> */}
                 <AppPicker
-                  value={selectClient}
+                  value={String(selectClient)}
                   onValueChange={setSelectClient}
                   placeholder="Select Client"
                   items={clients.map((c) => ({
                     label: c.client_name,
-                    value: c.id,
+                    value: String(c.id),
                   }))}
                 />
                 {/* <RNPickerSelect

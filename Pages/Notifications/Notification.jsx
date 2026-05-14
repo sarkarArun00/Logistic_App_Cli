@@ -10,6 +10,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { useNotification } from '../../Context/NotificationContext';
 import { useGlobalAlert } from '../../Context/GlobalAlertContext';
+import { Modal, ScrollView } from 'react-native';
 
 
 
@@ -18,10 +19,18 @@ function Notification({ navigation }) {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [approvals, setApprovals] = useState([]);
+    const [approved, setApproved] = useState([]);
     const viewedIdsRef = useRef(new Set());
     const timeoutRef = useRef(null);
     const { setNotificationCount } = useNotification();
     const { showAlertModal, hideAlert } = useGlobalAlert();
+
+    const [approvalModalVisible, setApprovalModalVisible] = useState(false);
+    const [selectedApprovalData, setSelectedApprovalData] = useState(null);
+    const [approvalAction, setApprovalAction] = useState('');
+
+    const [approvalModalLoading, setApprovalModalLoading] = useState(false);
+    const [approvalDetails, setApprovalDetails] = useState(null);
 
     useEffect(() => {
         // const fetchData = async () => {
@@ -52,6 +61,7 @@ function Notification({ navigation }) {
 
                 if (response.status == 1 && response.data?.pending.length > 0) {
                     setApprovals(response.data?.pending);
+                    setApproved(response.data?.approved);
                 } else {
                     console.log('Response: No data found');
                 }
@@ -164,7 +174,7 @@ function Notification({ navigation }) {
     // };
 
 
-    const handleApprove = async (id) => {
+    const handleApprove = async (id, userId) => {
         try {
             const response = await TaskService.approveApproval({ notifId: id });
             console.log('response:', response)
@@ -195,6 +205,52 @@ function Notification({ navigation }) {
             console.error('Error declining employee:', error);
         }
     }
+
+    const openApprovalModal = async (item, actionType) => {
+        try {
+            setApprovalAction(actionType);
+            setApprovalModalVisible(true);
+            setApprovalModalLoading(true);
+
+            const response2 = await TaskService.getLogisticDenomination({
+                empId: item?.srcEmp || null,
+            });
+
+            console.log('resss denomination', response2);
+
+            if (response2?.status === 1) {
+                setApprovalDetails(response2?.data);
+            } else {
+                setApprovalDetails(null);
+            }
+        } catch (err) {
+            console.log('Error fetching denomination:', err);
+            setApprovalDetails(null);
+        } finally {
+            setApprovalModalLoading(false);
+        }
+    };
+
+    const approvalList = [
+        ...approvals.map(item => ({
+            ...item,
+            sectionType: 'pending',
+        })),
+
+        ...(approved?.length > 0
+            ? [
+                {
+                    sectionHeader: true,
+                    title: 'Approved Notifications',
+                    id: 'approved-header',
+                },
+                ...approved.map(item => ({
+                    ...item,
+                    sectionType: 'approved',
+                })),
+            ]
+            : []),
+    ];
 
 
     const NotificationItem = ({ item }) => (
@@ -279,47 +335,112 @@ function Notification({ navigation }) {
                 />
             ) : (
                 <FlatList
-                    data={selectedTab === 'General' ? notifications : approvals}
-                    renderItem={({ item }) =>
-                        selectedTab === 'General' ? (
-                            <NotificationItem item={item} />
-                        ) : (
-                            <View style={styles.notificationContainer}>
+                        data={selectedTab === 'General' ? notifications : approvalList}
+                        renderItem={({ item }) => {
 
-                                <View style={styles.textContainer}>
-                                    <Text style={styles.name}>
-                                        {item?.name}{' '}
-                                        <Text style={styles.message}>{item.message}</Text>
-                                    </Text>
-                                </View>
-
-
-                                <View style={styles.buttonRow}>
-                                    <View>
-                                        <Text style={styles.time}>
-                                            {item?.time}{' '}
-                                            {dayjs(item.createdAt).format('MMMM D, YYYY h:mm A')}
+                            // Section Header
+                            if (item.sectionHeader) {
+                                return (
+                                    <View style={{
+                                        paddingHorizontal: 16,
+                                        paddingVertical: 10,
+                                        backgroundColor: '#F8FAFC',
+                                    }}>
+                                        <Text style={{
+                                            fontSize: 14,
+                                            fontFamily: 'Montserrat-SemiBold',
+                                            color: '#64748B',
+                                        }}>
+                                            {item.title}
                                         </Text>
                                     </View>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                                        <TouchableOpacity
-                                            style={[styles.button, { backgroundColor: '#10B981' }]}
-                                            onPress={() => handleApprove(item?.id)}
-                                        >
-                                            <Text style={styles.buttonText}>Approve</Text>
-                                        </TouchableOpacity>
+                                );
+                            }
 
-                                        <TouchableOpacity
-                                            style={[styles.button, { backgroundColor: '#EF4444' }]}
-                                            onPress={() => handleDecline(item?.id)}
-                                        >
-                                            <Text style={styles.buttonText}>Decline</Text>
-                                        </TouchableOpacity>
+                            return selectedTab === 'General' ? (
+                                <NotificationItem item={item} />
+                            ) : (
+                                <View style={styles.notificationContainer}>
+
+                                        <View style={styles.textContainer}>
+                                            <Text style={styles.name}>
+                                                {item?.name || 'Notification'}{' '}
+                                                <Text style={styles.message}>{item.message}</Text>
+                                            </Text>
+                                        </View>
+
+                                        <View style={styles.buttonRow}>
+                                            <View>
+                                                <Text style={styles.time}>
+                                                    {dayjs(item.createdAt).format('DD-MM-YYYY hh:mm A')}
+                                                </Text>
+                                            </View>
+
+                                            {item.sectionType === 'pending' ? (
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                                                    {/* <TouchableOpacity
+                                                        style={[styles.button, { backgroundColor: '#10B981' }]}
+                                                        onPress={() => handleApprove(item?.id, item.srcEmp)}
+                                                    >
+                                                        <Text style={styles.buttonText}>Approve</Text>
+                                                    </TouchableOpacity>
+
+                                                    <TouchableOpacity
+                                                        style={[styles.button, { backgroundColor: '#EF4444' }]}
+                                                        onPress={() => handleDecline(item?.id)}
+                                                    >
+                                                        <Text style={styles.buttonText}>Decline</Text>
+                                                    </TouchableOpacity> */}
+
+                                                    <TouchableOpacity
+                                                        style={styles.viewButton}
+                                                        onPress={() => openApprovalModal(item, 'approve')}
+                                                        activeOpacity={0.8}
+                                                    >
+                                                        <Ionicons
+                                                            name="eye-outline"
+                                                            size={16}
+                                                            color="#2563EB"
+                                                        />
+
+                                                        <Text style={styles.viewButtonText}>
+                                                            View Details
+                                                        </Text>
+                                                    </TouchableOpacity>
+
+
+
+                                                    {/* <TouchableOpacity
+                                                        style={[styles.button, { backgroundColor: '#EF4444' }]}
+                                                        onPress={() => openApprovalModal(item, 'decline')}
+                                                    >
+                                                        <Text style={styles.buttonText}>Decline</Text>
+                                                    </TouchableOpacity> */}
+                                                </View>
+                                            ) : (
+                                                <View
+                                                    style={{
+                                                        backgroundColor: '#DCFCE7',
+                                                        paddingHorizontal: 10,
+                                                        paddingVertical: 6,
+                                                        borderRadius: 20,
+                                                    }}
+                                                >
+                                                    <Text
+                                                        style={{
+                                                            color: '#166534',
+                                                            fontSize: 12,
+                                                            fontFamily: 'Montserrat-SemiBold',
+                                                        }}
+                                                    >
+                                                        Approved
+                                                    </Text>
+                                                    </View>
+                                            )}
+                                        </View>
                                     </View>
-                                </View>
-                            </View>
-                        )
-                    }
+                            );
+                        }}
                     keyExtractor={item => item?.id.toString()}
                     // onViewableItemsChanged={onViewableItemsChanged}
                     // viewabilityConfig={viewabilityConfig}
@@ -351,6 +472,213 @@ function Notification({ navigation }) {
                     <ActivityIndicator size="large" color="#FFFFFF" />
                     <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
                 </View>
+            )}
+
+
+            {approvalModalLoading ? (
+                <View style={{ paddingVertical: 50 }}>
+                    <ActivityIndicator size="large" color="#2F81F5" />
+
+                    <Text
+                        style={{
+                            textAlign: 'center',
+                            marginTop: 12,
+                            color: '#64748B',
+                            fontFamily: 'Montserrat-Medium',
+                        }}
+                    >
+                        Fetching payment details...
+                    </Text>
+                </View>
+            ) : (
+                <>
+                    <Modal
+                        visible={approvalModalVisible}
+                        transparent
+                        animationType="slide"
+                        onRequestClose={() => setApprovalModalVisible(false)}
+                    >
+                        <View style={styles.modalOverlay}>
+                            <View style={styles.modalContainer}>
+
+                                {/* Header */}
+                                <View style={styles.modalHeader}>
+                                    <Text style={styles.modalTitle}>
+                                        {approvalAction === 'approve'
+                                            ? 'Approve Request'
+                                            : 'Decline Request'}
+                                    </Text>
+
+                                    <TouchableOpacity
+                                        onPress={() => setApprovalModalVisible(false)}
+                                    >
+                                        <Ionicons name="close" size={24} color="#0C0D36" />
+                                    </TouchableOpacity>
+                                </View>
+
+                                <ScrollView showsVerticalScrollIndicator={false}>
+
+                                    {/* Denomination Section */}
+                                    {approvalDetails?.denominations?.length > 0 && (
+                                        <View style={styles.sectionCard}>
+                                            <Text style={styles.sectionTitle}>
+                                                Denomination Details
+                                            </Text>
+
+                                            {approvalDetails?.denominations.map((item, index) => (
+                                                <View key={index} style={styles.rowCard}>
+                                                    <View>
+                                                        <Text style={styles.rowLabel}>
+                                                            ₹{item.denomination_name}
+                                                        </Text>
+                                                        <Text style={styles.rowSubLabel}>
+                                                            Qty: {item.count}
+                                                        </Text>
+                                                    </View>
+
+                                                    <Text style={styles.amountText}>
+                                                        ₹{item.amount}
+                                                    </Text>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    )}
+
+                                    {/* Cheque Section */}
+                                    {approvalDetails?.cheques?.length > 0 && (
+                                        <View style={styles.sectionCard}>
+                                            <Text style={styles.sectionTitle}>
+                                                Cheque Details
+                                            </Text>
+
+                                            {approvalDetails?.cheques.map((cheque, index) => (
+                                                <View key={index} style={styles.chequeCard}>
+
+                                                    <View style={styles.chequeRow}>
+                                                        <Text style={styles.chequeLabel}>
+                                                            Cheque No
+                                                        </Text>
+
+                                                        <Text style={styles.chequeValue}>
+                                                            {cheque.cheque_no}
+                                                        </Text>
+                                                    </View>
+
+                                                    <View style={styles.chequeRow}>
+                                                        <Text style={styles.chequeLabel}>
+                                                            Bank
+                                                        </Text>
+
+                                                        <Text style={styles.chequeValue}>
+                                                            {cheque.bank_name}
+                                                        </Text>
+                                                    </View>
+
+                                                    <View style={styles.chequeRow}>
+                                                        <Text style={styles.chequeLabel}>
+                                                            Amount
+                                                        </Text>
+
+                                                        <Text style={styles.chequeValue}>
+                                                            ₹{cheque.amount}
+                                                        </Text>
+                                                    </View>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    )}
+
+                                    {/* Empty */}
+                                    {approvalDetails?.denominations?.length === 0 &&
+                                        approvalDetails?.cheques?.length === 0 && (
+                                            <View style={styles.emptyBox}>
+                                                <Ionicons
+                                                    name="document-text-outline"
+                                                    size={55}
+                                                    color="#CBD5E1"
+                                                />
+
+                                                <Text style={styles.emptyText}>
+                                                    No payment details found
+                                                </Text>
+                                            </View>
+                                        )}
+
+                                </ScrollView>
+
+                                {/* Footer Buttons */}
+                                <View style={styles.footerRow}>
+
+                                    {/* Cancel */}
+                                    {/* <TouchableOpacity
+                                        style={styles.cancelButton}
+                                        onPress={() => setApprovalModalVisible(false)}
+                                        activeOpacity={0.8}
+                                    >
+                                        <Text style={styles.cancelButtonText}>
+                                            Cancel
+                                        </Text>
+                                    </TouchableOpacity> */}
+
+                                    {/* Decline */}
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.confirmButton,
+                                            { backgroundColor: '#EF4444' },
+                                        ]}
+                                        activeOpacity={0.8}
+                                        onPress={() => {
+                                            handleDecline(approvalDetails?.id);
+                                            setApprovalModalVisible(false);
+                                        }}
+                                    >
+                                        <View style={styles.buttonInner}>
+                                            <Ionicons
+                                                name="close-circle-outline"
+                                                size={18}
+                                                color="#fff"
+                                            />
+
+                                            <Text style={styles.confirmButtonText}>
+                                                Decline
+                                            </Text>
+                                        </View>
+                                    </TouchableOpacity>
+
+                                    {/* Approve */}
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.confirmButton,
+                                            { backgroundColor: '#10B981' },
+                                        ]}
+                                        activeOpacity={0.8}
+                                        onPress={() => {
+                                            handleApprove(
+                                                approvalDetails?.id,
+                                                approvalDetails?.srcEmp
+                                            );
+
+                                            setApprovalModalVisible(false);
+                                        }}
+                                    >
+                                        <View style={styles.buttonInner}>
+                                            <Ionicons
+                                                name="checkmark-circle-outline"
+                                                size={18}
+                                                color="#fff"
+                                            />
+
+                                            <Text style={styles.confirmButtonText}>
+                                                Approve
+                                            </Text>
+                                        </View>
+                                    </TouchableOpacity>
+
+                                </View>
+                            </View>
+                        </View>
+                    </Modal>
+                </>
             )}
         </SafeAreaView>
     )
@@ -446,6 +774,170 @@ const styles = StyleSheet.create({
         fontFamily: 'Montserrat-Medium',
         color: '#fff',
         fontWeight: '600',
+    },
+
+
+
+    // New css
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        paddingHorizontal: 20,
+    },
+
+    modalContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 24,
+        maxHeight: '85%',
+        padding: 20,
+    },
+
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 18,
+    },
+
+    modalTitle: {
+        fontSize: 18,
+        fontFamily: 'Montserrat-SemiBold',
+        color: '#0C0D36',
+    },
+
+    sectionCard: {
+        backgroundColor: '#F8FAFC',
+        borderRadius: 18,
+        padding: 15,
+        marginBottom: 15,
+    },
+
+    sectionTitle: {
+        fontSize: 14,
+        fontFamily: 'Montserrat-SemiBold',
+        color: '#0F172A',
+        marginBottom: 12,
+    },
+
+    rowCard: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 14,
+        padding: 12,
+        marginBottom: 10,
+    },
+
+    rowLabel: {
+        fontSize: 15,
+        fontFamily: 'Montserrat-SemiBold',
+        color: '#0C0D36',
+    },
+
+    rowSubLabel: {
+        fontSize: 12,
+        color: '#64748B',
+        marginTop: 2,
+    },
+
+    amountText: {
+        fontSize: 15,
+        fontFamily: 'Montserrat-SemiBold',
+        color: '#10B981',
+    },
+
+    chequeCard: {
+        backgroundColor: '#fff',
+        borderRadius: 14,
+        padding: 14,
+        marginBottom: 10,
+    },
+
+    chequeRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+    },
+
+    chequeLabel: {
+        color: '#64748B',
+        fontSize: 13,
+    },
+
+    chequeValue: {
+        color: '#0C0D36',
+        fontFamily: 'Montserrat-Medium',
+    },
+
+    footerRow: {
+        flexDirection: 'row',
+        gap: 12,
+        marginTop: 15,
+    },
+
+    cancelButton: {
+        flex: 1,
+        backgroundColor: '#E2E8F0',
+        borderRadius: 16,
+        paddingVertical: 14,
+        alignItems: 'center',
+    },
+
+    cancelButtonText: {
+        color: '#0F172A',
+        fontFamily: 'Montserrat-SemiBold',
+    },
+
+    confirmButton: {
+        flex: 1,
+        borderRadius: 16,
+        paddingVertical: 14,
+        alignItems: 'center',
+    },
+
+    confirmButtonText: {
+        color: '#fff',
+        fontFamily: 'Montserrat-SemiBold',
+    },
+
+    emptyBox: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 40,
+    },
+
+    emptyText: {
+        marginTop: 10,
+        color: '#94A3B8',
+        fontSize: 14,
+    },
+
+    viewButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#EFF6FF',
+        borderWidth: 1,
+        borderColor: '#BFDBFE',
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 14,
+        gap: 6,
+    },
+
+    viewButtonText: {
+        color: '#2563EB',
+        fontSize: 13,
+        fontFamily: 'Montserrat-SemiBold',
+    },
+
+    buttonInner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
     },
 })
 
