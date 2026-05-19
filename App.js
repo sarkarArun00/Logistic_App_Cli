@@ -44,6 +44,7 @@ import Rejected from './Pages/Fuel-voucher/Rejected/Rejected';
 import Receiptview from './Pages/Receipt/Receiptview';
 import {NotificationProvider} from './Context/NotificationContext'
 import TestLocationScreen from './Pages/TestLocationScreen'
+import { Appearance } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -184,6 +185,7 @@ const TabIcon = ({ focused, icon, label }) => (
 );
 
 export default function App() {
+  Appearance.setColorScheme('light');
   const [isConnected, setIsConnected] = useState(true);
   const notificationRef = useRef();
   const slideAnim = useRef(new Animated.Value(-60)).current;
@@ -275,7 +277,11 @@ export default function App() {
             No Internet Connection
           </Text>
         </Animated.View>
-        <StatusBar backgroundColor="#ddd" barStyle="dark-content" />
+          {/* <StatusBar backgroundColor="#ddd" barStyle="dark-content" /> */}
+          <StatusBar
+            barStyle="dark-content"
+            backgroundColor="#FFFFFF"
+          />
         <NavigationContainer>
           <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
             {/* Screens without Tab Bar */}

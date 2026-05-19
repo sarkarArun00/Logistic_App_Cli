@@ -756,14 +756,20 @@ function Assigned({ navigation }) {
                                 </View>
 
                                 <View>
-                                    <View>
-                                        <Text style={styles.label}>Description</Text>
-                                        <TextInput
-                                            style={styles.textarea} value={selectedItem?.description}
-                                            placeholder="Placeholder"
-                                            multiline={true}
-                                        />
-                                    </View>
+
+                                    {selectedItem?.description?.trim() ? (
+                                        <View>
+                                            <Text style={styles.label}>Description</Text>
+
+                                            <TextInput
+                                                style={styles.textarea}
+                                                value={selectedItem.description}
+                                                placeholder="Description here.."
+                                                multiline={true}
+                                                editable={false}
+                                            />
+                                        </View>
+                                    ) : null}
 
                                     <View>
                                         <Text style={styles.label}>Comments</Text>

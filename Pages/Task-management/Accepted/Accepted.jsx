@@ -497,12 +497,14 @@ function Accepted({ navigation }) {
 
                                 <View>
                                     <Text style={styles.label}>Description</Text>
-                                    <TextInput
+                                    <TextInput readOnly
                                         style={styles.textarea} value={selectedItem?.description || 'No Description'}
-                                        placeholder="Placeholder"
+                                        placeholder="Description here..."
                                         multiline={true}
                                     />
                                 </View>
+
+
 
                                 <TouchableOpacity onPress={() => { setModalVisible(false); }} style={{ backgroundColor: '#2F81F5', borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10, }}>
                                     <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 16, color: 'white', textAlign: 'center', }}>Close</Text>

@@ -724,9 +724,9 @@ function Collected({ navigation }) {
                                         <TextInput
                                             style={styles.textarea}
                                             readOnly
-                                            placeholder="Write here.."
+                                            placeholder="Description here.."
                                             multiline={true}
-                                            value={selectedItem?.description}
+                                            value={selectedItem?.description || 'No Descriptions'}
                                         />
                                     </View>
 
