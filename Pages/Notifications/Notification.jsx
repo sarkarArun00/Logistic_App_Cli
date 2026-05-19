@@ -57,7 +57,6 @@ function Notification({ navigation }) {
         const fetchEmployeeApprovals = async () => {
             try {
                 const response = await TaskService.getEmployeeApprovals({ module: 'Logistic' });
-                console.log('Response: getEmployeeApprovals', response);
 
                 if (response.status == 1 && response.data?.pending.length > 0) {
                     setApprovals(response.data?.pending);
@@ -88,7 +87,6 @@ function Notification({ navigation }) {
                     if (response.status === 1 && response.data.length > 0) {
                         const allNotifications = response.data;
                         const allIds = allNotifications.map(item => item.id);
-                        console.log('allIds allIds', allIds);
 
                         await markNotificationsAsSeen(allIds);
                     } else {

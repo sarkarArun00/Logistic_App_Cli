@@ -14,6 +14,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {GlobalStyles} from '../../GlobalStyles';
 import { Vibration } from 'react-native';
 import { useSearch } from '../../../hooks/userSearch1';
+import { ActivityIndicator } from 'react-native';
 
 
 
@@ -48,6 +49,7 @@ function RejectedTask({ navigation }) {
         : filteredData.slice(0, visibleCount); // Show limited if not
     const [refreshing, setRefreshing] = useState(false);
 
+
     const formatDateTime = (isoString) => {
         const date = new Date(isoString);
         const day = String(date.getDate()).padStart(2, '0');
@@ -68,20 +70,22 @@ function RejectedTask({ navigation }) {
 
     const fetchData = async () => {
         try {
+            setLoading(true);
+
             const response = await TaskService.getMyRejectedTasks();
+
             if (response.status == 1) {
                 setAllTasksData(response.data || []);
-                // setVisibleTasks(response.data?.slice(0, 5) || []);
-                search('',response.data)
+                search('', response.data);
             } else {
                 setAllTasksData([]);
-                // setVisibleTasks([]);
-                search('',[])
+                search('', []);
             }
         } catch (error) {
-            // console.error('Error fetching tasks:', error);
+            console.log('Error fetching tasks:', error);
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     };
 
@@ -255,7 +259,21 @@ function RejectedTask({ navigation }) {
                 </ScrollView> */}
 
                 <View style={{ paddingHorizontal: 3, }}>
-                    {visibleTasks && visibleTasks.length > 0 ? (
+                    {loading ? (
+                        <View style={styles.loaderWrapper}>
+                            <View style={styles.loaderBox}>
+                                <ActivityIndicator
+                                    size="large"
+                                    color="#2F81F5"
+                                />
+
+                                <Text style={styles.loaderText}>
+                                    Loading rejected tasks...
+                                </Text>
+                            </View>
+                        </View>
+                    ) : visibleTasks && visibleTasks.length > 0 ? (
+
                         visibleTasks.map((task, index) => (
                             <View style={styles.mainbox} key={task.id || index}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15 }}>
@@ -387,6 +405,7 @@ function RejectedTask({ navigation }) {
                                 </View>
                             </View>
                         ))
+
                     ) : (
                         <View style={{ padding: 20, alignItems: 'center', justifyContent: 'center', marginTop: 200 }}>
                             {/* <Text style={{ fontSize: 16, color: '#999', fontFamily: 'Montserrat-Medium' }}>
@@ -398,6 +417,7 @@ function RejectedTask({ navigation }) {
                             />
                         </View>
                     )}
+
                 </View>
 
                 {/* Payment Modal */}
@@ -586,9 +606,9 @@ function RejectedTask({ navigation }) {
                                         <Text style={styles.label}>Description</Text>
                                         <TextInput
                                             style={styles.textarea}
-                                            placeholder="Placeholder"
+                                            placeholder="Remarks"
                                             multiline={true}
-                                            value={selectedItem?.description}
+                                            value={selectedItem?.description || 'No description'}
                                         />
                                     </View>
 
@@ -937,6 +957,25 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 20,
+    },
+
+    loaderWrapper: {
+        minHeight: 350,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    loaderBox: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    loaderText: {
+        marginTop: 12,
+        fontSize: 14,
+        color: '#64748B',
+        fontFamily: 'Montserrat-Medium',
+        textAlign: 'center',
     },
 })
 
