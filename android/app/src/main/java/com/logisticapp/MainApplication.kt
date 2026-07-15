@@ -1,4 +1,4 @@
-package com.logisticapp
+package com.nirnayan.logistics
 
 import android.app.Application
 import com.facebook.react.PackageList

@@ -3,7 +3,6 @@ apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 apply plugin: "com.google.gms.google-services"
 
-def enableProguardInReleaseBuilds = false
 def jscFlavor = "io.github.react-native-community:jsc-android:2026004.+"
 
 react {
@@ -11,46 +10,50 @@ react {
 }
 
 android {
-    ndkVersion rootProject.ext.ndkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
-    compileSdkVersion rootProject.ext.compileSdkVersion
-
-    namespace "com.logisticapp"
+    namespace "com.nirnayan.logistics"
+    compileSdk rootProject.ext.compileSdkVersion
 
     defaultConfig {
-        applicationId "com.logisticapp"
-        missingDimensionStrategy "react-native-camera", "general"
+        applicationId "com.nirnayan.logistics"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+
+        versionCode 3
+        versionName "1.0.2"
     }
 
     signingConfigs {
         debug {
+            storeFile file("debug.keystore")
             storePassword "android"
             keyAlias "androiddebugkey"
             keyPassword "android"
         }
-        release {
-            if (project.hasProperty("MYAPP_RELEASE_STORE_FILE")) {
-                storeFile file("debug.keystore")
-                storePassword "android"
-                keyAlias "androiddebugkey"
-                keyPassword "android"
-            }
+
+    release {
+        if (project.hasProperty("MYAPP_UPLOAD_STORE_FILE")) {
+            storeFile file(MYAPP_UPLOAD_STORE_FILE)
+            storePassword MYAPP_UPLOAD_STORE_PASSWORD
+            keyAlias MYAPP_UPLOAD_KEY_ALIAS
+            keyPassword MYAPP_UPLOAD_KEY_PASSWORD
         }
+    }
     }
 
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
+
         release {
             signingConfig signingConfigs.release
-            shrinkResources false
-            minifyEnabled enableProguardInReleaseBuilds
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+
+            minifyEnabled true
+            shrinkResources true
+
+            proguardFiles getDefaultProguardFile(
+                "proguard-android-optimize.txt"
+            ), "proguard-rules.pro"
         }
     }
 }
@@ -75,9 +78,10 @@ dependencies {
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 
 afterEvaluate {
-    if (tasks.findByName("generateDebugLintReportModel") && tasks.findByName("copyReactNativeVectorIconFonts")) {
-        tasks.named("generateDebugLintReportModel").configure {
-            dependsOn("copyReactNativeVectorIconFonts")
-        }
+    def lintTask = tasks.findByName("generateDebugLintReportModel")
+    def fontTask = tasks.findByName("copyReactNativeVectorIconFonts")
+
+    if (lintTask != null && fontTask != null) {
+        lintTask.dependsOn(fontTask)
     }
 }

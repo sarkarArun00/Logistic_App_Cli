@@ -1,4 +1,4 @@
-package com.logisticapp
+package com.nirnayan.logistics
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

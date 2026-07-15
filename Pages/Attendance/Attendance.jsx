@@ -259,7 +259,6 @@ function Attendance({ navigation }) {
                 };
 
                 const getColor = (shiftType, isPresent) => {
-                    console.log("Colour", response);
                     if (shiftType === 'WD') {
                         if (isPresent === true) return '#4CAF50'; // Green - Present
                         if (isPresent === false) return '#FF5252'; // Red - Absent
