@@ -1,5 +1,8 @@
 import React, {useEffect, useState, useRef} from 'react';
-import {NavigationContainer} from '@react-navigation/native';
+import {
+  NavigationContainer,
+  DefaultTheme,
+} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {
@@ -45,6 +48,9 @@ import Receiptview from './Pages/Receipt/Receiptview';
 import {NotificationProvider} from './Context/NotificationContext'
 import TestLocationScreen from './Pages/TestLocationScreen'
 import { Appearance } from 'react-native';
+
+
+Appearance.setColorScheme('light');
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -185,10 +191,23 @@ const TabIcon = ({ focused, icon, label }) => (
 );
 
 export default function App() {
-  Appearance.setColorScheme('light');
   const [isConnected, setIsConnected] = useState(true);
   const notificationRef = useRef();
   const slideAnim = useRef(new Animated.Value(-60)).current;
+
+  const AppLightTheme = {
+  ...DefaultTheme,
+  dark: false,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: '#2F81F5',
+    background: '#FFFFFF',
+    card: '#FFFFFF',
+    text: '#0C0D36',
+    border: '#E5E7EB',
+    notification: '#FF3B30',
+  },
+};
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
@@ -282,7 +301,7 @@ export default function App() {
             barStyle="dark-content"
             backgroundColor="#FFFFFF"
           />
-        <NavigationContainer>
+          <NavigationContainer theme={AppLightTheme}>
           <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
             {/* Screens without Tab Bar */}
             <Stack.Screen name="Splash" component={SplashScreen} />

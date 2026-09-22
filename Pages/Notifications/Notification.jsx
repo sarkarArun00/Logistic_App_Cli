@@ -20,6 +20,7 @@ function Notification({ navigation }) {
     const [loading, setLoading] = useState(true);
     const [approvals, setApprovals] = useState([]);
     const [approved, setApproved] = useState([]);
+    const [refreshApprovals, setRefreshApprovals] = useState(0);
     const viewedIdsRef = useRef(new Set());
     const timeoutRef = useRef(null);
     const { setNotificationCount } = useNotification();
@@ -30,7 +31,9 @@ function Notification({ navigation }) {
     const [approvalAction, setApprovalAction] = useState('');
 
     const [approvalModalLoading, setApprovalModalLoading] = useState(false);
+
     const [approvalDetails, setApprovalDetails] = useState(null);
+    const [notificationId, setNotificationId] = useState(null);
 
     useEffect(() => {
         // const fetchData = async () => {
@@ -58,9 +61,9 @@ function Notification({ navigation }) {
             try {
                 const response = await TaskService.getEmployeeApprovals({ module: 'Logistic' });
 
-                if (response.status == 1 && response.data?.pending.length > 0) {
-                    setApprovals(response.data?.pending);
-                    setApproved(response.data?.approved);
+                if (response.status == 1) {
+                    setApprovals(response.data?.pending ?? []);
+                    setApproved(response.data?.approved ?? []);
                 } else {
                     console.log('Response: No data found');
                 }
@@ -73,7 +76,7 @@ function Notification({ navigation }) {
         // fetchData();
         // fetchNotifications();
         fetchEmployeeApprovals();
-    }, [])
+    }, [refreshApprovals]);
 
     useFocusEffect(
         React.useCallback(() => {
@@ -87,8 +90,8 @@ function Notification({ navigation }) {
                     if (response.status === 1 && response.data.length > 0) {
                         const allNotifications = response.data;
                         const allIds = allNotifications.map(item => item.id);
-
-                        await markNotificationsAsSeen(allIds);
+                        console.log('logistic approval data: ', allNotifications)
+                        await markNotificationsAsSeen(allIds); 
                     } else {
                         setLoading(false);
                         setNotificationCount(0);
@@ -174,12 +177,18 @@ function Notification({ navigation }) {
 
     const handleApprove = async (id, userId) => {
         try {
-            const response = await TaskService.approveApproval({ notifId: id });
+            console.log('check idddd', notificationId)
+            // return
+            const response = await TaskService.approveApproval({ notifId: notificationId });
             console.log('response:', response)
             if (response.status == 1) {
                 console.log('Approval successful:', response);
-                Alert.alert('Approval successful')
-                setApprovals(prev => prev.filter(item => item.id !== id));
+
+                setApprovalModalVisible(false);
+
+                setRefreshApprovals(prev => prev + 1);
+
+                Alert.alert('Approval successful');
             } else {
                 console.log('Approval failed:', response);
                 Alert.alert(response.message)
@@ -190,12 +199,15 @@ function Notification({ navigation }) {
     }
 
 
-    const handleDecline = async (id) => {
+    const handleDecline = async (notificationId) => {
         try {
-            const response = await TaskService.declineApproval({ notifId: id });
+            const response = await TaskService.declineApproval({ notifId: notificationId });
             if (response.status == 1) {
                 console.log('Decline successful:', response);
-                setApprovals(prev => prev.filter(item => item.id !== id));
+
+                setApprovalModalVisible(false);
+
+                setRefreshApprovals(prev => prev + 1);
             } else {
                 console.log('Decline failed:', response);
             }
@@ -205,24 +217,59 @@ function Notification({ navigation }) {
     }
 
     const openApprovalModal = async (item, actionType) => {
+        console.log('resss openApprovalModal', item)
         try {
             setApprovalAction(actionType);
             setApprovalModalVisible(true);
             setApprovalModalLoading(true);
+            setApprovalDetails(null);
+            setNotificationId(item.id)
+            const referenceId = String(
+                item?.referenceId ?? ''
+            ).trim();
 
-            const response2 = await TaskService.getLogisticDenomination({
-                empId: item?.srcEmp || null,
-            });
+            const isCashReceipt =
+                referenceId.toUpperCase().startsWith('CR/');
 
-            console.log('resss denomination', response2);
+            let response;
 
-            if (response2?.status === 1) {
-                setApprovalDetails(response2?.data);
+            if (isCashReceipt) {
+                // Example: CR/260915/0004
+                response =
+                    await TaskService.getReqDenomination({
+                        receiptId: referenceId,
+                    });
+
+                console.log('resssss with CR')
+            } else {
+                // Fund transfer or other Logistic approval
+                response =
+                    await TaskService.getLogisticDenomination({
+                        empId: item?.srcEmp ?? null,
+                    });
+                console.log('resssss without CR')
+            }
+
+            console.log(
+                isCashReceipt
+                    ? 'Cash receipt denomination:'
+                    : 'Logistic denomination:',
+                response
+            );
+
+            if (response?.status === 1) {
+                setApprovalDetails(response?.data ?? null);
             } else {
                 setApprovalDetails(null);
             }
-        } catch (err) {
-            console.log('Error fetching denomination:', err);
+
+            console.log('resss check', response?.data)
+        } catch (error) {
+            console.log(
+                'Error fetching denomination:',
+                error
+            );
+
             setApprovalDetails(null);
         } finally {
             setApprovalModalLoading(false);
@@ -251,6 +298,7 @@ function Notification({ navigation }) {
     ];
 
 
+    console.log('jkiusdhakjsdjksadkjas askjdhaskjdhak', approvalList)
     const NotificationItem = ({ item }) => (
         <View style={{ flexDirection: 'row', paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: '#E0E0E0' }}>
             <Ionicons name={item.status == '1' ? "mail-outline" : "mail-outline"} size={32}
@@ -422,7 +470,8 @@ function Notification({ navigation }) {
                                                         paddingHorizontal: 10,
                                                         paddingVertical: 6,
                                                         borderRadius: 20,
-                                                    }}
+                                                        }}
+
                                                 >
                                                     <Text
                                                         style={{
@@ -540,7 +589,33 @@ function Notification({ navigation }) {
                                                 </View>
                                             ))}
                                         </View>
-                                    )}
+                                        )}
+
+
+                                        {approvalDetails?.length > 0 && (
+                                            <View style={styles.sectionCard}>
+                                                <Text style={styles.sectionTitle}>
+                                                    Denomination Details
+                                                </Text>
+
+                                                {approvalDetails?.map((item, index) => (
+                                                    <View key={index} style={styles.rowCard}>
+                                                        <View>
+                                                            <Text style={styles.rowLabel}>
+                                                                ₹{item.denomination_name}
+                                                            </Text>
+                                                            <Text style={styles.rowSubLabel}>
+                                                                Qty: {item.denomination_count}
+                                                            </Text>
+                                                        </View>
+
+                                                        <Text style={styles.amountText}>
+                                                            ₹{item.amount}
+                                                        </Text>
+                                                    </View>
+                                                ))}
+                                            </View>
+                                        )}
 
                                     {/* Cheque Section */}
                                     {approvalDetails?.cheques?.length > 0 && (
@@ -667,7 +742,7 @@ function Notification({ navigation }) {
                                             />
 
                                             <Text style={styles.confirmButtonText}>
-                                                Approve
+                                                    Approve {approvalDetails?.id}
                                             </Text>
                                         </View>
                                     </TouchableOpacity>

@@ -8,8 +8,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // const BASE_API_URL = "https://limstest.nirnayanhealthcare.com/";
 // const GLOBAL_API_URL = "https://limsapi-dev.nirnayanhealthcare.com/global/";
 
+//Testing
 const BASE_API_URL = "https://lims-testing-api.nirnayanhealthcare.com/";
 const GLOBAL_API_URL = "https://lims-testing-exp-api.nirnayanhealthcare.com/global/";
+ 
+//Production
+// const BASE_API_URL = "https://limsprod-nest-api.nirnayanhealthcare.com/";
+// const GLOBAL_API_URL = "https://limsprod-exp-api.nirnayanhealthcare.com/global/";
+
 const GOOGLE_MAPS_APIKEY = "AIzaSyAeQzuOcT3aIg5Ql2__hJ2bDli20jCA-Bo";
 
 // Shared Auth Interceptor

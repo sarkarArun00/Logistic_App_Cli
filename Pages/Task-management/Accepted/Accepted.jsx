@@ -324,7 +324,7 @@ function Accepted({ navigation }) {
                                         <View style={{ position: 'relative', marginBottom: 5 }}>
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 13, height: 13 }} source={require('../../../assets/asicon4.png')} />
                                             <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
-                                                Assigned By: {task?.assigned?.assigner.employee_name}
+                                                Assigned By: {task?.assigned?.assigner?.employee_name}
                                             </Text>
                                         </View>
                                         {/* <View style={{ position: 'relative' }}>

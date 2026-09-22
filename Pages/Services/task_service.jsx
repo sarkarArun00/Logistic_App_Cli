@@ -493,6 +493,15 @@ const TaskService = {
       throw error;
     }
   },
+  getReqDenomination: async (data) => {
+    try {
+      const response = await apiClient.post('accounts/payment/getDenominations', data);
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
 
   getVehicleByEmpId: async (data) => {
     try {

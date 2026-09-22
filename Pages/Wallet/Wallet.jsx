@@ -8,7 +8,7 @@ import { GlobalStyles } from '../GlobalStyles';
 import TaskService from '../Services/task_service';
 import { useGlobalAlert } from '../../Context/GlobalAlertContext';
 import RazorpayCheckout from 'react-native-razorpay';
-
+import { useFocusEffect } from '@react-navigation/native';
 import RazorpayWebView from './RazorpayWebView'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import dayjs from 'dayjs';
@@ -114,6 +114,25 @@ function Wallet({ navigation, progress = 0.5 }) {
 
     }, []);
 
+    useFocusEffect(
+        React.useCallback(() => {
+            const fetchWalletDetails = async () => {
+                TaskService.getMyWallet().then((res) => {
+                    if (res.status == 1) {
+                        setDetails(res.data);
+                        console.log('Wallet Details:', res.data);
+                        setAmount(res.data.walletBalance || 0)
+                    } else {
+                        setDetails([]);
+                        console.log('Error fetching wallet details:', res.message);
+                    }
+
+                    console.log('refreshing..... details')
+                });
+            }
+            fetchWalletDetails();
+        }, [])
+    );
 
     const fetchWalletDetails = async () => {
         TaskService.getMyWallet().then((res) => {

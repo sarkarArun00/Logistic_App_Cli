@@ -48,7 +48,8 @@ function Profile({ navigation }) {
             const response = await TaskService.getUserData();
             if (response.status === 1) {
                 setUserInfo(response.data);
-                console.log('User Info:', response.data);
+                console.log('User Info:', response.data.employeePhoto);
+                console.log('User avatarSource:', avatarSource);
             } else {
                 console.error('Failed to fetch profile picture:', response.message);
             }
@@ -332,6 +333,7 @@ function Profile({ navigation }) {
                                     style={{ width: '100%', height: '100%' }}
                                     resizeMode="cover"
                                 />
+
                             </View>
                         </TouchableOpacity>
 
