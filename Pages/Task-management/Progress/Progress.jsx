@@ -27,6 +27,8 @@ import { useSearch } from '../../../hooks/userSearch1';
 import PaymentReceiptModal from '../../Components/PaymentReceiptModal';
 
 
+import CustomAlert from '../../Components/CustomAlert'
+
 const wait = (timeout) => {
     return new Promise(resolve => setTimeout(resolve, timeout));
 };
@@ -89,6 +91,15 @@ function Progress({ navigation }) {
     const [getUserId, setUserId] = useState(false);
     const { showAlertModal, hideAlert } = useGlobalAlert();
     const [sharedTaskId, storeTaskId] = useState(null)
+
+
+    const [alertVisible, setAlertVisible] = useState(false);
+
+    const [alertData, setAlertData] = useState({
+        type: 'success',
+        title: '',
+        message: '',
+    });
 
     useEffect(() => {
 
@@ -158,6 +169,16 @@ function Progress({ navigation }) {
         getClientsAll();
         wait(2000).then(() => setRefreshing(false));
     }, []);
+
+    const showAlert = (type, title, message) => {
+        setAlertData({
+            type,
+            title,
+            message,
+        });
+
+        setAlertVisible(true);
+    };
 
     // const handleLoadMore = () => {
     //     setLoadingMore(true);
@@ -232,15 +253,11 @@ function Progress({ navigation }) {
         }
         setModalVisible(true);
         setSelectedTaskDesc(task);
-        setSelectedClientId(task.client.id);
+        setSelectedClientId(task?.client?.id || task.clientId);
         setItemTaskId(task.id);
         storeTaskId(task.id)
 
-        console.log('task iddddddd', task)
-        console.log('task 00000000', task.id)
-        console.log('storedTaskId', sharedTaskId)
-
-
+        console.log('task ttttttt', task)
     };
 
 
@@ -284,74 +301,165 @@ function Progress({ navigation }) {
 
 
     const openCamera = async () => {
-        const hasPermission = await requestPermission('camera');
+        try {
+            const hasPermission = await requestPermission('camera');
 
-        if (!hasPermission) {
-            showAlertModal('Camera access is needed to take pictures.', true);
-            return;
-        }
+            if (!hasPermission) {
+                showAlertModal(
+                    'Camera access is needed to take pictures.',
+                    true
+                );
+                return;
+            }
 
-        const options = {
-            mediaType: 'photo',
-            includeBase64: true,
-            quality: 1,
-            saveToPhotos: true,
-        };
+            const options = {
+                mediaType: 'photo',
+                includeBase64: false,
+                quality: 0.7,
+                saveToPhotos: false,
+                cameraType: 'back',
+                maxWidth: 1280,
+                maxHeight: 1280,
+            };
 
-        launchCamera(options, async (response) => {
+            const response = await launchCamera(options);
+
             if (response.didCancel) {
                 console.log('User cancelled camera');
-            } else if (response.errorCode) {
-                console.error('Camera error:', response.errorMessage);
-                showAlertModal('Camera error occurred.', true);
-            } else if (response.assets && response.assets.length > 0) {
-                const image = response.assets[0];
-
-                // Compress image if needed (below 50KB)
-                const compressedImage = await compressImage(image.uri); // Your own compression logic
-                setImages([compressedImage]); // Update state
+                return;
             }
-        });
-    };
 
-
-
-    const compressImage = async (uri) => {
-        let currentUri = uri;
-        let sizeInKB = Infinity;
-        let compressedImage = { uri };
-
-        while (sizeInKB > 50) {
-            try {
-                const resizedImage = await ImageResizer.createResizedImage(
-                    currentUri,
-                    500,        // target width
-                    500,        // target height
-                    'JPEG',
-                    50          // quality (0–100)
+            if (response.errorCode) {
+                console.error(
+                    'Camera error:',
+                    response.errorCode,
+                    response.errorMessage
                 );
 
-                // Convert to base64
-                const base64 = await readFile(resizedImage.uri, 'base64');
-                sizeInKB = base64.length * (3 / 4) / 1024;
+                showAlertModal(
+                    response.errorMessage ||
+                    'Camera error occurred.',
+                    true
+                );
 
-                if (sizeInKB <= 50) {
-                    compressedImage = {
-                        uri: resizedImage.uri,
-                        base64,
-                    };
-                    break;
-                }
-
-                currentUri = resizedImage.uri;
-            } catch (error) {
-                console.error('Compression failed:', error);
-                break;
+                return;
             }
+
+            const image = response.assets?.[0];
+
+            if (!image?.uri) {
+                showAlertModal(
+                    'Unable to capture image. Please try again.',
+                    true
+                );
+                return;
+            }
+
+            console.log('Captured image:', {
+                uri: image.uri,
+                width: image.width,
+                height: image.height,
+                fileSize: image.fileSize,
+            });
+
+            const compressedImage = await compressImage(image.uri);
+
+            if (!compressedImage?.uri) {
+                showAlertModal(
+                    'Unable to process image. Please try again.',
+                    true
+                );
+                return;
+            }
+
+            setImages([compressedImage]);
+
+        } catch (error) {
+            console.error('Camera processing failed:', error);
+
+            showAlertModal(
+                'Unable to process the captured image. Please try again.',
+                true
+            );
         }
-        console.log('Final compressed image size:', sizeInKB, 'KB');
-        console.log('Final compressed compressedImage size:', compressedImage);
-        return compressedImage;
+    };
+
+    const compressImage = async (uri) => {
+        if (!uri) {
+            throw new Error('Image URI is missing');
+        }
+
+        const MAX_SIZE_KB = 50;
+        const MAX_ATTEMPTS = 5;
+
+        let currentUri = uri;
+
+        let width = 800;
+        let height = 800;
+        let quality = 65;
+
+        let lastResult = null;
+
+        for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+            const resizedImage =
+                await ImageResizer.createResizedImage(
+                    currentUri,
+                    width,
+                    height,
+                    'JPEG',
+                    quality,
+                    0
+                );
+
+            if (!resizedImage?.uri) {
+                throw new Error('Image compression failed');
+            }
+
+            const base64 = await readFile(
+                resizedImage.uri,
+                'base64'
+            );
+
+            // Calculate the decoded image size.
+            const padding =
+                (base64.match(/=+$/) || [''])[0].length;
+
+            const sizeInKB =
+                ((base64.length * 3) / 4 - padding) / 1024;
+
+            console.log(
+                `Compression attempt ${attempt + 1}:`,
+                sizeInKB.toFixed(2),
+                'KB'
+            );
+
+            lastResult = {
+                uri: resizedImage.uri,
+                base64,
+            };
+
+            if (sizeInKB <= MAX_SIZE_KB) {
+                console.log(
+                    'Image compressed successfully:',
+                    sizeInKB.toFixed(2),
+                    'KB'
+                );
+
+                return lastResult;
+            }
+
+            // Reduce image dimensions and quality gradually.
+            width = Math.max(250, Math.round(width * 0.8));
+            height = Math.max(250, Math.round(height * 0.8));
+
+            quality = Math.max(25, quality - 10);
+
+            currentUri = resizedImage.uri;
+        }
+
+        throw new Error(
+            'Unable to compress image below 50 KB.'
+        );
     };
 
     const selectImages = () => {
@@ -376,6 +484,11 @@ function Progress({ navigation }) {
 
             if (images.length === 0 || !images[0].uri) {
                 showAlertModal('Please select an image to upload.', true);
+                showAlert(
+                    'warning',
+                    'Attachment is Missing',
+                    'Please select an image to upload.',
+                );
                 return;
             }
 
@@ -387,16 +500,25 @@ function Progress({ navigation }) {
                 hasItems: false
             }
 
+            // return
             const response = await TaskService.collectMyTask(requestBody);
 
             if (response.status == 1) {
                 addTaskAttachment(selectedTaskId);
                 showAlertModal('Task Collected Successfully!', false);
+                showAlert(
+                    'success',
+                    'Collected',
+                    'Task Collected Successfully.',
+                );
                 setCollectModalVisible(false);
                 fetchData();
             } else {
-                Alert.alert("Error", "Failed to collect task.");
-                showAlertModal('Failed to collect task.', true);
+                showAlert(
+                    'error',
+                    'Failed',
+                    'Failed to collect task.',
+                );
             }
         } catch (error) {
             console.error('Collect task error:', error);
@@ -427,14 +549,24 @@ function Progress({ navigation }) {
         const locationString = task?.pickUpLocation?.coordinates;
 
         if (!locationString) {
-            showAlertModal('Location not available', true);
+            // showAlertModal('Location not available', true);
+            showAlert(
+                'warning',
+                'Failed',
+                'Location not available.',
+            );
             return;
         }
 
         const [lat, long] = locationString.split(',').map(coord => parseFloat(coord.trim()));
 
         if (isNaN(lat) || isNaN(long)) {
-            showAlertModal('Invalid location coordinates', true);
+            // showAlertModal('Invalid location coordinates', true);
+            showAlert(
+                'warning',
+                'Failed',
+                'Invalid location coordinates.',
+            );
             return;
         }
 
@@ -499,7 +631,11 @@ function Progress({ navigation }) {
 
     const deliverItem = async () => {
         if (itemIds.length === 0) {
-            showAlertModal('Please select at least one item to delivery.', true);
+            showAlert(
+                'warning',
+                'Item is Missing',
+                'Please select at least one item to delivery.',
+            );
             return;
         }
         // setLoading(true);
@@ -508,7 +644,6 @@ function Progress({ navigation }) {
             remarks: deliverRemarks,
             itemIds: itemIds,
         };
-        console.log('request request request', request)
 
         try {
             const response = await TaskService.collectMyTask(request);
@@ -516,12 +651,22 @@ function Progress({ navigation }) {
                 addTaskAttachment(selectedTaskId);
                 fetchData();
                 setCollectModalVisible2(false);
-                showAlertModal('Item Delivered Successfully.', false);
+                // showAlertModal('Item Delivered Successfully.', false);
+                showAlert(
+                    'success',
+                    'Item is Delivered',
+                    'Item Delivered Successfully.',
+                );
                 sentNotification(selectedTaskId, 'Delivered Successfully');
                 setDeliveryRemarks('');
                 setItemIds([]);
             } else {
                 showAlertModal('Failed to Deliver', true);
+                showAlert(
+                    'error',
+                    'Failed',
+                    'Failed to Deliver.',
+                );
             }
         } catch (error) {
             console.error(error);
@@ -531,13 +676,13 @@ function Progress({ navigation }) {
         }
     };
 
-
-
-
-
     const collectItem = async () => {
         if (itemIds.length === 0) {
-            showAlertModal('Please select at least one item to collect.', true);
+            showAlert(
+                'warning',
+                'Item is Missing',
+                'Please select at least one item to collect.',
+            );
             return;
         }
         // let request = {
@@ -545,6 +690,14 @@ function Progress({ navigation }) {
         //     remarks: deliverRemarks,
         //     itemIds: itemIds,
         // };
+        if (images.length == 0) {
+            showAlert(
+                'warning',
+                'Attachment is Missing',
+                'Please take a picture of sample collection.',
+            );
+            return;
+        }
 
         const empId = await AsyncStorage.getItem("user_id");
 
@@ -570,7 +723,7 @@ function Progress({ navigation }) {
             notCollectedIds
         };
 
-        console.log('heloooooo', payload);
+        // console.log('heloooooo', payload);
         // return
         try {
             setLoading(true);
@@ -580,12 +733,22 @@ function Progress({ navigation }) {
                 addTaskAttachment(selectedTaskId);
                 fetchData();
                 setCollectModalVisible3(false);
-                showAlertModal('Item Collected Successfully.', false);
+                // showAlertModal('Item Collected Successfully.', false);
+                showAlert(
+                    'success',
+                    'Collected',
+                    'Item Collected Successfully.',
+                );
                 sentNotification(selectedTaskId, 'Collected Successfully ');
                 setDeliveryRemarks('');
                 setItemIds([]);
             } else {
-                showAlertModal('Failed to Collect.', true);
+                // showAlertModal('Failed to Collect.', true);
+                showAlert(
+                    'error',
+                    'Filed',
+                    'Failed to Collect.',
+                );
             }
         } catch (error) {
             console.error(error);
@@ -618,25 +781,6 @@ function Progress({ navigation }) {
         } else {
             setItemIds(prev => [...prev, { itemId }]);
         }
-    };
-
-
-    const formatDateTime = (dateString) => {
-        if (!dateString) return '';
-
-        const date = new Date(dateString);
-
-        return date
-            .toLocaleString('en-IN', {
-                timeZone: 'Asia/Kolkata',
-                month: 'short',       // "Feb"
-                day: '2-digit',       // "20"
-                year: 'numeric',      // "2025"
-                hour: 'numeric',      // "4"
-                minute: '2-digit',    // "01"
-                hour12: true          // "PM"
-            })
-            .replace(',', ''); // Optional: Remove comma between date and time
     };
 
     // const handleSelectAll = () => {
@@ -694,8 +838,6 @@ function Progress({ navigation }) {
         }
     };
 
-
-
     const getAllBanks = () => {
         try {
             TaskService.getAllBanks().then((response) => {
@@ -711,11 +853,32 @@ function Progress({ navigation }) {
     }
 
     // Call Button
-    const makeCall = (call) => {
-        if (call) {
-            const cleaned = call.replace(/\D/g, ''); // remove spaces, dashes, etc.
-            const formatted = cleaned.startsWith('+') ? cleaned : `+91${cleaned}`; // assuming India
-            Linking.openURL(`tel:${formatted}`);
+    const makeCall = async call => {
+        if (!call || !String(call).trim()) {
+            showAlert(
+                'warning',
+                'Phone Number Missing',
+                'No contact number is available for this user.',
+            );
+            return;
+        }
+
+        const cleaned = String(call).replace(/\D/g, '');
+
+        const formatted = cleaned.startsWith('91') && cleaned.length === 12
+            ? `+${cleaned}`
+            : cleaned.length === 10
+                ? `+91${cleaned}`
+                : `+${cleaned}`;
+
+        try {
+            await Linking.openURL(`tel:${formatted}`);
+        } catch (error) {
+            showAlert(
+                'error',
+                'Unable to Call',
+                'Could not open the phone dialer. Please try again.',
+            );
         }
     };
 
@@ -739,6 +902,36 @@ function Progress({ navigation }) {
         const year = date.getFullYear();
 
         return `${day}-${month}-${year}`;
+    };
+
+    const formatMessageDateTime = (dateValue) => {
+        if (!dateValue) return '';
+
+        const date = new Date(dateValue);
+
+        if (Number.isNaN(date.getTime())) return '';
+
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = String(date.getFullYear()).slice(-2);
+
+        const time = date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+        });
+
+        return `${day}-${month}-${year} at ${time}`;
+    };
+
+    const handleReceivePayment = () => {
+        getClientsAll();
+        setModalVisible4(true);
+        setModalVisible(false);
+        storeTaskId(taskId);
+        setSelectedClientId(selectedItem?.clientId);
+
+        console.log('handleReceivePayment', selectedItem)
     };
 
     // useEffect(() => {
@@ -1104,10 +1297,7 @@ function Progress({ navigation }) {
                                                             <View style={styles.phleFlexBox}>
                                                                 <Text style={styles.phleTitle}>{item.commentor?.employee_name}</Text>
                                                                 <Text style={styles.phleTime}>
-                                                                    {new Date(item.createdAt).toLocaleTimeString([], {
-                                                                        hour: '2-digit',
-                                                                        minute: '2-digit'
-                                                                    })}
+                                                                    {formatMessageDateTime(item.createdAt)}
                                                                 </Text>
                                                             </View>
                                                             {item?.attachment?.path && item.attachment.path !== "" ? (
@@ -1162,7 +1352,7 @@ function Progress({ navigation }) {
                                 </TouchableOpacity>
                             </View>
 
-                            <TouchableOpacity onPress={() => { setModalVisible4(true); setModalVisible(false); storeTaskId(taskId) }} style={{ backgroundColor: '#2F81F5', borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10, marginHorizontal: 15, marginBottom: 15, }}>
+                            <TouchableOpacity onPress={handleReceivePayment} style={{ backgroundColor: '#2F81F5', borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10, marginHorizontal: 15, marginBottom: 15, }}>
                                 <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 16, color: 'white', textAlign: 'center', }}>Receive Payment</Text>
                             </TouchableOpacity>
 
@@ -1609,6 +1799,7 @@ function Progress({ navigation }) {
                                     <Image pointerEvents="none" style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
                                 </TouchableOpacity>
                             </View>
+                            <ScrollView>
                             <View style={{ padding: 15, }}>
 
                                 <View>
@@ -1733,7 +1924,8 @@ function Progress({ navigation }) {
                                         <ActivityIndicator size="large" color="#2F81F5" />
                                     </View>
                                 )}
-                            </View>
+                                </View>
+                            </ScrollView>
                         </View>
                     </View>
                 </Modal>
@@ -1778,7 +1970,12 @@ function Progress({ navigation }) {
                     visible={modalVisible4}
                     onClose={() => setModalVisible4(false)}
 
-                    clients={allClients}
+                    clients={
+                        allClients.filter(
+                            client =>
+                                String(client.id) === String(selectedClientId)
+                        )
+                    }
                     banks={bankName}
                     denominations={denomMaster}   // ✅ IMPORTANT: full API list
 
@@ -1860,6 +2057,15 @@ function Progress({ navigation }) {
                     <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
                 </View>
             )}
+
+            <CustomAlert
+                visible={alertVisible}
+                type={alertData.type}
+                title={alertData.title}
+                message={alertData.message}
+                onClose={() => setAlertVisible(false)}
+            />
+
         </SafeAreaView>
     )
 }
@@ -2230,7 +2436,7 @@ const styles = StyleSheet.create({
     },
     phleTime: {
         fontFamily: 'Montserrat-Medium',
-        fontSize: 12,
+        fontSize: 10,
         color: '#0C0D36',
     },
     phleDesc: {

@@ -13,6 +13,7 @@ import { Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker'; // install if not already
 import { lightTheme } from '../../GlobalStyles';
 // import { useSearch } from '../../../hooks/useSearch';
+import CustomAlert from '../../Components/CustomAlert'
 
 const wait = (timeout) => {
     return new Promise(resolve => setTimeout(resolve, timeout));
@@ -42,6 +43,26 @@ function Completed({ navigation }) {
     const [showToDatePicker, setShowToDatePicker] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [allTaskType, setTaskType] = useState([])
+
+
+    const [alertVisible, setAlertVisible] = useState(false);
+
+    const [alertData, setAlertData] = useState({
+        type: 'success',
+        title: '',
+        message: '',
+    });
+
+    const showAlert = (type, title, message) => {
+        setAlertData({
+            type,
+            title,
+            message,
+        });
+
+        setAlertVisible(true);
+    };
+
 
     const formatDate = (date) => {
         const day = String(date.getDate()).padStart(2, '0');
@@ -201,11 +222,32 @@ function Completed({ navigation }) {
             console.log(error)
         }
     }
-    const makeCall = (call) => {
-        if (call) {
-            const cleaned = call.replace(/\D/g, ''); // remove spaces, dashes, etc.
-            const formatted = cleaned.startsWith('+') ? cleaned : `+91${cleaned}`; // assuming India
-            Linking.openURL(`tel:${formatted}`);
+    const makeCall = async call => {
+        if (!call || !String(call).trim()) {
+            showAlert(
+                'warning',
+                'Phone Number Missing',
+                'No contact number is available for this user.',
+            );
+            return;
+        }
+
+        const cleaned = String(call).replace(/\D/g, '');
+
+        const formatted = cleaned.startsWith('91') && cleaned.length === 12
+            ? `+${cleaned}`
+            : cleaned.length === 10
+                ? `+91${cleaned}`
+                : `+${cleaned}`;
+
+        try {
+            await Linking.openURL(`tel:${formatted}`);
+        } catch (error) {
+            showAlert(
+                'error',
+                'Unable to Call',
+                'Could not open the phone dialer. Please try again.',
+            );
         }
     };
 
@@ -659,6 +701,13 @@ function Completed({ navigation }) {
                 </View>
             )}
 
+            <CustomAlert
+                visible={alertVisible}
+                type={alertData.type}
+                title={alertData.title}
+                message={alertData.message}
+                onClose={() => setAlertVisible(false)}
+            />
         </SafeAreaView>
     )
 }

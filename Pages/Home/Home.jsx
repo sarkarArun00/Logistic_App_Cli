@@ -32,7 +32,7 @@ import {
 import TaskScreen from '../Task-management/Task-Screen/Task-Screen.jsx';
 import ShimmerSwipeText from './ShimmerSwipeText';
 // import { useLocationTracker } from '../Services/geolocation-service.jsx'
-
+import CustomAlert from '../Components/CustomAlert.jsx'
 
 
 const wait = (timeout) => {
@@ -64,6 +64,24 @@ export default function Home({ navigation }) {
     const [empId, setEmpId] = useState(null);
     const [taskId, setTaskId] = useState(null);
 
+
+    const [alertVisible, setAlertVisible] = useState(false);
+
+    const [alertData, setAlertData] = useState({
+        type: 'success',
+        title: '',
+        message: '',
+    });
+
+    const showAlert = (type, title, message) => {
+        setAlertData({
+            type,
+            title,
+            message,
+        });
+
+        setAlertVisible(true);
+    };
 
     const pages = [
         // { id: '1', name: 'Profile', link: 'Profile' },
@@ -125,17 +143,6 @@ export default function Home({ navigation }) {
     useLocationTracker(empId, null, token);
 
 
-
-    // useEffect(() => {
-    //     const subscription = AppState.addEventListener('change', (nextState) => {
-    //         if (nextState === 'active') {
-    //             // App came back from background — re-check location
-    //             getCurrentLocation();
-    //         }
-    //     });
-
-    //     return () => subscription.remove();
-    // }, []);
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -318,9 +325,17 @@ export default function Home({ navigation }) {
                     startTimer(now);
 
                     Vibration.vibrate(300);
-                    showAlertModal("✅ Checked In Successfully", false);
+                    showAlert(
+                        'success',
+                        'Checked In',
+                        'Checked In Successfully.',
+                    );
                 } else {
-                    showAlertModal("❌ Check-in failed. Try again.", true);
+                    showAlert(
+                        'error',
+                        'Failed',
+                        'Check-in failed. Try again.',
+                    );
                 }
             } else {
                 const response = await AuthService.attendanceCheckOut(request);
@@ -351,9 +366,19 @@ export default function Home({ navigation }) {
                     swipeRef.current?.reset();
 
                     Vibration.vibrate(300);
-                    showAlertModal("✅ Checked Out Successfully", false);
+                    // showAlertModal("✅ Checked Out Successfully", false);
+                    showAlert(
+                        'success',
+                        'Checked Out',
+                        'Checked Out Successfully',
+                    );
                 } else {
-                    showAlertModal("❌ Check-out failed. Try again.", true);
+                    // showAlertModal("❌ Check-out failed. Try again.", true);
+                    showAlert(
+                        'error',
+                        'Failed',
+                        'Check-out failed. Try again.',
+                    );
                 }
             }
 
@@ -366,31 +391,35 @@ export default function Home({ navigation }) {
             if (
                 message === "Permission denied"
             ) {
-                Alert.alert(
-                    "Permission Required",
-                    "Location permission is required to check in or check out."
+                showAlert(
+                    'warning',
+                    'Permission Required',
+                    'Location permission is required to check in or check out.',
                 );
             } else if (
                 message === "Location request timed out"
             ) {
-                Alert.alert(
-                    "Location Timeout",
-                    "Unable to fetch location. Please move to an open area and try again."
+                showAlert(
+                    'warning',
+                    'Location Timeout',
+                    'Unable to fetch location. Please move to an open area and try again.',
                 );
             } else if (
                 message === "Location unavailable / GPS off" ||
                 message === "Location settings are not satisfied"
             ) {
-                Alert.alert(
-                    "GPS Required",
-                    "Please enable GPS/location services and try again."
+                showAlert(
+                    'warning',
+                    'GPS Required',
+                    'Please enable GPS/location services and try again.',
                 );
             } else if (
                 message === "Google Play Services not available"
             ) {
-                Alert.alert(
-                    "Google Play Services Error",
-                    "Google Play Services is not available on this device."
+                showAlert(
+                    'error',
+                    'Google Play Services Error',
+                    'Google Play Services is not available on this device.',
                 );
             } else {
                 Alert.alert("Error", message || "Something went wrong. Please try again.");
@@ -486,9 +515,10 @@ export default function Home({ navigation }) {
         if (!isCheckedIn) {
             Vibration.vibrate(200);
 
-            Alert.alert(
-                "Attendance Required",
-                "Please check-in before accessing this feature."
+            showAlert(
+                'warning',
+                'Attendance Required',
+                'Please check-in before accessing this feature.',
             );
             return false;
         }
@@ -726,6 +756,14 @@ export default function Home({ navigation }) {
                 </View>
 
             </ScrollView>
+
+            <CustomAlert
+                visible={alertVisible}
+                type={alertData.type}
+                title={alertData.title}
+                message={alertData.message}
+                onClose={() => setAlertVisible(false)}
+            />
         </SafeAreaView>
     )
 }

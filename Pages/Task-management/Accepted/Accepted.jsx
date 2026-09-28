@@ -10,7 +10,7 @@ import NotificationCount from '../../Notifications/NotificationCount';
 import { GlobalStyles } from '../../GlobalStyles';
 import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
 import { useSearch } from '../../../hooks/userSearch1';
-
+import CustomAlert from '../../Components/CustomAlert'
 
 
 
@@ -39,6 +39,23 @@ function Accepted({ navigation }) {
         : filteredData.slice(0, visibleCount); // Show limited if not
 
 
+    const [alertVisible, setAlertVisible] = useState(false);
+
+    const [alertData, setAlertData] = useState({
+        type: 'success',
+        title: '',
+        message: '',
+    });
+
+    const showAlert = (type, title, message) => {
+        setAlertData({
+            type,
+            title,
+            message,
+        });
+
+        setAlertVisible(true);
+    };
     // const [fontsLoaded] = useFonts({
     //     Montserrat-SemiBold,
     //     Montserrat-Medium,
@@ -82,13 +99,21 @@ function Accepted({ navigation }) {
             setLoading(true)
             const response = await TaskService.startNewTask({ taskId: task_Id });
             if (response.status == 1) {
-                showAlertModal('Task Started Successfully', false);
+                showAlert(
+                    'success',
+                    'Started',
+                    'Task Started Successfully',
+                );
                 sentNotification(task_Id);
                 fetchAcceptedData();
                 navigation.navigate('In Progress')
                 setLoading(false)
             } else {
-                showAlertModal(response.data, true);
+                showAlert(
+                    'error',
+                    'Failed',
+                    response.data,
+                );
                 setLoading(false)
             }
         } catch (error) {
@@ -109,7 +134,6 @@ function Accepted({ navigation }) {
         }
 
         const response = await TaskService.generateNotification(request);
-        console.log("Notification response:", response.data);
     }
 
     // const handleLoadMore = () => {
@@ -159,23 +183,6 @@ function Accepted({ navigation }) {
         });
     };
 
-    // const formatDateTime = (dateString) => {
-    //     if (!dateString) return '';
-
-    //     const date = new Date(dateString);
-
-    //     return date
-    //         .toLocaleString('en-IN', {
-    //             timeZone: 'Asia/Kolkata',
-    //             month: 'short',       // "Feb"
-    //             day: '2-digit',       // "20"
-    //             year: 'numeric',      // "2025"
-    //             hour: 'numeric',      // "4"
-    //             minute: '2-digit',    // "01"
-    //             hour12: true          // "PM"
-    //         })
-    //         .replace(',', ''); // Optional: Remove comma between date and time
-    // };
 
     const formatDate = (isoString) => {
         if (!isoString) return 'Invalid Date';
@@ -191,11 +198,32 @@ function Accepted({ navigation }) {
     };
 
     // Call Button
-    const makeCall = (call) => {
-        if (call) {
-            const cleaned = call.replace(/\D/g, ''); // remove spaces, dashes, etc.
-            const formatted = cleaned.startsWith('+') ? cleaned : `+91${cleaned}`; // assuming India
-            Linking.openURL(`tel:${formatted}`);
+    const makeCall = async call => {
+        if (!call || !String(call).trim()) {
+            showAlert(
+                'warning',
+                'Phone Number Missing',
+                'No contact number is available for this user.',
+            );
+            return;
+        }
+
+        const cleaned = String(call).replace(/\D/g, '');
+
+        const formatted = cleaned.startsWith('91') && cleaned.length === 12
+            ? `+${cleaned}`
+            : cleaned.length === 10
+                ? `+91${cleaned}`
+                : `+${cleaned}`;
+
+        try {
+            await Linking.openURL(`tel:${formatted}`);
+        } catch (error) {
+            showAlert(
+                'error',
+                'Unable to Call',
+                'Could not open the phone dialer. Please try again.',
+            );
         }
     };
 
@@ -534,6 +562,15 @@ function Accepted({ navigation }) {
                     <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
                 </View>
             )}
+
+
+            <CustomAlert
+                visible={alertVisible}
+                type={alertData.type}
+                title={alertData.title}
+                message={alertData.message}
+                onClose={() => setAlertVisible(false)}
+            />
         </SafeAreaView>
     )
 }

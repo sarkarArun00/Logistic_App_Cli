@@ -2,10 +2,17 @@ import { useState, useEffect, useCallback } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, RefreshControl, FlatList, Alert } from 'react-native'
 // import { useFonts, Montserrat_600SemiBold, Montserrat-Medium, Montserrat_400Regular } from '@expo-google-fonts/montserrat'
-import { Picker } from '@react-native-picker/picker';
+import {
+    launchCamera,
+    launchImageLibrary,
+} from 'react-native-image-picker';
+
+import ImageResizer from 'react-native-image-resizer';
+import { readFile } from 'react-native-fs';
 import { Checkbox } from 'react-native-paper';
 // import FontAwesome from '@expo/vector-icons/FontAwesome';
 // import * as ImagePicker from 'expo-image-picker';
+import { Picker } from '@react-native-picker/picker';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import TaskStatusTabs from '../TaskStatusTabs'
 import TaskService from '../../Services/task_service';
@@ -15,8 +22,12 @@ import {GlobalStyles} from '../../GlobalStyles';
 import { Vibration } from 'react-native';
 import { useSearch } from '../../../hooks/userSearch1';
 import { ActivityIndicator } from 'react-native';
-
-
+import CustomAlert from '../../Components/CustomAlert'
+import {
+    Platform,
+    PermissionsAndroid,
+} from 'react-native';
+import { BASE_API_URL } from '../../Services/API';
 
 
 
@@ -49,6 +60,23 @@ function RejectedTask({ navigation }) {
         : filteredData.slice(0, visibleCount); // Show limited if not
     const [refreshing, setRefreshing] = useState(false);
 
+    const [alertVisible, setAlertVisible] = useState(false);
+
+    const [alertData, setAlertData] = useState({
+        type: 'success',
+        title: '',
+        message: '',
+    });
+
+    const showAlert = (type, title, message) => {
+        setAlertData({
+            type,
+            title,
+            message,
+        });
+
+        setAlertVisible(true);
+    };
 
     const formatDateTime = (isoString) => {
         const date = new Date(isoString);
@@ -89,66 +117,325 @@ function RejectedTask({ navigation }) {
         }
     };
 
-    // Camera Open
+
+    // const openCamera = async () => {
+    //     const hasPermission = await requestPermission('camera');
+    //     if (!hasPermission) {
+    //         Alert.alert('Permission Required', 'Camera access is needed to take pictures.');
+    //         return;
+    //     }
+
+    //     const result = await ImagePicker.launchCameraAsync({
+    //         mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    //         allowsEditing: true,
+    //         quality: 1,
+    //     });
+
+    //     if (!result.canceled) {
+    //         const newImage = { uri: result.assets[0].uri };
+    //         setImages((prev) => [...prev, newImage]);
+    //     }
+    // };
+
+    // const openGallery = async () => {
+    //     const hasPermission = await requestPermission('gallery');
+    //     if (!hasPermission) {
+    //         Alert.alert('Permission Required', 'Gallery access is needed to select images.');
+    //         return;
+    //     }
+
+    //     const result = await ImagePicker.launchImageLibraryAsync({
+    //         mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    //         allowsMultipleSelection: true,
+    //         quality: 1,
+    //     });
+
+    //     if (!result.canceled) {
+    //         const newImages = result.assets.map((asset) => ({ uri: asset.uri }));
+    //         setImages((prev) => [...prev, ...newImages]);
+    //     }
+    // };
+
+    // ================================
+    // CAMERA PERMISSION
+    // ================================
+
     const requestPermission = async (type) => {
-        if (type === 'camera') {
-            const { status } = await ImagePicker.requestCameraPermissionsAsync();
-            return status === 'granted';
-        } else {
-            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            return status === 'granted';
+        try {
+            if (Platform.OS !== 'android') {
+                return true;
+            }
+
+            if (type === 'camera') {
+                const granted = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.CAMERA,
+                    {
+                        title: 'Camera Permission',
+                        message:
+                            'App needs access to your camera to take pictures.',
+                        buttonNegative: 'Cancel',
+                        buttonPositive: 'Allow',
+                    }
+                );
+
+                return (
+                    granted === PermissionsAndroid.RESULTS.GRANTED
+                );
+            }
+
+            // The system photo picker does not require
+            // broad storage permission.
+            return true;
+
+        } catch (error) {
+            console.log('Permission error:', error);
+            return false;
         }
     };
+
+
+    // ================================
+    // IMAGE COMPRESSION
+    // ================================
+
+    const compressImage = async (uri) => {
+        if (!uri) {
+            throw new Error('Image URI is missing');
+        }
+
+        const MAX_SIZE_KB = 50;
+        const MAX_ATTEMPTS = 5;
+
+        let currentUri = uri;
+
+        let width = 800;
+        let height = 800;
+        let quality = 65;
+
+        for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+            const resizedImage =
+                await ImageResizer.createResizedImage(
+                    currentUri,
+                    width,
+                    height,
+                    'JPEG',
+                    quality,
+                    0
+                );
+
+            if (!resizedImage?.uri) {
+                throw new Error('Image compression failed');
+            }
+
+            const base64 = await readFile(
+                resizedImage.uri,
+                'base64'
+            );
+
+            const padding =
+                (base64.match(/=+$/) || [''])[0].length;
+
+            const sizeInKB =
+                ((base64.length * 3) / 4 - padding) / 1024;
+
+            console.log(
+                `Compression attempt ${attempt + 1}:`,
+                sizeInKB.toFixed(2),
+                'KB'
+            );
+
+            if (sizeInKB <= MAX_SIZE_KB) {
+                return {
+                    uri: resizedImage.uri,
+                    base64,
+                };
+            }
+
+            width = Math.max(
+                250,
+                Math.round(width * 0.8)
+            );
+
+            height = Math.max(
+                250,
+                Math.round(height * 0.8)
+            );
+
+            quality = Math.max(
+                25,
+                quality - 10
+            );
+
+            currentUri = resizedImage.uri;
+        }
+
+        throw new Error(
+            'Unable to compress image below 50 KB.'
+        );
+    };
+
+
+    // ================================
+    // OPEN CAMERA
+    // ================================
 
     const openCamera = async () => {
-        const hasPermission = await requestPermission('camera');
-        if (!hasPermission) {
-            Alert.alert('Permission Required', 'Camera access is needed to take pictures.');
-            return;
-        }
+        try {
+            const hasPermission =
+                await requestPermission('camera');
 
-        const result = await ImagePicker.launchCameraAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            quality: 1,
-        });
+            if (!hasPermission) {
+                showAlertModal(
+                    'Camera access is needed to take pictures.',
+                    true
+                );
+                return;
+            }
 
-        if (!result.canceled) {
-            const newImage = { uri: result.assets[0].uri };
-            setImages((prev) => [...prev, newImage]);
+            const response = await launchCamera({
+                mediaType: 'photo',
+                includeBase64: false,
+                quality: 0.7,
+                saveToPhotos: false,
+                cameraType: 'back',
+                maxWidth: 1280,
+                maxHeight: 1280,
+            });
+
+            if (response.didCancel) {
+                return;
+            }
+
+            if (response.errorCode) {
+                console.log(
+                    'Camera error:',
+                    response.errorCode,
+                    response.errorMessage
+                );
+
+                showAlertModal(
+                    response.errorMessage ||
+                    'Camera error occurred.',
+                    true
+                );
+
+                return;
+            }
+
+            const image = response.assets?.[0];
+
+            if (!image?.uri) {
+                showAlertModal(
+                    'Unable to capture image. Please try again.',
+                    true
+                );
+                return;
+            }
+
+            const compressedImage =
+                await compressImage(image.uri);
+
+            setImages([compressedImage]);
+
+        } catch (error) {
+            console.log('Camera error:', error);
+
+            showAlertModal(
+                error?.message ||
+                'Unable to process the captured image.',
+                true
+            );
         }
     };
+
+
+    // ================================
+    // OPEN GALLERY
+    // ================================
 
     const openGallery = async () => {
-        const hasPermission = await requestPermission('gallery');
-        if (!hasPermission) {
-            Alert.alert('Permission Required', 'Gallery access is needed to select images.');
-            return;
-        }
+        try {
+            const response = await launchImageLibrary({
+                mediaType: 'photo',
+                selectionLimit: 1,
+                includeBase64: false,
+                quality: 0.7,
+                maxWidth: 1280,
+                maxHeight: 1280,
+            });
 
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsMultipleSelection: true,
-            quality: 1,
-        });
+            if (response.didCancel) {
+                return;
+            }
 
-        if (!result.canceled) {
-            const newImages = result.assets.map((asset) => ({ uri: asset.uri }));
-            setImages((prev) => [...prev, ...newImages]);
+            if (response.errorCode) {
+                console.log(
+                    'Gallery error:',
+                    response.errorCode,
+                    response.errorMessage
+                );
+
+                showAlertModal(
+                    response.errorMessage ||
+                    'Unable to open gallery.',
+                    true
+                );
+
+                return;
+            }
+
+            const image = response.assets?.[0];
+
+            if (!image?.uri) {
+                showAlertModal(
+                    'Unable to select image. Please try again.',
+                    true
+                );
+                return;
+            }
+
+            const compressedImage =
+                await compressImage(image.uri);
+
+            setImages([compressedImage]);
+
+        } catch (error) {
+            console.log('Gallery error:', error);
+
+            showAlertModal(
+                error?.message ||
+                'Unable to process the selected image.',
+                true
+            );
         }
     };
+
+
+    // ================================
+    // CAMERA / GALLERY POPUP
+    // ================================
 
     const selectImages = () => {
         Alert.alert(
             'Select Image',
             'Choose an option',
             [
-                { text: 'Camera', onPress: openCamera },
-                { text: 'Gallery', onPress: openGallery },
-                { text: 'Cancel', style: 'cancel' }
+                {
+                    text: 'Camera',
+                    onPress: openCamera,
+                },
+                {
+                    text: 'Gallery',
+                    onPress: openGallery,
+                },
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
             ]
         );
     };
+
 
     const handleDeleteImage = (index) => {
         const updatedImages = images.filter((_, i) => i !== index);
@@ -166,11 +453,34 @@ function RejectedTask({ navigation }) {
     };
 
     // Call Button
-    const makeCall = (call) => {
-        const cleaned = call.replace(/\D/g, ''); // remove spaces, dashes, etc.
-        const formatted = cleaned.startsWith('+') ? cleaned : `+91${cleaned}`; // assuming India
-        Linking.openURL(`tel:${formatted}`);
-      };
+    const makeCall = async call => {
+        if (!call || !String(call).trim()) {
+            showAlert(
+                'warning',
+                'Phone Number Missing',
+                'No contact number is available for this user.',
+            );
+            return;
+        }
+
+        const cleaned = String(call).replace(/\D/g, '');
+
+        const formatted = cleaned.startsWith('91') && cleaned.length === 12
+            ? `+${cleaned}`
+            : cleaned.length === 10
+                ? `+91${cleaned}`
+                : `+${cleaned}`;
+
+        try {
+            await Linking.openURL(`tel:${formatted}`);
+        } catch (error) {
+            showAlert(
+                'error',
+                'Unable to Call',
+                'Could not open the phone dialer. Please try again.',
+            );
+        }
+    };
 
 
     const onRefresh = useCallback(() => {
@@ -217,6 +527,26 @@ function RejectedTask({ navigation }) {
         } catch (error) {
             console.error('Error sending comment:', error);
         }
+    };
+
+    const formatMessageDateTime = (dateValue) => {
+        if (!dateValue) return '';
+
+        const date = new Date(dateValue);
+
+        if (Number.isNaN(date.getTime())) return '';
+
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = String(date.getFullYear()).slice(-2);
+
+        const time = date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+        });
+
+        return `${day}-${month}-${year} at ${time}`;
     };
 
     return (
@@ -670,10 +1000,7 @@ function RejectedTask({ navigation }) {
                                                             <View style={styles.phleFlexBox}>
                                                                 <Text style={styles.phleTitle}>{item.commentor?.employee_name}</Text>
                                                                 <Text style={styles.phleTime}>
-                                                                    {new Date(item.createdAt).toLocaleTimeString([], {
-                                                                        hour: '2-digit',
-                                                                        minute: '2-digit'
-                                                                    })}
+                                                                    {formatMessageDateTime(item.createdAt)}
                                                                 </Text>
                                                             </View>
                                                             {item?.attachment?.path && item.attachment.path !== "" ? (
@@ -738,6 +1065,14 @@ function RejectedTask({ navigation }) {
                 </Modal>
 
             </ScrollView>
+
+            <CustomAlert
+                visible={alertVisible}
+                type={alertData.type}
+                title={alertData.title}
+                message={alertData.message}
+                onClose={() => setAlertVisible(false)}
+            />
         </SafeAreaView>
     )
 }
@@ -888,7 +1223,7 @@ const styles = StyleSheet.create({
     },
     phleTime: {
         fontFamily: 'Montserrat-Medium',
-        fontSize: 12,
+        fontSize: 10,
         color: '#0C0D36',
     },
     phleDesc: {

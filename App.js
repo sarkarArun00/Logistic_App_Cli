@@ -48,6 +48,7 @@ import Receiptview from './Pages/Receipt/Receiptview';
 import {NotificationProvider} from './Context/NotificationContext'
 import TestLocationScreen from './Pages/TestLocationScreen'
 import { Appearance } from 'react-native';
+import Password from './Pages/Login/Password';
 
 
 Appearance.setColorScheme('light');
@@ -306,7 +307,12 @@ export default function App() {
             {/* Screens without Tab Bar */}
             <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Welcome" component={Welcome} />
-            <Stack.Screen name="Login" component={Login} />
+              <Stack.Screen name="Login" component={Login} />
+              <Stack.Screen
+              name="Password"
+              component={Password}
+              options={{ headerShown: false }}
+            />
             <Stack.Screen name="VoucherDetails" component={VoucherDetails} />
             <Stack.Screen name="Receipt" component={Receipt} />
             <Stack.Screen name="Receiptview" component={Receiptview} />

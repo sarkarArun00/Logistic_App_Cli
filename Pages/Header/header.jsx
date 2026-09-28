@@ -40,7 +40,6 @@ const header = ({ navigation, profileImage }) => {
           // setNotificationCount2(response.data.unseen.length || 0);
           setNotificationCount(response.data.filter(item => item.isRead == false).length || 0);
           setNotificationCount2(response.data.filter(item => item.isRead == false).length || 0);
-          console.log('notttttttttt', response.data.filter(item => item.isRead == false).length)
         }
       } catch (err) {
         console.log("Notification check error:", err);
@@ -70,12 +69,36 @@ const header = ({ navigation, profileImage }) => {
     <View>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', }}>
-          <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={{ width: 45, height: 45, overflow: 'hidden', borderRadius: '50%', }}>
-            <Image style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 50, }} source={
-              profileImage
-                ? { uri: BASE_API_URL + profileImage }
-                : require('../../assets/user1.png') // fallback image
-            } />
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Profile')}
+            activeOpacity={0.8}
+            style={{
+              width: 45,
+              height: 45,
+              overflow: 'hidden',
+              borderRadius: 22.5,
+              backgroundColor: '#F1F5F9',
+            }}
+          >
+
+            <Image
+              style={{
+                width: 45,
+                height: 45,
+                borderRadius: 22.5,
+              }}
+              resizeMode="cover"
+              source={
+                profileImage
+                  ? {
+                    uri: profileImage.startsWith('http')
+                      ? profileImage
+                      : `${BASE_API_URL.replace(/\/$/, '')}/${profileImage.replace(/^\//, '')}`,
+                    cache: 'force-cache',
+                  }
+                  : require('../../assets/user1.png')
+              }
+            />
           </TouchableOpacity>
           <Text numberOfLines={1} ellipsizeMode="tail" style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 19, color: '#3085FE', paddingLeft: 8, width: 180, }}>Hi {userName} !</Text>
         </View>
@@ -100,9 +123,9 @@ const header = ({ navigation, profileImage }) => {
             source={require('../../assets/noti.png')}
           />
 
-          {notificationCount2 > 0 && (
+          {/* {notificationCount2 > 0 && (
             <View
-              pointerEvents="none"   // <-- let taps fall through to Pressable
+              pointerEvents="none"
               style={{
                 position: 'absolute',
                 right: 0,
@@ -128,7 +151,7 @@ const header = ({ navigation, profileImage }) => {
                 {notificationCount2 > 99 ? '99+' : notificationCount2}
               </Text>
             </View>
-          )}
+          )} */}
         </Pressable>
 
       </View>
@@ -136,6 +159,6 @@ const header = ({ navigation, profileImage }) => {
   )
 }
 
-export default header
+export default React.memo(header);
 
 const styles = StyleSheet.create({})

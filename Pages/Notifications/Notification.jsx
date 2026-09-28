@@ -177,10 +177,7 @@ function Notification({ navigation }) {
 
     const handleApprove = async (id, userId) => {
         try {
-            console.log('check idddd', notificationId)
-            // return
             const response = await TaskService.approveApproval({ notifId: notificationId });
-            console.log('response:', response)
             if (response.status == 1) {
                 console.log('Approval successful:', response);
 
@@ -203,8 +200,6 @@ function Notification({ navigation }) {
         try {
             const response = await TaskService.declineApproval({ notifId: notificationId });
             if (response.status == 1) {
-                console.log('Decline successful:', response);
-
                 setApprovalModalVisible(false);
 
                 setRefreshApprovals(prev => prev + 1);
@@ -217,7 +212,6 @@ function Notification({ navigation }) {
     }
 
     const openApprovalModal = async (item, actionType) => {
-        console.log('resss openApprovalModal', item)
         try {
             setApprovalAction(actionType);
             setApprovalModalVisible(true);
@@ -240,14 +234,13 @@ function Notification({ navigation }) {
                         receiptId: referenceId,
                     });
 
-                console.log('resssss with CR')
             } else {
                 // Fund transfer or other Logistic approval
                 response =
                     await TaskService.getLogisticDenomination({
                         empId: item?.srcEmp ?? null,
                     });
-                console.log('resssss without CR')
+
             }
 
             console.log(
@@ -298,7 +291,6 @@ function Notification({ navigation }) {
     ];
 
 
-    console.log('jkiusdhakjsdjksadkjas askjdhaskjdhak', approvalList)
     const NotificationItem = ({ item }) => (
         <View style={{ flexDirection: 'row', paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: '#E0E0E0' }}>
             <Ionicons name={item.status == '1' ? "mail-outline" : "mail-outline"} size={32}
@@ -450,7 +442,7 @@ function Notification({ navigation }) {
                                                         />
 
                                                         <Text style={styles.viewButtonText}>
-                                                            View Details
+                                                            View
                                                         </Text>
                                                     </TouchableOpacity>
 

@@ -19,11 +19,14 @@ import TaskService from '../../Services/task_service';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { Alert, Vibration } from 'react-native';
+import CustomAlert from '../../Components/CustomAlert'
 
 
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 60) / 2;
+
+
 
 
 
@@ -33,6 +36,26 @@ const TaskScreen = () => {
 
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const [alertVisible, setAlertVisible] = useState(false);
+
+  const [alertData, setAlertData] = useState({
+    type: 'success',
+    title: '',
+    message: '',
+  });
+
+  const showAlert = (type, title, message) => {
+    setAlertData({
+      type,
+      title,
+      message,
+    });
+
+    setAlertVisible(true);
+  };
+
+
 
   useFocusEffect(
     useCallback(() => {
@@ -157,13 +180,13 @@ const TaskScreen = () => {
       }
 
       const isCheckedIn = await AsyncStorage.getItem(`isCheckedIn_${userId}`);
-      console.log('isCheckedIn', isCheckedIn)
       if (isCheckedIn !== 'true') {
         Vibration.vibrate(200);
 
-        Alert.alert(
-          "Attendance Required",
-          "Please check-in before accessing this feature."
+        showAlert(
+          'warning',
+          'Attendance Required',
+          'Please check-in before accessing this feature.',
         );
         return;
       }
@@ -273,6 +296,14 @@ const TaskScreen = () => {
         )}
       />
 
+
+      <CustomAlert
+        visible={alertVisible}
+        type={alertData.type}
+        title={alertData.title}
+        message={alertData.message}
+        onClose={() => setAlertVisible(false)}
+      />
 
     </SafeAreaView>
   );

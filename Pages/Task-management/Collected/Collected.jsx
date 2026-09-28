@@ -23,7 +23,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { launchCamera } from 'react-native-image-picker';
 import ImageResizer from 'react-native-image-resizer';
 import RNFS from 'react-native-fs';
-
+import CustomAlert from '../../Components/CustomAlert'
 
 
 const wait = (timeout) => {
@@ -51,43 +51,26 @@ function Collected({ navigation }) {
     const { showAlertModal, hideAlert } = useGlobalAlert();
     const [visibleCount, setVisibleCount] = useState(5);
     const { searchQuery, filteredData, search } = useSearch(allTasksData);
-    // const visibleTasks = searchQuery
-    //     ? filteredData           // Show all if searching
-    //     : filteredData.slice(0, visibleCount); // Show limited if not
 
 
-    // const [fontsLoaded] = useFonts({
-    //     Montserrat-SemiBold,
-    //     Montserrat-Medium,
-    // });
+    const [alertVisible, setAlertVisible] = useState(false);
 
-    // useFocusEffect(
-    //     useCallback(() => {
-    //         console.log("callllllllllllled")
-    //         const fetchData = async () => {
-    //             // try {
-    //                 setLoading(true)
-    //                 const response = await TaskService.getMyCollectedTasks();
-    //                 if (response.status == 1) {
-    //                     setAllTasksData(response.data || []);
-    //                     // setVisibleTasks(response.data?.slice(0, 5) || []);
-    //                     search('',response.data)
-    //                     setLoading(false)
-    //                 } else {
-    //                     setAllTasksData([]);
-    //                     // setVisibleTasks([]);
-    //                     search('',[])
-    //                     setLoading(false)
-    //                 }
-    //             // } catch (error) {
-    //             //     // console.error('Error fetching tasks:', error);
-    //             // } finally {
-    //             //     setLoading(false);
-    //             // }
-    //         };
-    //         fetchData();
-    //     }, [])
-    // )
+    const [alertData, setAlertData] = useState({
+        type: 'success',
+        title: '',
+        message: '',
+    });
+
+    const showAlert = (type, title, message) => {
+        setAlertData({
+            type,
+            title,
+            message,
+        });
+
+        setAlertVisible(true);
+    };
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -240,6 +223,8 @@ function Collected({ navigation }) {
     }, []);
 
     const navigateToUserLocation = (task) => {
+        console.log('pickup location:  ', task)
+        // return
         const locationString = task?.pickUpLocation?.coordinates;
 
         if (!locationString) {
@@ -434,12 +419,54 @@ function Collected({ navigation }) {
     // }
 
     // Call Button
-    const makeCall = (call) => {
-        if (call) {
-            const cleaned = call.replace(/\D/g, ''); // remove spaces, dashes, etc.
-            const formatted = cleaned.startsWith('+') ? cleaned : `+91${cleaned}`; // assuming India
-            Linking.openURL(`tel:${formatted}`);
+    const makeCall = async call => {
+        if (!call || !String(call).trim()) {
+            showAlert(
+                'warning',
+                'Phone Number Missing',
+                'No contact number is available for this user.',
+            );
+            return;
         }
+
+        const cleaned = String(call).replace(/\D/g, '');
+
+        const formatted = cleaned.startsWith('91') && cleaned.length === 12
+            ? `+${cleaned}`
+            : cleaned.length === 10
+                ? `+91${cleaned}`
+                : `+${cleaned}`;
+
+        try {
+            await Linking.openURL(`tel:${formatted}`);
+        } catch (error) {
+            showAlert(
+                'error',
+                'Unable to Call',
+                'Could not open the phone dialer. Please try again.',
+            );
+        }
+    };
+
+
+    const formatMessageDateTime = (dateValue) => {
+        if (!dateValue) return '';
+
+        const date = new Date(dateValue);
+
+        if (Number.isNaN(date.getTime())) return '';
+
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = String(date.getFullYear()).slice(-2);
+
+        const time = date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+        });
+
+        return `${day}-${month}-${year} at ${time}`;
     };
 
     return (
@@ -788,10 +815,7 @@ function Collected({ navigation }) {
                                                             <View style={styles.phleFlexBox}>
                                                                 <Text style={styles.phleTitle}>{item.commentor?.employee_name}</Text>
                                                                 <Text style={styles.phleTime}>
-                                                                    {new Date(item.createdAt).toLocaleTimeString([], {
-                                                                        hour: '2-digit',
-                                                                        minute: '2-digit'
-                                                                    })}
+                                                                    {formatMessageDateTime(item.createdAt)}
                                                                 </Text>
                                                             </View>
                                                             {item?.attachment?.path && item.attachment.path !== "" ? (
@@ -905,6 +929,14 @@ function Collected({ navigation }) {
                     <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
                 </View>
             )}
+
+            <CustomAlert
+                visible={alertVisible}
+                type={alertData.type}
+                title={alertData.title}
+                message={alertData.message}
+                onClose={() => setAlertVisible(false)}
+            />
         </SafeAreaView>
     )
 }
@@ -1075,7 +1107,7 @@ const styles = StyleSheet.create({
     },
     phleTime: {
         fontFamily: 'Montserrat-Medium',
-        fontSize: 12,
+        fontSize: 10,
         color: '#0C0D36',
     },
     phleDesc: {

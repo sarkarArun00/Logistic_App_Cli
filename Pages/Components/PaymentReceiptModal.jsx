@@ -104,6 +104,7 @@ export default function PaymentReceiptModal({
   const [gatewayVisible, setGatewayVisible] = useState(false);
   const [gatewayMode, setGatewayMode] = useState(null); // "3" or "4"
 
+
   const handleChequeDateConfirm = (date) => {
     setChequeDate(date);
     hideChequeDatePicker();
@@ -111,7 +112,6 @@ export default function PaymentReceiptModal({
 
   // ---------- on open ----------
   useEffect(() => {
-    console.log('fetchDenominations', fetchDenominations)
     if (!visible) return;
     // load required lists
     fetchClients?.();
@@ -360,6 +360,12 @@ export default function PaymentReceiptModal({
     return ctx;
   };
 
+  useEffect(() => {
+    if (visible && initialClientId != null) {
+      setSelectClient(String(initialClientId));
+    }
+  }, [visible, initialClientId]);
+
   const onPickAttachment = async () => {
     try {
       const result = await launchImageLibrary({
@@ -568,10 +574,10 @@ export default function PaymentReceiptModal({
                   ))}
                 </Picker> */}
                 <AppPicker
-                  value={String(selectClient)}
+                  value={selectClient ? String(selectClient) : ''}
                   onValueChange={setSelectClient}
                   placeholder="Select Client"
-                  items={clients.map((c) => ({
+                  items={clients.map(c => ({
                     label: c.client_name,
                     value: String(c.id),
                   }))}

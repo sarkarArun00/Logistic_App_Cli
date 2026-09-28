@@ -69,7 +69,20 @@ const AuthService = {
       }
     },
   
-  
+  requestOtp: async (data) => {
+    const response = await apiClient.post('/requestOTP', data, { timeout: 15000 });
+    return response.data;
+  },
+
+  verifyOTP: async (data) => {
+    const response = await apiClient.post('/verifyOTP', data, { timeout: 15000 });
+    return response.data;
+  },
+
+  updatePassword: async (data) => {
+    const response = await apiClient.post('/updatePassword', data, { timeout: 15000 });
+    return response.data;
+  },
 
   getToken: async () => {
     return await AsyncStorage.getItem("token");
