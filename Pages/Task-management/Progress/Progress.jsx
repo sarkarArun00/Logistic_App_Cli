@@ -109,7 +109,7 @@ function Progress({ navigation }) {
 
         if (collectModalVisible2) {
             // Clear images on every open
-            setImages([]);
+            // setImages([]);
             setDeliveryRemarks('');
         }
 
@@ -130,14 +130,14 @@ function Progress({ navigation }) {
 
     useEffect(() => {
         if (collectModalVisible) {
-            setImages([]);
+            // setImages([]);
             setCollectCommentText('');
         }
     }, [collectModalVisible]);
 
     useEffect(() => {
         if (collectModalVisible3) {
-            setImages([]);
+            // setImages([]);
             setDeliveryRemarks('');
             setItemIds([])
         }
@@ -147,7 +147,6 @@ function Progress({ navigation }) {
         try {
             setLoading(true);
             const response = await TaskService.getMyInProgressTasks();
-            console.log('in progress task ', response)
             if (response.status == 1) {
                 setAllTasksData(response.data || []);
                 search('', response.data); //
@@ -483,7 +482,6 @@ function Progress({ navigation }) {
         try {
 
             if (images.length === 0 || !images[0].uri) {
-                showAlertModal('Please select an image to upload.', true);
                 showAlert(
                     'warning',
                     'Attachment is Missing',
@@ -505,7 +503,6 @@ function Progress({ navigation }) {
 
             if (response.status == 1) {
                 addTaskAttachment(selectedTaskId);
-                showAlertModal('Task Collected Successfully!', false);
                 showAlert(
                     'success',
                     'Collected',
@@ -513,6 +510,9 @@ function Progress({ navigation }) {
                 );
                 setCollectModalVisible(false);
                 fetchData();
+                if (taskItem?.taskType?.taskType == 'Sample Pickup') {
+                    navigation.navigate('Collected');
+                }
             } else {
                 showAlert(
                     'error',
@@ -581,7 +581,9 @@ function Progress({ navigation }) {
 
 
     const [getTaskType, setTaskType] = useState("")
+    const [taskItem, storeTaskItem] = useState("")
     const onCollectModalOpen = async (task) => {
+        storeTaskItem(task)
         setTaskId(task.id);
         // This is for Item Delivery
         if (task.taskType.taskType == 'Item Delivery') {
@@ -645,6 +647,9 @@ function Progress({ navigation }) {
             itemIds: itemIds,
         };
 
+        console.log('item delivery: ', images)
+
+        // return
         try {
             const response = await TaskService.collectMyTask(request);
             if (response.status == 1) {
@@ -660,6 +665,7 @@ function Progress({ navigation }) {
                 sentNotification(selectedTaskId, 'Delivered Successfully');
                 setDeliveryRemarks('');
                 setItemIds([]);
+                setImages([]);
             } else {
                 showAlertModal('Failed to Deliver', true);
                 showAlert(
@@ -774,6 +780,7 @@ function Progress({ navigation }) {
 
 
     const toggleItemChecked = (itemId) => {
+        console.log('ooooooooo images', images)
         const exists = itemIds.some(item => item.itemId === itemId);
 
         if (exists) {
@@ -781,6 +788,11 @@ function Progress({ navigation }) {
         } else {
             setItemIds(prev => [...prev, { itemId }]);
         }
+
+        console.log('ooooooooo', exists)
+
+        console.log('ooooooooo images', images)
+
     };
 
     // const handleSelectAll = () => {
@@ -1748,9 +1760,14 @@ function Progress({ navigation }) {
                                                 </Text>
                                             </View>
                                             <Checkbox
-                                                status={itemIds.some(item => item.id === info.itemId) ? 'checked' : 'unchecked'}
+                                                status={
+                                                    itemIds.some(item => item.itemId === info.itemId)
+                                                        ? 'checked'
+                                                        : 'unchecked'
+                                                }
                                                 onPress={() => toggleItemChecked(info.itemId)}
                                             />
+
 
                                         </View>
                                     ))}

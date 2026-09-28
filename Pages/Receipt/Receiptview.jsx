@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'
+import { Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet, View, Text, TouchableOpacity, Image, Alert, ScrollView, PermissionsAndroid, Platform, ToastAndroid } from 'react-native';
 import TaskService from '../Services/task_service';
