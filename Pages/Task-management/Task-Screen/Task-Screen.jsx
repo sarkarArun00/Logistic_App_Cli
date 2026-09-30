@@ -188,6 +188,10 @@ const TaskScreen = () => {
           'Attendance Required',
           'Please check-in before accessing this feature.',
         );
+
+        setTimeout(() => {
+          navigation.navigate('MainApp');
+        }, 1000);
         return;
       }
 

@@ -116,6 +116,7 @@ function LoginScreen() {
       const userData = {
         email: email,
         user_pass: password,
+        type: "Logistic"
       };
 
       const response = await AuthService.empLogin(userData);

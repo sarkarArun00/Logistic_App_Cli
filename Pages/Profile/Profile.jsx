@@ -12,7 +12,7 @@ import { BASE_API_URL } from '../Services/API';
 import TaskService from '../Services/task_service';
 import { Vibration } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import CustomAlert from '../Components/CustomAlert'
 
 // import {
 //   useFonts,
@@ -32,6 +32,14 @@ function Profile({ navigation }) {
     const { showAlertModal, hideAlert } = useGlobalAlert();
     const [viewerVisible, setViewerVisible] = useState(false);
 
+
+    const [alertVisible, setAlertVisible] = useState(false);
+
+    const [alertData, setAlertData] = useState({
+        type: 'success',
+        title: '',
+        message: '',
+    });
     // const [fontsLoaded] = useFonts({
     //     Montserrat_700Bold,
     //     Montserrat_400Regular,
@@ -41,6 +49,16 @@ function Profile({ navigation }) {
     // if (!fontsLoaded) {
     //     return null;
     // }
+
+    const showAlert = (type, title, message) => {
+        setAlertData({
+            type,
+            title,
+            message,
+        });
+
+        setAlertVisible(true);
+    };
 
     const fetchProfilePicture = async () => {
         try {
@@ -91,9 +109,10 @@ function Profile({ navigation }) {
 
             // 🚫 BLOCK LOGOUT IF CHECKED-IN
             if (isCheckedIn === 'true') {
-                Alert.alert(
-                    "Checkout Required",
-                    "Please check-out before logging out."
+                showAlert(
+                    'warning',
+                    'Checkout Required',
+                    'Please check-out before logging out.',
                 );
                 return;
             }
@@ -483,6 +502,13 @@ function Profile({ navigation }) {
 
             </ScrollView>
 
+            <CustomAlert
+                visible={alertVisible}
+                type={alertData.type}
+                title={alertData.title}
+                message={alertData.message}
+                onClose={() => setAlertVisible(false)}
+            />
         </SafeAreaView>
     )
 }
