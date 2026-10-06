@@ -549,6 +549,33 @@ function RejectedTask({ navigation }) {
         return `${day}-${month}-${year} at ${time}`;
     };
 
+
+    const formatTime12Hour = (time) => {
+        if (!time) return '';
+
+        const [hours, minutes] = time.split(':');
+
+        const hour = parseInt(hours, 10);
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+
+        return `${hour12}:${minutes} ${period}`;
+    };
+
+    const formatDate = (dateValue) => {
+        if (!dateValue) return '';
+
+        const date = new Date(dateValue);
+
+        if (isNaN(date.getTime())) return '';
+
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+
+        return `${day}-${month}-${year}`;
+    };
+
     return (
         <SafeAreaView style={[styles.container, GlobalStyles.SafeAreaView]}>
             <ScrollView
@@ -642,7 +669,7 @@ function RejectedTask({ navigation }) {
                                         <View style={{ position: 'relative', marginBottom: 5 }}>
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 13, height: 13 }} source={require('../../../assets/asicon3.png')} />
                                             <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
-                                                {task?.preferredTime?.start_time?.slice(0, 5)} - {task?.preferredTime?.end_time?.slice(0, 5)}
+                                                {formatTime12Hour(task?.preferredTime?.start_time)} - {formatTime12Hour(task?.preferredTime?.end_time)}
                                             </Text>
                                         </View>
                                         <View style={{ position: 'relative', marginBottom: 5 }}>
@@ -703,8 +730,8 @@ function RejectedTask({ navigation }) {
                                     {
                                         task?.taskFrequency == 'Once' && (
                                             <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 15 }}>
-                                                <Text style={styles.oncetxt}>{task?.preferredDate}</Text>
-                                                <Text style={styles.oncetxt}>{task?.preferredTime?.start_time} - {task?.preferredTime?.end_time}</Text>
+                                                <Text style={styles.oncetxt}>{formatDate(task?.preferredDate)}</Text>
+                                                <Text style={styles.oncetxt}>{formatTime12Hour(task?.preferredTime?.start_time)} - {formatTime12Hour(task?.preferredTime?.end_time)}</Text>
                                             </View>
                                         )
                                     }
@@ -731,7 +758,7 @@ function RejectedTask({ navigation }) {
 
                                 <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', padding: 15, marginTop: 12, flexDirection: 'row', alignItems: 'center', }}>
                                     <View><Image style={{ width: 22, height: 22, }} source={require('../../../assets/Cross.png')} /></View>
-                                    <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 12, color: '#2F81F5', paddingLeft: 8, }}>Task Rejected at {formatDateTime(task.updated_at)}</Text>
+                                    <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 12, color: '#2F81F5', paddingLeft: 8, }}>Task Rejected at {formatDate(task.updated_at)}</Text>
                                 </View>
                             </View>
                         ))

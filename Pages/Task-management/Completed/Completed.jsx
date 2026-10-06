@@ -190,24 +190,6 @@ function Completed({ navigation }) {
         }
     };
 
-    const formatDateTime2 = (dateString) => {
-        if (!dateString) return '';
-
-        const date = new Date(dateString);
-
-        return date
-            .toLocaleString('en-IN', {
-                timeZone: 'Asia/Kolkata',
-                month: 'short',       // "Feb"
-                day: '2-digit',       // "20"
-                year: 'numeric',      // "2025"
-                hour: 'numeric',      // "4"
-                minute: '2-digit',    // "01"
-                hour12: true          // "PM"
-            })
-            .replace(',', ''); // Optional: Remove comma between date and time
-    };
-
 
     const taskTypes = async () => {
         try {
@@ -262,6 +244,18 @@ function Completed({ navigation }) {
         const year = date.getFullYear();
 
         return `${day}-${month}-${year}`;
+    };
+
+    const formatTime12Hour = (time) => {
+        if (!time) return '';
+
+        const [hours, minutes] = time.split(':');
+
+        const hour = parseInt(hours, 10);
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+
+        return `${hour12}:${minutes} ${period}`;
     };
 
     return (
@@ -361,7 +355,18 @@ function Completed({ navigation }) {
                                         }
                                     </View>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 13, }}>
-                                        <TouchableOpacity onPress={() => makeCall(task?.pickUpLocation?.contact)}><Image style={{ width: 20, height: 20, }} source={require('../../../assets/call.png')} /></TouchableOpacity>
+                                        {
+                                            task?.request_id && task?.taskType?.taskType === 'Sample Pickup' || task?.taskType?.taskType === 'Sample Pickup' || task?.taskType?.taskType === 'Cash Collection' ? (
+                                                <TouchableOpacity onPress={() => makeCall(task?.client?.contact_number)}>
+                                                    <Image style={{ width: 20, height: 20 }} source={require('../../../assets/call.png')} />
+                                                </TouchableOpacity>
+                                            ) :
+                                                (
+                                                    <TouchableOpacity onPress={() => makeCall(task?.pickUpLocation?.contact)}>
+                                                        <Image style={{ width: 20, height: 20 }} source={require('../../../assets/call.png')} />
+                                                    </TouchableOpacity>
+                                                )
+                                        }
                                     </View>
                                 </View>
 
@@ -373,11 +378,22 @@ function Completed({ navigation }) {
                                         </View>
                                         <View style={{ position: 'relative', marginBottom: 5, }}>
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 11, height: 13, }} source={require('../../../assets/asicon2.png')} />
-                                            <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20, }}>{task?.pickUpLocation?.address ?? 'No Address'}</Text>
+                                            {
+                                                task?.request_id && task?.taskType?.taskType === 'Sample Pickup' || task?.taskType?.taskType === 'Sample Pickup' || task?.taskType?.taskType === 'Cash Collection' ? (
+                                                    <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
+                                                        {task?.client?.address ?? 'No Address'}
+                                                    </Text>
+                                                ) :
+                                                    (
+                                                        <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
+                                                            {task?.pickUpLocation?.address ?? 'No Address'}
+                                                        </Text>
+                                                    )
+                                            }
                                         </View>
                                         <View style={{ position: 'relative', marginBottom: 5, }}>
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 13, height: 13, }} source={require('../../../assets/asicon3.png')} />
-                                            <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20, }}>{task?.preferredTime?.start_time?.slice(0, 5)} - {task?.preferredTime?.end_time?.slice(0, 5)}</Text>
+                                            <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20, }}>{formatTime12Hour(task?.preferredTime?.start_time)} - {formatTime12Hour(task?.preferredTime?.end_time)}</Text>
                                         </View>
                                         <View style={{ position: 'relative', marginBottom: 5 }}>
                                             <Image style={{ position: 'absolute', left: 0, top: 0, width: 13, height: 13 }} source={require('../../../assets/asicon4.png')} />
@@ -435,7 +451,7 @@ function Completed({ navigation }) {
                                         task?.taskFrequency == 'Once' && (
                                             <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 15 }}>
                                                 <Text style={styles.oncetxt}>{formatDate2(task?.preferredDate)}</Text>
-                                                <Text style={styles.oncetxt}>{task?.preferredTime?.start_time} - {task?.preferredTime?.end_time}</Text>
+                                                <Text style={styles.oncetxt}>{formatTime12Hour(task?.preferredTime?.start_time)} - {formatTime12Hour(task?.preferredTime?.end_time)}</Text>
                                             </View>
                                         )
                                     }

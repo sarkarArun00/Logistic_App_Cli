@@ -6,6 +6,7 @@ import { AuthContext } from "../../Context/AuthContext";
 import { BASE_API_URL } from '../Services/API';
 import { useFocusEffect } from '@react-navigation/native';
 import { useNotification } from '../../Context/NotificationContext';
+import NotificationCount from '../Notifications/NotificationCount';
 
 const header = ({ navigation, profileImage }) => {
 
@@ -118,10 +119,13 @@ const header = ({ navigation, profileImage }) => {
             pressed && { opacity: 0.7 },
           ]}
         >
-          <Image
+          <View pointerEvents="none">
+            <NotificationCount />
+          </View>
+          {/* <Image
             style={{ width: 18, height: 18 }}
             source={require('../../assets/noti.png')}
-          />
+          /> */}
 
           {/* {notificationCount2 > 0 && (
             <View
