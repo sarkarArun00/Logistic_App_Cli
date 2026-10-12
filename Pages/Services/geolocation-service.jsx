@@ -6,7 +6,7 @@ import { globalApiClient, apiClient, BASE_API_URL } from './API';
 const TRACKER_API_URL = 
     `${BASE_API_URL}operation/tracker/updateEmpLocation`;
 
-const TRACKING_INTERVAL_MS = 10000;
+const TRACKING_INTERVAL_MS = 120000;
 
 export const requestLocationPermission = async () => {
     try {
