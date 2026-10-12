@@ -3,7 +3,7 @@ import { Alert, Linking, PermissionsAndroid, Platform } from "react-native";
 import Geolocation from "react-native-geolocation-service";
 import { globalApiClient, apiClient, BASE_API_URL } from './API';
 
-const TRACKER_API_URL = 
+const TRACKER_API_URL =
     `${BASE_API_URL}operation/tracker/updateEmpLocation`;
 
 const TRACKING_INTERVAL_MS = 120000;

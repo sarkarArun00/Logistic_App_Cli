@@ -110,6 +110,11 @@ export default function PaymentReceiptModal({
     hideChequeDatePicker();
   };
 
+  //Inactive banks are filtered
+  const filteredBanks = useMemo(() => {
+    return (banks || []).filter((b) => b?.status !== false);
+  }, [banks]);
+
   // ---------- on open ----------
   useEffect(() => {
     if (!visible) return;
@@ -237,7 +242,8 @@ export default function PaymentReceiptModal({
     if (!chequeDate) return showAlert?.("Cheque date is required.", true);
     if (!selectBank) return showAlert?.("Bank is required.", true);
 
-    const bankObj = (banks || []).find((b) => String(b.id) === String(selectBank));
+    // ✅ filteredBanks For Inactive Banks
+    const bankObj = filteredBanks.find((b) => String(b.id) === String(selectBank));
     setChequeDetails({
       chequeNo: String(chequeNo).trim(),
       chequeDate,
@@ -567,12 +573,6 @@ export default function PaymentReceiptModal({
               {/* Client */}
               <Text style={styles.label}>Client Name</Text>
               <View style={styles.pickerContainer}>
-                {/* <Picker selectedValue={selectClient} onValueChange={setSelectClient} mode="dropdown" style={styles.picker}>
-                  <Picker.Item label="Select Client" value="" />
-                  {clients.map((c) => (
-                    <Picker.Item key={c.id} label={c.client_name} value={c.id} />
-                  ))}
-                </Picker> */}
                 <AppPicker
                   value={selectClient ? String(selectClient) : ''}
                   onValueChange={setSelectClient}
@@ -582,23 +582,6 @@ export default function PaymentReceiptModal({
                     value: String(c.id),
                   }))}
                 />
-                {/* <RNPickerSelect
-                  value={selectClient}
-                  onValueChange={(value) => setSelectClient(value)}
-                  placeholder={{ label: 'Select Client', value: '' }}
-                  items={clients.map((c) => ({
-                    label: c.client_name,
-                    value: c.id,
-                  }))}
-                  useNativeAndroidPickerStyle={true}
-                  style={{
-                    inputIOS: styles.iosPickerInput,
-                    inputAndroid: styles.androidPickerInput,
-                    placeholder: {
-                      color: '#999',
-                    },
-                  }}
-                /> */}
               </View>
 
               {/* Mode */}
@@ -613,22 +596,6 @@ export default function PaymentReceiptModal({
                     value: String(mode.id),
                   }))}
                 />
-                {/* <Picker
-                  selectedValue={selectPaymode}
-                  mode="dropdown"
-                  onValueChange={(value) => setSelectPaymode(value)}
-                  style={styles.picker}
-                >
-                  <Picker.Item label="Select Payment Mode" value="" />
-
-                  {visiblePaymentModes.map(mode => (
-                    <Picker.Item
-                      key={mode.id}
-                      label={mode.label}
-                      value={String(mode.id)}
-                    />
-                  ))}
-                </Picker> */}
               </View>
 
               {/* Amount */}
@@ -677,13 +644,6 @@ export default function PaymentReceiptModal({
                         <Text style={styles.sumTotaValue}>₹ {total.toFixed(2)}</Text>
                       </View>
 
-                      {/* <View style={styles.amtWords}>
-                    <Text style={styles.amountInWdLabel}>Amount in Words</Text>
-                    <Text style={styles.amountInWdValue}>
-                      {enteredAmount ? `${toWords(enteredAmount)} Only` : "-"}
-                    </Text>
-                  </View> */}
-
                       <TouchableOpacity onPress={() => setDetailsModalVisible(true)} style={{ marginTop: 10 }}>
                         <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, lineHeight: 16, color: "#2F81F5" }}>Edit Denominations</Text>
                       </TouchableOpacity>
@@ -716,11 +676,6 @@ export default function PaymentReceiptModal({
                             <Text style={styles.isCheckBoxLabel}>Amount</Text>
                             <Text style={styles.isCheckBoxValue}>₹{chequeDetails.amount}</Text>
                           </View>
-
-                          {/* <View style={styles.isCheckBox}>
-                        <Text style={styles.isCheckBoxLabel}>Amount In Words</Text>
-                        <Text style={styles.isCheckBoxValue}>{toWords(Number(chequeDetails.amount))} Only</Text>
-                      </View> */}
                         </>
                       )}
 
@@ -872,7 +827,8 @@ export default function PaymentReceiptModal({
                     <View style={styles.pickerContainer}>
                       <Picker selectedValue={selectBank} onValueChange={setSelectBank} style={styles.picker}>
                         <Picker.Item label="Select bank" value="" />
-                        {banks.map((b) => (
+
+                        {filteredBanks.map((b) => (
                           <Picker.Item key={b.id} label={b.bank_name} value={b.id} />
                         ))}
                       </Picker>

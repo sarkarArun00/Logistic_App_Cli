@@ -1849,130 +1849,130 @@ function Progress({ navigation }) {
                                 </TouchableOpacity>
                             </View>
                             <ScrollView>
-                            <View style={{ padding: 15, }}>
+                                <View style={{ padding: 15, }}>
 
-                                <View>
-                                    <Text style={styles.label}>Attachment</Text>
+                                    <View>
+                                        <Text style={styles.label}>Attachment</Text>
 
-                                    <TouchableOpacity style={styles.uploadContainer} onPress={selectImages}>
-                                        <Image style={{ width: 30, height: 28, marginHorizontal: 'auto', }} source={require('../../../assets/upload-icon.png')} />
-                                        <Text style={styles.uploadTitle}>Upload</Text>
-                                        <Text style={styles.uploadSubTitle}>Supports JPG, JPEG, and PNG</Text>
-                                    </TouchableOpacity>
+                                        <TouchableOpacity style={styles.uploadContainer} onPress={selectImages}>
+                                            <Image style={{ width: 30, height: 28, marginHorizontal: 'auto', }} source={require('../../../assets/upload-icon.png')} />
+                                            <Text style={styles.uploadTitle}>Upload</Text>
+                                            <Text style={styles.uploadSubTitle}>Supports JPG, JPEG, and PNG</Text>
+                                        </TouchableOpacity>
 
-                                    {images.length > 0 ? (
-                                        <FlatList
-                                            style={styles.flatList}
-                                            data={images}
-                                            keyExtractor={(item, index) => index.toString()}
-                                            renderItem={({ item, index }) => (
-                                                <View>
-                                                    <Image source={{ uri: item.uri }} style={{ width: 60, height: 60, borderRadius: 5, marginRight: 10, }} />
-                                                    <TouchableOpacity
-                                                        onPress={() => handleDeleteImage(index)}
-                                                        style={{
-                                                            position: 'absolute',
-                                                            top: -5,
-                                                            right: 5,
-                                                            backgroundColor: 'red',
-                                                            borderRadius: 12,
-                                                            width: 22,
-                                                            height: 22,
-                                                            justifyContent: 'center',
-                                                            alignItems: 'center'
-                                                        }}
-                                                    >
-                                                        <Text style={{ color: 'white', fontSize: 12, lineHeight: 14, }}>✕</Text>
-                                                    </TouchableOpacity>
-                                                </View>
-                                            )}
-                                            horizontal
-                                        />
-                                    ) : (
-                                        <Text style={styles.noImgSelected}>No images selected</Text>
-                                    )}
-                                </View>
+                                        {images.length > 0 ? (
+                                            <FlatList
+                                                style={styles.flatList}
+                                                data={images}
+                                                keyExtractor={(item, index) => index.toString()}
+                                                renderItem={({ item, index }) => (
+                                                    <View>
+                                                        <Image source={{ uri: item.uri }} style={{ width: 60, height: 60, borderRadius: 5, marginRight: 10, }} />
+                                                        <TouchableOpacity
+                                                            onPress={() => handleDeleteImage(index)}
+                                                            style={{
+                                                                position: 'absolute',
+                                                                top: -5,
+                                                                right: 5,
+                                                                backgroundColor: 'red',
+                                                                borderRadius: 12,
+                                                                width: 22,
+                                                                height: 22,
+                                                                justifyContent: 'center',
+                                                                alignItems: 'center'
+                                                            }}
+                                                        >
+                                                            <Text style={{ color: 'white', fontSize: 12, lineHeight: 14, }}>✕</Text>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                )}
+                                                horizontal
+                                            />
+                                        ) : (
+                                            <Text style={styles.noImgSelected}>No images selected</Text>
+                                        )}
+                                    </View>
 
 
-                                <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 16, color: '#0C0D36', paddingBottom: 18, }}>Item Details:</Text>
+                                    <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 16, color: '#0C0D36', paddingBottom: 18, }}>Item Details:</Text>
 
-                                {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, }}>
+                                    {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, }}>
                                     <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 16, color: '#0C0D36', }}>Select All</Text>
                                     <Checkbox status={checked ? "checked" : "unchecked"} onPress={handleSelectAll} />
                                 </View> */}
-                                {itemDetails?.map((info, index) => (
+                                    {itemDetails?.map((info, index) => (
 
-                                    <View
-                                        key={info.id}
-                                        style={{
-                                            flexDirection: 'row',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center',
-                                            marginBottom: 6,
-                                        }}
-                                    >
-                                        <View style={{ flexDirection: 'row', flex: 1 }}>
-                                            <View
-                                                style={{
-                                                    width: 24,
-                                                    height: 24,
-                                                    borderRadius: 12,
-                                                    borderWidth: 1,
-                                                    borderColor: '#8FEE95',
-                                                    backgroundColor: '#F0FFF1',
-                                                    flexDirection: 'row',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                }}
-                                            >
-                                                <Image
-                                                    style={{ width: 14, height: 14 }}
-                                                    source={require('../../../assets/texticon2.png')}
-                                                />
+                                        <View
+                                            key={info.id}
+                                            style={{
+                                                flexDirection: 'row',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                marginBottom: 6,
+                                            }}
+                                        >
+                                            <View style={{ flexDirection: 'row', flex: 1 }}>
+                                                <View
+                                                    style={{
+                                                        width: 24,
+                                                        height: 24,
+                                                        borderRadius: 12,
+                                                        borderWidth: 1,
+                                                        borderColor: '#8FEE95',
+                                                        backgroundColor: '#F0FFF1',
+                                                        flexDirection: 'row',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                    }}
+                                                >
+                                                    <Image
+                                                        style={{ width: 14, height: 14 }}
+                                                        source={require('../../../assets/texticon2.png')}
+                                                    />
+                                                </View>
+                                                <Text
+                                                    style={{
+                                                        fontFamily: 'Montserrat-Medium',
+                                                        fontSize: 14,
+                                                        color: '#0C0D36',
+                                                        paddingLeft: 10,
+                                                    }}
+                                                >
+                                                    {info?.item_name ?? 'Unknown Item'} - {info?.quantity}
+                                                </Text>
                                             </View>
-                                            <Text
-                                                style={{
-                                                    fontFamily: 'Montserrat-Medium',
-                                                    fontSize: 14,
-                                                    color: '#0C0D36',
-                                                    paddingLeft: 10,
-                                                }}
-                                            >
-                                                {info?.item_name ?? 'Unknown Item'} - {info?.quantity}
-                                            </Text>
+                                            <Checkbox
+                                                status={itemIds.some(item => item.itemId === info.itemId) ? 'checked' : 'unchecked'}
+                                                onPress={() => toggleItemChecked(info.itemId)}
+                                            />
+
                                         </View>
-                                        <Checkbox
-                                            status={itemIds.some(item => item.itemId === info.itemId) ? 'checked' : 'unchecked'}
-                                            onPress={() => toggleItemChecked(info.itemId)}
+                                    ))}
+
+
+                                    <View>
+                                        <Text style={styles.label}>Remarks</Text>
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="Write here..."
+                                            placeholderTextColor="#0C0D36"
+                                            value={deliverRemarks}
+                                            onChangeText={text => setDeliveryRemarks(text)}
                                         />
-
                                     </View>
-                                ))}
-
-
-                                <View>
-                                    <Text style={styles.label}>Remarks</Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Write here..."
-                                        placeholderTextColor="#0C0D36"
-                                        value={deliverRemarks}
-                                        onChangeText={text => setDeliveryRemarks(text)}
-                                    />
-                                </View>
-                                <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', padding: 15, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between', }}>
-                                    <TouchableOpacity onPress={() => setCollectModalVisible3(false)} style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12, }}>
-                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#2F81F5', textAlign: 'center', }}>Close</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => collectItem()} style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12, }}>
-                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#fff', textAlign: 'center', }}>Collect</Text>
-                                    </TouchableOpacity>
-                                </View>
-                                {loading && (
-                                    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)' }}>
-                                        <ActivityIndicator size="large" color="#2F81F5" />
+                                    <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', padding: 15, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between', }}>
+                                        <TouchableOpacity onPress={() => setCollectModalVisible3(false)} style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12, }}>
+                                            <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#2F81F5', textAlign: 'center', }}>Close</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={() => collectItem()} style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12, }}>
+                                            <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#fff', textAlign: 'center', }}>Collect</Text>
+                                        </TouchableOpacity>
                                     </View>
-                                )}
+                                    {loading && (
+                                        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)' }}>
+                                            <ActivityIndicator size="large" color="#2F81F5" />
+                                        </View>
+                                    )}
                                 </View>
                             </ScrollView>
                         </View>
