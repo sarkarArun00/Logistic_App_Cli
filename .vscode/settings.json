@@ -1,0 +1,9 @@
+{
+    "docwriter.progress.trackFunctions": true,
+    "docwriter.progress.trackMethods": false,
+    "docwriter.progress.trackClasses": true,
+    "docwriter.progress.trackTypes": true,
+    "docwriter.style": "Auto-detect",
+    "editor.formatOnPaste": true,
+    "editor.formatOnSave": true
+}
