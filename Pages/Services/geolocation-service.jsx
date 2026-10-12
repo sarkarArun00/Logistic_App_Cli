@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react";
 import { Alert, Linking, PermissionsAndroid, Platform } from "react-native";
 import Geolocation from "react-native-geolocation-service";
+import { globalApiClient, apiClient, BASE_API_URL } from './API';
 
-const TRACKER_API_URL =
-    "https://lims-testing-api.nirnayanhealthcare.com/operation/tracker/updateEmpLocation";
+const TRACKER_API_URL = 
+    `${BASE_API_URL}operation/tracker/updateEmpLocation`;
 
-const TRACKING_INTERVAL_MS = 120000;
+const TRACKING_INTERVAL_MS = 10000;
 
 export const requestLocationPermission = async () => {
     try {
@@ -67,6 +68,8 @@ export const requestLocationPermission = async () => {
         return false;
     }
 };
+
+console.log('TRACKER_API_URL', BASE_API_URL)
 
 export const getCurrentPositionAsync = (options = {}) =>
     new Promise((resolve, reject) => {

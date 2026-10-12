@@ -1276,9 +1276,10 @@ function Progress({ navigation }) {
                                         <Text style={styles.label}>Description</Text>
                                         <TextInput
                                             style={styles.textarea}
+                                            readOnly={true}
                                             placeholder="Write here.."
                                             multiline={true}
-                                            value={selectedItem?.description}
+                                            value={selectedItem?.description || 'No description'}
                                         />
                                     </View>
 
