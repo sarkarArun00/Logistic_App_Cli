@@ -1,25 +1,24 @@
-
-import { globalApiClient, apiClient } from './API';
+import {globalApiClient, apiClient} from './API';
 // import * as FileSystem from 'expo-file-system';
 // import * as Sharing from 'expo-sharing';
-import { Linking, Alert } from 'react-native';
-import { useGlobalAlert } from '../../Context/GlobalAlertContext';
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import {Linking, Alert} from 'react-native';
+import {useGlobalAlert} from '../../Context/GlobalAlertContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNFS from 'react-native-fs';
-import { BASE_API_URL } from "./API";
+import {BASE_API_URL} from './API';
 
 const joinUrl = (base, path) =>
-  `${String(base).replace(/\/+$/, "")}/${String(path).replace(/^\/+/, "")}`;
+  `${String(base).replace(/\/+$/, '')}/${String(path).replace(/^\/+/, '')}`;
 
 const postFormData = async (path, fd) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await AsyncStorage.getItem('token');
   const url = joinUrl(BASE_API_URL, path);
 
   const res = await fetch(url, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      Accept: "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      Accept: 'application/json',
+      ...(token ? {Authorization: `Bearer ${token}`} : {}),
     },
     body: fd,
   });
@@ -31,13 +30,11 @@ const postFormData = async (path, fd) => {
     return JSON.parse(text);
   } catch {
     // if backend returns HTML or plain text error
-    return { status: 0, message: "Invalid JSON response", raw: text };
+    return {status: 0, message: 'Invalid JSON response', raw: text};
   }
 };
 
 const TaskService = {
-
-
   //Bank Master Api Call Start
   getAllBanks: async () => {
     try {
@@ -51,15 +48,15 @@ const TaskService = {
   // Denomination Master Api Call Start
   getAllDenomination: async () => {
     try {
-      const response = await apiClient.get('accounts/master/denomination/getAll');
+      const response = await apiClient.get(
+        'accounts/master/denomination/getAll',
+      );
       return response.data;
     } catch (error) {
       throw null;
     }
   },
   // Denomination Master Api Call End
-
-
 
   getAllClients: async () => {
     try {
@@ -72,7 +69,9 @@ const TaskService = {
 
   getAllGeneralNotifications: async () => {
     try {
-      const response = await apiClient.get('notification/getAllLogisticNotifications');
+      const response = await apiClient.get(
+        'notification/getAllLogisticNotifications',
+      );
       return response.data;
     } catch (error) {
       throw null;
@@ -81,37 +80,42 @@ const TaskService = {
 
   getAssignedTask: async () => {
     try {
-      const response = await apiClient.get('operation/logistics/task/getMyAssignedTasks')
+      const response = await apiClient.get(
+        'operation/logistics/task/getMyAssignedTasks',
+      );
       return response.data;
     } catch (error) {
-      console.error("API error:", error);
+      console.error('API error:', error);
       throw error;
     }
   },
 
-  acceptTask: async (data) => {
+  acceptTask: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/task/acceptTask', data);
+      const response = await apiClient.post(
+        'operation/logistics/task/acceptTask',
+        data,
+      );
       return response.data;
     } catch (error) {
       throw null;
     }
   },
 
-  createPayment: async (fd) => {
+  createPayment: async fd => {
     try {
-      const token = await AsyncStorage.getItem("token");
-      const response = await apiClient.post("accounts/payment/create", fd, {
+      const token = await AsyncStorage.getItem('token');
+      const response = await apiClient.post('accounts/payment/create', fd, {
         headers: {
-          Accept: "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          Accept: 'application/json',
+          ...(token ? {Authorization: `Bearer ${token}`} : {}),
           // ✅ do not set Content-Type
         },
       });
 
       return response.data;
     } catch (error) {
-      console.log("createPayment error:", {
+      console.log('createPayment error:', {
         message: error?.message,
         code: error?.code,
         status: error?.response?.status,
@@ -123,7 +127,9 @@ const TaskService = {
 
   getAcceptedTask: async () => {
     try {
-      const response = await apiClient.get('operation/logistics/task/getMyAcceptedTasks');
+      const response = await apiClient.get(
+        'operation/logistics/task/getMyAcceptedTasks',
+      );
       return response.data;
     } catch (error) {
       throw null;
@@ -132,7 +138,9 @@ const TaskService = {
 
   getMyInProgressTasks: async () => {
     try {
-      const response = await apiClient.get('operation/logistics/task/getMyInProgressTasks');
+      const response = await apiClient.get(
+        'operation/logistics/task/getMyInProgressTasks',
+      );
       return response.data;
     } catch (error) {
       throw null;
@@ -140,56 +148,99 @@ const TaskService = {
   },
   getMyRejectedTasks: async () => {
     try {
-      const response = await apiClient.get('operation/logistics/task/getMyRejectedTasks');
+      const response = await apiClient.get(
+        'operation/logistics/task/getMyRejectedTasks',
+      );
       return response.data;
     } catch (error) {
       throw null;
     }
   },
 
-  startNewTask: async (data) => {
+  startNewTask: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/task/startTask', data);
+      const response = await apiClient.post(
+        'operation/logistics/task/startTask',
+        data,
+      );
       return response.data;
     } catch (error) {
       throw null;
     }
   },
 
-  getTaskComments: async (data) => {
+  // viewAcceptedTask: async data => {
+  //   try {
+  //     const response = await apiClient.post(
+  //       'operation/b2b/b2b-task/viewAcceptedTask',
+  //       data,
+  //     );
+  //     return response.data;
+  //   } catch (error) {
+  //     throw null;
+  //   }
+  // },
+
+  viewAcceptedTask: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/task/getTaskComments', data);
+      const response = await apiClient.post(
+        'operation/b2b/b2b-task/viewAcceptedTask',
+        data,
+      );
+      return response.data;
+    } catch (error) {
+      console.error('viewAcceptedTask API error:', error);
+      throw error;
+    }
+  },
+
+  getTaskComments: async data => {
+    try {
+      const response = await apiClient.post(
+        'operation/logistics/task/getTaskComments',
+        data,
+      );
       return response.data;
     } catch (error) {
       throw null;
     }
   },
 
-  addNewComment: async (data) => {
+  addNewComment: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/task/addNewComment', data, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        }
-      });
+      const response = await apiClient.post(
+        'operation/logistics/task/addNewComment',
+        data,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
       return response.data;
     } catch (error) {
       throw null;
     }
   },
 
-  viewAssignedTask: async (data) => {
+  viewAssignedTask: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/task/viewAssignedTask', data);
+      const response = await apiClient.post(
+        'operation/logistics/task/viewAssignedTask',
+        data,
+      );
       return response.data;
     } catch (error) {
       throw null;
     }
   },
 
-  declineTask: async (data) => {
+  declineTask: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/task/declineTask', data);
+      const response = await apiClient.post(
+        'operation/logistics/task/declineTask',
+        data,
+      );
       return response.data;
     } catch (error) {
       throw null;
@@ -198,16 +249,20 @@ const TaskService = {
 
   getMyCollectedTasks: async () => {
     try {
-      const response = await apiClient.get('operation/logistics/task/getMyCollectedTasks');
+      const response = await apiClient.get(
+        'operation/logistics/task/getMyCollectedTasks',
+      );
       return response.data;
     } catch (error) {
       throw null;
     }
   },
 
-  collectMyTask: async (data) => {
+  collectMyTask: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/task/collectMyTask', data
+      const response = await apiClient.post(
+        'operation/logistics/task/collectMyTask',
+        data,
       );
       return response.data;
     } catch (error) {
@@ -218,7 +273,9 @@ const TaskService = {
 
   getAllOperationEmp: async () => {
     try {
-      const response = await apiClient.get('operation/logistics/getAllOperationEmployees');
+      const response = await apiClient.get(
+        'operation/logistics/getAllOperationEmployees',
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -226,9 +283,12 @@ const TaskService = {
     }
   },
 
-  sampleHandover: async (data) => {
+  sampleHandover: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/task/sampleHandover', data);
+      const response = await apiClient.post(
+        'operation/logistics/task/sampleHandover',
+        data,
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -236,9 +296,12 @@ const TaskService = {
     }
   },
 
-  getMyCompletedTasks: async (data) => {
+  getMyCompletedTasks: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/task/getMyCompletedTasks', data);
+      const response = await apiClient.post(
+        'operation/logistics/task/getMyCompletedTasks',
+        data,
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -246,7 +309,7 @@ const TaskService = {
     }
   },
 
-  openReceiptInBrowser: async (receiptId) => {
+  openReceiptInBrowser: async receiptId => {
     try {
       // const encodedId = encodeURIComponent(receiptId);
 
@@ -254,18 +317,22 @@ const TaskService = {
 
       return url; // just return URL
     } catch (error) {
-      console.log("openReceiptInBrowser error:", error);
+      console.log('openReceiptInBrowser error:', error);
       throw error;
     }
   },
 
-  addTaskAttachment: async (data) => {
+  addTaskAttachment: async data => {
     try {
-      const response = await apiClient.post('operation/task-attachment/addTaskAttachment', data, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        }
-      });
+      const response = await apiClient.post(
+        'operation/task-attachment/addTaskAttachment',
+        data,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -273,22 +340,25 @@ const TaskService = {
     }
   },
 
-  generateNewReceipt: async (fd) => {
+  generateNewReceipt: async fd => {
     try {
-      return await postFormData("operation/task-receipt/generateNewReceipt", fd);
+      return await postFormData(
+        'operation/task-receipt/generateNewReceipt',
+        fd,
+      );
     } catch (error) {
-      console.log("generateNewReceipt error:", error);
-      Alert.alert("Error", String(error?.message || "Network Error"));
+      console.log('generateNewReceipt error:', error);
+      Alert.alert('Error', String(error?.message || 'Network Error'));
       throw error;
     }
   },
 
-
-
-
-  generateReceipt: async (data) => {
+  generateReceipt: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/generateReceipt', data);
+      const response = await apiClient.post(
+        'operation/logistics/generateReceipt',
+        data,
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -296,9 +366,12 @@ const TaskService = {
     }
   },
 
-  getEmpMonthlyShiftRoster: async (data) => {
+  getEmpMonthlyShiftRoster: async data => {
     try {
-      const response = await apiClient.post('global/employee/emp-attendance/getEmpMonthlyShiftRoster', data);
+      const response = await apiClient.post(
+        'global/employee/emp-attendance/getEmpMonthlyShiftRoster',
+        data,
+      );
       return response;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -306,9 +379,12 @@ const TaskService = {
     }
   },
 
-  updateEmpLocation: async (data) => {
+  updateEmpLocation: async data => {
     try {
-      const response = await apiClient.post('operation/tracker/updateEmpLocation', data);
+      const response = await apiClient.post(
+        'operation/tracker/updateEmpLocation',
+        data,
+      );
       return response;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -316,9 +392,12 @@ const TaskService = {
     }
   },
 
-  generateNotification: async (data) => {
+  generateNotification: async data => {
     try {
-      const response = await apiClient.post('global/notifications/generateNotification', data);
+      const response = await apiClient.post(
+        'global/notifications/generateNotification',
+        data,
+      );
       return response;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -326,9 +405,12 @@ const TaskService = {
     }
   },
 
-  getMyReceipts: async (data) => {
+  getMyReceipts: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/getMyReceipts', data);
+      const response = await apiClient.post(
+        'operation/logistics/getMyReceipts',
+        data,
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -346,9 +428,12 @@ const TaskService = {
     }
   },
 
-  getMyTransactions: async (data) => {
+  getMyTransactions: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/getMyTransactions', data);
+      const response = await apiClient.post(
+        'operation/logistics/getMyTransactions',
+        data,
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -356,9 +441,12 @@ const TaskService = {
     }
   },
 
-  downloadReceipt: async (data) => {
+  downloadReceipt: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/downloadReceipt', data);
+      const response = await apiClient.post(
+        'operation/logistics/downloadReceipt',
+        data,
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -366,9 +454,12 @@ const TaskService = {
     }
   },
 
-  transferToOrg: async (data) => {
+  transferToOrg: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/transferToOrg', data);
+      const response = await apiClient.post(
+        'operation/logistics/transferToOrg',
+        data,
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -376,9 +467,12 @@ const TaskService = {
     }
   },
 
-  transferToEmp: async (data) => {
+  transferToEmp: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/transferToEmp', data);
+      const response = await apiClient.post(
+        'operation/logistics/transferToEmp',
+        data,
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -406,9 +500,12 @@ const TaskService = {
     }
   },
 
-  getLoginByDate: async (data) => {
+  getLoginByDate: async data => {
     try {
-      const response = await apiClient.post('global/employee/emp-attendance/getLoginByDate', data);
+      const response = await apiClient.post(
+        'global/employee/emp-attendance/getLoginByDate',
+        data,
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -416,9 +513,12 @@ const TaskService = {
     }
   },
 
-  getReceiptById: async (data) => {
+  getReceiptById: async data => {
     try {
-      const response = await apiClient.post('accounts/receipt/getReceiptById', data);
+      const response = await apiClient.post(
+        'accounts/receipt/getReceiptById',
+        data,
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -426,9 +526,12 @@ const TaskService = {
     }
   },
 
-  getEmployeeApprovals: async (data) => {
+  getEmployeeApprovals: async data => {
     try {
-      const response = await apiClient.post('notification/getEmployeeApprovals', data);
+      const response = await apiClient.post(
+        'notification/getEmployeeApprovals',
+        data,
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -436,13 +539,17 @@ const TaskService = {
     }
   },
 
-  changeProfilePicture: async (data) => {
+  changeProfilePicture: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/changeProfilePicture', data, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        }
-      });
+      const response = await apiClient.post(
+        'operation/logistics/changeProfilePicture',
+        data,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -455,89 +562,6 @@ const TaskService = {
       const response = await apiClient.get('operation/logistics/getUserData', {
         headers: {
           'Content-Type': 'multipart/form-data',
-        }
-      });
-      return response.data;
-    } catch (error) {
-      Alert.alert(error.response?.data || error.message);
-      throw error;
-    }
-  },
-
-  declineApproval: async (data) => {
-    try {
-      const response = await apiClient.post('notification/declineApproval', data);
-      return response.data;
-    } catch (error) {
-      Alert.alert(error.response?.data || error.message);
-      throw error;
-    }
-  },
-
-  approveApproval: async (data) => {
-    try {
-      const response = await apiClient.post('notification/approveApproval', data);
-      return response.data;
-    } catch (error) {
-      Alert.alert(error.response?.data || error.message);
-      throw error;
-    }
-  },
-
-  getLogisticDenomination: async (data) => {
-    try {
-      const response = await apiClient.post('operation/logistics/getLogisticDenomination', data);
-      return response.data;
-    } catch (error) {
-      Alert.alert(error.response?.data || error.message);
-      throw error;
-    }
-  },
-  getReqDenomination: async (data) => {
-    try {
-      const response = await apiClient.post('accounts/payment/getDenominations', data);
-      return response.data;
-    } catch (error) {
-      Alert.alert(error.response?.data || error.message);
-      throw error;
-    }
-  },
-
-  getVehicleByEmpId: async (data) => {
-    try {
-      const response = await apiClient.post('tracking/tracking/getTrackingByEmployeeIds', data);
-      return response.data;
-    } catch (error) {
-      Alert.alert(error.response?.data || error.message);
-      throw error;
-    }
-  },
-
-  saveFuelVoucher: async (data) => {
-    try {
-      const response = await apiClient.post('operation/logistics/fuel-voucher/createFuelVoucher', data);
-      return response.data;
-    } catch (error) {
-      Alert.alert(error.response?.data || error.message);
-      throw error;
-    }
-  },
-
-  getAllFuelVouchers: async (data) => {
-    try {
-      const response = await apiClient.post('operation/logistics/fuel-voucher/getAllFuelVouchers', data);
-      return response.data;
-    } catch (error) {
-      Alert.alert(error.response?.data || error.message);
-      throw error;
-    }
-  },
-
-  addFuelVoucherAttachment: async (data) => {
-    try {
-      const response = await apiClient.post('operation/logistics/fuel-voucher/addFuelVoucherAttachment', data, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
         },
       });
       return response.data;
@@ -547,18 +571,132 @@ const TaskService = {
     }
   },
 
-  getFeulVoucherById: async (data) => {
+  declineApproval: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/fuel-voucher/getVoucherById', data);
+      const response = await apiClient.post(
+        'notification/declineApproval',
+        data,
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
-  getAllAttachmentsById: async (data) => {
+
+  approveApproval: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/fuel-voucher/getAllAttachments', data);
+      const response = await apiClient.post(
+        'notification/approveApproval',
+        data,
+      );
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  getLogisticDenomination: async data => {
+    try {
+      const response = await apiClient.post(
+        'operation/logistics/getLogisticDenomination',
+        data,
+      );
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+  getReqDenomination: async data => {
+    try {
+      const response = await apiClient.post(
+        'accounts/payment/getDenominations',
+        data,
+      );
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  getVehicleByEmpId: async data => {
+    try {
+      const response = await apiClient.post(
+        'tracking/tracking/getTrackingByEmployeeIds',
+        data,
+      );
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  saveFuelVoucher: async data => {
+    try {
+      const response = await apiClient.post(
+        'operation/logistics/fuel-voucher/createFuelVoucher',
+        data,
+      );
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  getAllFuelVouchers: async data => {
+    try {
+      const response = await apiClient.post(
+        'operation/logistics/fuel-voucher/getAllFuelVouchers',
+        data,
+      );
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  addFuelVoucherAttachment: async data => {
+    try {
+      const response = await apiClient.post(
+        'operation/logistics/fuel-voucher/addFuelVoucherAttachment',
+        data,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  getFeulVoucherById: async data => {
+    try {
+      const response = await apiClient.post(
+        'operation/logistics/fuel-voucher/getVoucherById',
+        data,
+      );
+      return response.data;
+    } catch (error) {
+      Alert.alert(error.response?.data || error.message);
+      throw error;
+    }
+  },
+  getAllAttachmentsById: async data => {
+    try {
+      const response = await apiClient.post(
+        'operation/logistics/fuel-voucher/getAllAttachments',
+        data,
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -577,16 +715,21 @@ const TaskService = {
 
   getClientListByLogistic: async () => {
     try {
-      const response = await apiClient.get('operation/logistics/getClientListByLogistic');
+      const response = await apiClient.get(
+        'operation/logistics/getClientListByLogistic',
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
-  searchReceipt: async (data) => {
+  searchReceipt: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/searchReceipt', data);
+      const response = await apiClient.post(
+        'operation/logistics/searchReceipt',
+        data,
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -606,7 +749,9 @@ const TaskService = {
 
   getMyNotifications: async () => {
     try {
-      const response = await apiClient.get('global/notifications/getGeneralNotificationV2');
+      const response = await apiClient.get(
+        'global/notifications/getGeneralNotificationV2',
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -614,18 +759,24 @@ const TaskService = {
     }
   },
 
-  updateNotificationStatus: async (data) => {
+  updateNotificationStatus: async data => {
     try {
-      const response = await apiClient.post('operation/logistics/updateNotificationStatus', data);
+      const response = await apiClient.post(
+        'operation/logistics/updateNotificationStatus',
+        data,
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
       throw error;
     }
   },
-  deleteNotification: async (data) => {
+  deleteNotification: async data => {
     try {
-      const response = await apiClient.post('notification/deleteNotification', data);
+      const response = await apiClient.post(
+        'notification/deleteNotification',
+        data,
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -635,7 +786,9 @@ const TaskService = {
 
   getAllTaskTypes: async () => {
     try {
-      const response = await apiClient.get('operation/logistics/getAllTaskTypes');
+      const response = await apiClient.get(
+        'operation/logistics/getAllTaskTypes',
+      );
       return response.data;
     } catch (error) {
       Alert.alert(error.response?.data || error.message);
@@ -643,18 +796,18 @@ const TaskService = {
     }
   },
 
-  handleReceiptDownload: async (url) => {
-    const { showAlertModal, hideAlert } = useGlobalAlert();
+  handleReceiptDownload: async url => {
+    const {showAlertModal, hideAlert} = useGlobalAlert();
     try {
       const fileUri = FileSystem.documentDirectory + 'receipt.pdf';
 
       // Download the PDF file to local storage
       const downloadResumable = FileSystem.createDownloadResumable(
         url,
-        fileUri
+        fileUri,
       );
 
-      const { uri } = await downloadResumable.downloadAsync();
+      const {uri} = await downloadResumable.downloadAsync();
 
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri);
@@ -667,8 +820,7 @@ const TaskService = {
       console.error('Download error:', error);
       showAlertModal('Failed to download receipt.', true);
     }
-  }
-
+  },
 };
 
 export default TaskService;

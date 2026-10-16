@@ -1,2604 +1,3309 @@
-import { useState, useEffect, useCallback } from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Image, ScrollView, TextInput, Linking, Modal, PermissionsAndroid, FlatList, Alert, RefreshControl } from 'react-native'
+import {useState, useEffect, useCallback} from 'react';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {
+  StyleSheet,
+  ActivityIndicator,
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  TextInput,
+  Linking,
+  Modal,
+  PermissionsAndroid,
+  FlatList,
+  Alert,
+  RefreshControl,
+} from 'react-native';
 // import { useFonts, Montserrat-SemiBold, Montserrat-Medium, Montserrat_400Regular } from '@expo-google-fonts/montserrat'
-import { Picker } from '@react-native-picker/picker';
-import { Checkbox } from 'react-native-paper';
+import {Picker} from '@react-native-picker/picker';
+import {Checkbox} from 'react-native-paper';
 // import FontAwesome from '@expo/vector-icons/FontAwesome';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import TaskStatusTabs from '../TaskStatusTabs'
+import TaskStatusTabs from '../TaskStatusTabs';
 import TaskService from '../../Services/task_service';
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import NotificationCount from '../../Notifications/NotificationCount';
-import { launchCamera } from 'react-native-image-picker';
-import { BASE_API_URL } from '../../Services/API';
-import { toWords } from 'number-to-words';
+import {launchCamera} from 'react-native-image-picker';
+import {BASE_API_URL} from '../../Services/API';
+import {toWords} from 'number-to-words';
 // import * as ImagePicker from 'expo-image-picker';
 // import * as ImageManipulator from 'expo-image-manipulator';
 
-import { GlobalStyles } from '../../GlobalStyles';
-import { Vibration } from 'react-native';
+import {GlobalStyles} from '../../GlobalStyles';
+import {Vibration} from 'react-native';
 import ImageResizer from 'react-native-image-resizer';
-import { readFile } from 'react-native-fs'; // For base64
+import {readFile} from 'react-native-fs'; // For base64
 
-import { useGlobalAlert } from '../../../Context/GlobalAlertContext';
-import { lightTheme } from '../../GlobalStyles';
-import { useSearch } from '../../../hooks/userSearch1';
+import {useGlobalAlert} from '../../../Context/GlobalAlertContext';
+import {lightTheme} from '../../GlobalStyles';
+import {useSearch} from '../../../hooks/userSearch1';
 import PaymentReceiptModal from '../../Components/PaymentReceiptModal';
 
+import CustomAlert from '../../Components/CustomAlert';
 
-import CustomAlert from '../../Components/CustomAlert'
-
-const wait = (timeout) => {
-    return new Promise(resolve => setTimeout(resolve, timeout));
+const wait = timeout => {
+  return new Promise(resolve => setTimeout(resolve, timeout));
 };
 
+function Progress({navigation}) {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [payMdlVisible, setpayMdlVisible] = useState(false);
+  // const [selectedLanguage, setSelectedLanguage] = useState();
+  const [collectModalVisible, setCollectModalVisible] = useState(false);
+  const [collectModalVisible1, setCollectModalVisible1] = useState(false);
+  const [collectModalVisible2, setCollectModalVisible2] = useState(false);
+  const [collectModalVisible3, setCollectModalVisible3] = useState(false);
+  const [itemCashData, setItemCashData] = useState(false);
+  // const [isExpanded, setIsExpanded] = useState(false);
+  const [allTasksData, setAllTasksData] = useState([]);
+  // const [visibleTasks, setVisibleTasks] = useState([]);
+  const [visibleCount, setVisibleCount] = useState(5);
+  const {searchQuery, filteredData, search} = useSearch(allTasksData);
+  const visibleTasks = searchQuery
+    ? filteredData
+    : filteredData.slice(0, visibleCount);
 
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedTask, setSelectedTask] = useState([]);
+  const [selectedItem, setSelectedTaskDesc] = useState('');
+  const [commentText, setCommentText] = useState('');
+  const [collectCommentText, setCollectCommentText] = useState('');
+  const [selectedTaskId, setTaskId] = useState('');
 
-function Progress({ navigation }) {
-    const [modalVisible, setModalVisible] = useState(false);
-    const [payMdlVisible, setpayMdlVisible] = useState(false);
-    // const [selectedLanguage, setSelectedLanguage] = useState();
-    const [collectModalVisible, setCollectModalVisible] = useState(false);
-    const [collectModalVisible1, setCollectModalVisible1] = useState(false);
-    const [collectModalVisible2, setCollectModalVisible2] = useState(false);
-    const [collectModalVisible3, setCollectModalVisible3] = useState(false);
-    const [itemCashData, setItemCashData] = useState(false);
-    // const [isExpanded, setIsExpanded] = useState(false);
-    const [allTasksData, setAllTasksData] = useState([]);
-    // const [visibleTasks, setVisibleTasks] = useState([]);
-    const [visibleCount, setVisibleCount] = useState(5);
-    const { searchQuery, filteredData, search } = useSearch(allTasksData);
-    const visibleTasks = searchQuery
-        ? filteredData
-        : filteredData.slice(0, visibleCount);
+  const [modalVisible2, setModalVisible2] = useState(false);
+  const [fullImageUri, setFullImageUri] = useState(null);
+  const [allClients, setClients] = useState([]);
+  const [selectedClientId, setSelectedClientId] = useState(null);
+  const [modalVisible4, setModalVisible4] = useState(false);
 
-    const [images, setImages] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [selectedTask, setSelectedTask] = useState([]);
-    const [selectedItem, setSelectedTaskDesc] = useState('');
-    const [commentText, setCommentText] = useState('');
-    const [collectCommentText, setCollectCommentText] = useState('');
-    const [selectedTaskId, setTaskId] = useState('');
+  const [paymentMode, setPaymentMode] = useState('');
+  const [amount, setAmount] = useState('');
+  const [remarks, setRemarks] = useState('');
+  const [taskId, setItemTaskId] = useState(null);
+  const [itemInfo, setItemDeliveryData] = useState([]);
+  const [itemDetails, setItemConsignemtData] = useState(null);
+  // const [itemIds, setItemIds] = useState([]);
+  const [deliverRemarks, setDeliveryRemarks] = useState('');
 
-    const [modalVisible2, setModalVisible2] = useState(false);
-    const [fullImageUri, setFullImageUri] = useState(null);
-    const [allClients, setClients] = useState([]);
-    const [selectedClientId, setSelectedClientId] = useState(null);
-    const [modalVisible4, setModalVisible4] = useState(false);
+  const [checked, setChecked] = useState(false); // For "Select All"
+  const [itemIds, setItemIds] = useState([]); // Selected item IDs
+  const [refreshing, setRefreshing] = useState(false);
 
-    const [paymentMode, setPaymentMode] = useState('');
-    const [amount, setAmount] = useState('');
-    const [remarks, setRemarks] = useState('');
-    const [taskId, setItemTaskId] = useState(null);
-    const [itemInfo, setItemDeliveryData] = useState([]);
-    const [itemDetails, setItemConsignemtData] = useState(null);
-    // const [itemIds, setItemIds] = useState([]);
-    const [deliverRemarks, setDeliveryRemarks] = useState('');
+  const [chequeNo, setChequeNo] = useState('');
+  const [chequeDate, setChequeDate] = useState(null);
+  const [bankName, setBankName] = useState([]);
 
-    const [checked, setChecked] = useState(false); // For "Select All"
-    const [itemIds, setItemIds] = useState([]); // Selected item IDs
-    const [refreshing, setRefreshing] = useState(false);
+  const [selectClient, setselectClient] = useState();
+  const [selectPaymode, setSelectPaymode] = useState('');
+  const [selectBank, setSelectBank] = useState();
+  const [getUserId, setUserId] = useState(false);
+  const {showAlertModal, hideAlert} = useGlobalAlert();
+  const [sharedTaskId, storeTaskId] = useState(null);
 
+  const [alertVisible, setAlertVisible] = useState(false);
 
-    const [chequeNo, setChequeNo] = useState('');
-    const [chequeDate, setChequeDate] = useState(null);
-    const [bankName, setBankName] = useState([]);
+  const [alertData, setAlertData] = useState({
+    type: 'success',
+    title: '',
+    message: '',
+  });
 
-    const [selectClient, setselectClient] = useState();
-    const [selectPaymode, setSelectPaymode] = useState('');
-    const [selectBank, setSelectBank] = useState();
-    const [getUserId, setUserId] = useState(false);
-    const { showAlertModal, hideAlert } = useGlobalAlert();
-    const [sharedTaskId, storeTaskId] = useState(null)
+  useEffect(() => {
+    // if (itemInfo.length > 0) {
+    //     setChecked(itemIds.length === itemInfo.length);
+    // }
 
+    if (collectModalVisible2) {
+      // Clear images on every open
+      // setImages([]);
+      setDeliveryRemarks('');
+    }
 
-    const [alertVisible, setAlertVisible] = useState(false);
+    const loadUser = async () => {
+      try {
+        const userId = await AsyncStorage.getItem('user_id');
+        if (userId) setUserId(userId);
+      } catch (e) {
+        console.log('Failed to get user_id:', e);
+      }
+    };
 
-    const [alertData, setAlertData] = useState({
-        type: 'success',
-        title: '',
-        message: '',
+    loadUser();
+
+    getClientsAll();
+    fetchData();
+  }, [collectModalVisible2, itemIds, itemInfo]);
+
+  useEffect(() => {
+    if (collectModalVisible) {
+      // setImages([]);
+      setCollectCommentText('');
+    }
+  }, [collectModalVisible]);
+
+  useEffect(() => {
+    if (collectModalVisible3) {
+      // setImages([]);
+      setDeliveryRemarks('');
+      setItemIds([]);
+    }
+  }, [collectModalVisible3]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const response = await TaskService.getMyInProgressTasks();
+      if (response.status == 1) {
+        setAllTasksData(response.data || []);
+        search('', response.data); //
+        setLoading(false);
+      } else {
+        setAllTasksData([]);
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      search('', []);
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = useCallback(() => {
+    fetchData();
+    getClientsAll();
+    wait(2000).then(() => setRefreshing(false));
+  }, []);
+
+  const showAlert = (type, title, message) => {
+    setAlertData({
+      type,
+      title,
+      message,
     });
 
-    useEffect(() => {
+    setAlertVisible(true);
+  };
+  const handleDeliverItem = () => {
+    if (!images || images.length === 0) {
+      Alert.alert(
+        'Image Required',
+        'Image Upload necessary. Please upload at least one image before delivering.',
+        [{text: 'OK'}],
+      );
+      return;
+    }
 
-        // if (itemInfo.length > 0) {
-        //     setChecked(itemIds.length === itemInfo.length);
-        // }
+    deliverItem();
+  };
+  // const handleLoadMore = () => {
+  //     setLoadingMore(true);
+  //     setTimeout(() => {
+  //         setVisibleCount(prev => prev + 5);
+  //         setLoadingMore(false);
+  //     }, 500);
+  // };
 
-        if (collectModalVisible2) {
-            // Clear images on every open
-            // setImages([]);
-            setDeliveryRemarks('');
-        }
+  const getClientsAll = async () => {
+    try {
+      const response = await TaskService.getClientListByLogistic();
+      if (response.status == 1) {
+        setClients(response.data || []);
+      } else {
+        setClients([]);
+      }
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    }
+  };
 
-        const loadUser = async () => {
-            try {
-                const userId = await AsyncStorage.getItem("user_id");
-                if (userId) setUserId(userId);
-            } catch (e) {
-                console.log("Failed to get user_id:", e);
-            }
-        };
+  const sendComment = async () => {
+    if (!commentText.trim()) return;
 
-        loadUser();
+    try {
+      const user_id = await AsyncStorage.getItem('user_id');
+      const formData = new FormData();
 
-        getClientsAll();
-        fetchData();
-    }, [collectModalVisible2, itemIds, itemInfo]);
+      formData.append('taskId', selectedItem.id);
+      formData.append('comment', commentText);
+      formData.append('commentorId', user_id);
 
-    useEffect(() => {
-        if (collectModalVisible) {
-            // setImages([]);
-            setCollectCommentText('');
-        }
-    }, [collectModalVisible]);
-
-    useEffect(() => {
-        if (collectModalVisible3) {
-            // setImages([]);
-            setDeliveryRemarks('');
-            setItemIds([])
-        }
-    }, [collectModalVisible3]);
-
-    const fetchData = async () => {
-        try {
-            setLoading(true);
-            const response = await TaskService.getMyInProgressTasks();
-            if (response.status == 1) {
-                setAllTasksData(response.data || []);
-                search('', response.data); //
-                setLoading(false);
-            } else {
-                setAllTasksData([]);
-                setLoading(false);
-            }
-
-        } catch (error) {
-            console.error('Error fetching tasks:', error);
-            search('', []);
-            setLoading(false);
-        }
-    };
-
-    const onRefresh = useCallback(() => {
-        fetchData();
-        getClientsAll();
-        wait(2000).then(() => setRefreshing(false));
-    }, []);
-
-    const showAlert = (type, title, message) => {
-        setAlertData({
-            type,
-            title,
-            message,
+      // Append attachment only if there's an image
+      if (images.length > 0 && images[0].base64) {
+        formData.append('attachment', {
+          uri: 'data:image/jpeg;base64,' + images[0].base64,
+          type: 'image/jpeg',
+          name: 'attachment.jpg',
         });
+      }
 
-        setAlertVisible(true);
-    };
+      // Send the formData via TaskService
+      const response = await TaskService.addNewComment(formData); // Send as FormData
 
-    // const handleLoadMore = () => {
-    //     setLoadingMore(true);
-    //     setTimeout(() => {
-    //         setVisibleCount(prev => prev + 5);
-    //         setLoadingMore(false);
-    //     }, 500);
-    // };
+      if (response.status == 1) {
+        Vibration.vibrate(100);
+      }
 
+      setSelectedTask(prev => [...prev, response.data]);
+      setCommentText('');
+      setImages([]);
 
-    const getClientsAll = async () => {
-        try {
-            const response = await TaskService.getClientListByLogistic();
-            if (response.status == 1) {
-                setClients(response.data || []);
-            } else {
-                setClients([]);
-            }
-        } catch (error) {
-            console.error('Error fetching tasks:', error);
-        }
+      const res = await TaskService.getTaskComments({taskId: selectedItem.id});
+      setSelectedTask(res.data);
+    } catch (error) {
+      console.error('Error sending comment:', error);
     }
+  };
 
-    const sendComment = async () => {
-        if (!commentText.trim()) return;
-
-        try {
-            const user_id = await AsyncStorage.getItem("user_id");
-            const formData = new FormData();
-
-            formData.append('taskId', selectedItem.id);
-            formData.append('comment', commentText);
-            formData.append('commentorId', user_id);
-
-            // Append attachment only if there's an image
-            if (images.length > 0 && images[0].base64) {
-                formData.append('attachment', {
-                    uri: 'data:image/jpeg;base64,' + images[0].base64,
-                    type: 'image/jpeg',
-                    name: 'attachment.jpg',
-                });
-            }
-
-            // Send the formData via TaskService
-            const response = await TaskService.addNewComment(formData); // Send as FormData
-
-            if (response.status == 1) {
-                Vibration.vibrate(100);
-            }
-
-
-            setSelectedTask(prev => [...prev, response.data]);
-            setCommentText('');
-            setImages([]);
-
-            const res = await TaskService.getTaskComments({ taskId: selectedItem.id });
-            setSelectedTask(res.data);
-
-        } catch (error) {
-            console.error('Error sending comment:', error);
-        }
-    };
-
-    // Camera End
-    const handleOpenModal = async (task) => {
-        try {
-            const response = await TaskService.getTaskComments({ taskId: task.id });
-            setSelectedTask(response.data);
-        }
-        catch (error) {
-            // console.error('Error fetching task comments:', error);
-        }
-        setModalVisible(true);
-        setSelectedTaskDesc(task);
-        setSelectedClientId(task?.client?.id || task.clientId);
-        setItemTaskId(task.id);
-        storeTaskId(task.id)
-
-        console.log('task ttttttt', task)
-    };
-
-
-    // Camera Open
-    const requestPermission = async (type) => {
-        try {
-            if (Platform.OS === 'android') {
-                if (type === 'camera') {
-                    const granted = await PermissionsAndroid.request(
-                        PermissionsAndroid.PERMISSIONS.CAMERA,
-                        {
-                            title: 'Camera Permission',
-                            message: 'App needs access to your camera to take pictures.',
-                            buttonNeutral: 'Ask Me Later',
-                            buttonNegative: 'Cancel',
-                            buttonPositive: 'OK',
-                        }
-                    );
-                    return granted === PermissionsAndroid.RESULTS.GRANTED;
-                } else {
-                    const granted = await PermissionsAndroid.request(
-                        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-                        {
-                            title: 'Storage Permission',
-                            message: 'App needs access to your photos.',
-                            buttonNeutral: 'Ask Me Later',
-                            buttonNegative: 'Cancel',
-                            buttonPositive: 'OK',
-                        }
-                    );
-                    return granted === PermissionsAndroid.RESULTS.GRANTED;
-                }
-            }
-            // iOS auto handles permissions via Info.plist
-            return true;
-        } catch (error) {
-            console.error('Permission error:', error);
-            return false;
-        }
-    };
-
-
-    const openCamera = async () => {
-        try {
-            const hasPermission = await requestPermission('camera');
-
-            if (!hasPermission) {
-                showAlertModal(
-                    'Camera access is needed to take pictures.',
-                    true
-                );
-                return;
-            }
-
-            const options = {
-                mediaType: 'photo',
-                includeBase64: false,
-                quality: 0.7,
-                saveToPhotos: false,
-                cameraType: 'back',
-                maxWidth: 1280,
-                maxHeight: 1280,
-            };
-
-            const response = await launchCamera(options);
-
-            if (response.didCancel) {
-                console.log('User cancelled camera');
-                return;
-            }
-
-            if (response.errorCode) {
-                console.error(
-                    'Camera error:',
-                    response.errorCode,
-                    response.errorMessage
-                );
-
-                showAlertModal(
-                    response.errorMessage ||
-                    'Camera error occurred.',
-                    true
-                );
-
-                return;
-            }
-
-            const image = response.assets?.[0];
-
-            if (!image?.uri) {
-                showAlertModal(
-                    'Unable to capture image. Please try again.',
-                    true
-                );
-                return;
-            }
-
-            console.log('Captured image:', {
-                uri: image.uri,
-                width: image.width,
-                height: image.height,
-                fileSize: image.fileSize,
-            });
-
-            const compressedImage = await compressImage(image.uri);
-
-            if (!compressedImage?.uri) {
-                showAlertModal(
-                    'Unable to process image. Please try again.',
-                    true
-                );
-                return;
-            }
-
-            setImages([compressedImage]);
-
-        } catch (error) {
-            console.error('Camera processing failed:', error);
-
-            showAlertModal(
-                'Unable to process the captured image. Please try again.',
-                true
-            );
-        }
-    };
-
-    const compressImage = async (uri) => {
-        if (!uri) {
-            throw new Error('Image URI is missing');
-        }
-
-        const MAX_SIZE_KB = 50;
-        const MAX_ATTEMPTS = 5;
-
-        let currentUri = uri;
-
-        let width = 800;
-        let height = 800;
-        let quality = 65;
-
-        let lastResult = null;
-
-        for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-            const resizedImage =
-                await ImageResizer.createResizedImage(
-                    currentUri,
-                    width,
-                    height,
-                    'JPEG',
-                    quality,
-                    0
-                );
-
-            if (!resizedImage?.uri) {
-                throw new Error('Image compression failed');
-            }
-
-            const base64 = await readFile(
-                resizedImage.uri,
-                'base64'
-            );
-
-            // Calculate the decoded image size.
-            const padding =
-                (base64.match(/=+$/) || [''])[0].length;
-
-            const sizeInKB =
-                ((base64.length * 3) / 4 - padding) / 1024;
-
-            console.log(
-                `Compression attempt ${attempt + 1}:`,
-                sizeInKB.toFixed(2),
-                'KB'
-            );
-
-            lastResult = {
-                uri: resizedImage.uri,
-                base64,
-            };
-
-            if (sizeInKB <= MAX_SIZE_KB) {
-                console.log(
-                    'Image compressed successfully:',
-                    sizeInKB.toFixed(2),
-                    'KB'
-                );
-
-                return lastResult;
-            }
-
-            // Reduce image dimensions and quality gradually.
-            width = Math.max(250, Math.round(width * 0.8));
-            height = Math.max(250, Math.round(height * 0.8));
-
-            quality = Math.max(25, quality - 10);
-
-            currentUri = resizedImage.uri;
-        }
-
-        throw new Error(
-            'Unable to compress image below 50 KB.'
-        );
-    };
-
-    const selectImages = () => {
-        Alert.alert(
-            'Select Image',
-            'Choose an option',
-            [
-                { text: 'Camera', onPress: openCamera },
-                // { text: 'Gallery', onPress: openGallery },
-                { text: 'Cancel', style: 'cancel' }
-            ]
-        );
-    };
-
-    const handleDeleteImage = (index) => {
-        const updatedImages = images.filter((_, i) => i !== index);
-        setImages(updatedImages);
-    };
-
-    const onCollect = async () => {
-        try {
-
-            if (images.length === 0 || !images[0].uri) {
-                showAlert(
-                    'warning',
-                    'Attachment is Missing',
-                    'Please select an image to upload.',
-                );
-                return;
-            }
-
-
-            let requestBody = {
-                taskId: selectedTaskId,
-                remarks: collectCommentText,
-                itemIds: [],
-                hasItems: false
-            }
-
-            // return
-            const response = await TaskService.collectMyTask(requestBody);
-
-            if (response.status == 1) {
-                addTaskAttachment(selectedTaskId);
-                showAlert(
-                    'success',
-                    'Collected',
-                    'Task Collected Successfully.',
-                );
-                setCollectModalVisible(false);
-                fetchData();
-                if (taskItem?.taskType?.taskType == 'Sample Pickup') {
-                    navigation.navigate('Collected');
-                }
-            } else {
-                showAlert(
-                    'error',
-                    'Failed',
-                    'Failed to collect task.',
-                );
-            }
-        } catch (error) {
-            console.error('Collect task error:', error);
-            Alert.alert("Error", "Something went wrong while collecting the task.");
-        }
-    };
-
-
-    const addTaskAttachment = async (selectedTaskId) => {
-        try {
-            const formData = new FormData();
-            formData.append('taskId', selectedTaskId);
-
-            if (images.length > 0 && images[0].base64) {
-                formData.append('attachment', {
-                    uri: 'data:image/jpeg;base64,' + images[0].base64,
-                    type: 'image/jpeg',
-                    name: 'attachment.jpg',
-                });
-            }
-            const response = await TaskService.addTaskAttachment(formData);
-        } catch (error) {
-            console.error('Error adding task attachment:', error);
-        }
+  // Camera End
+  const handleOpenModal = async task => {
+    try {
+      const response = await TaskService.getTaskComments({taskId: task.id});
+      setSelectedTask(response.data);
+    } catch (error) {
+      // console.error('Error fetching task comments:', error);
     }
+    setModalVisible(true);
+    setSelectedTaskDesc(task);
+    setSelectedClientId(task?.client?.id || task.clientId);
+    setItemTaskId(task.id);
+    storeTaskId(task.id);
 
-    const navigateToUserLocation = (task) => {
-        const locationString = task?.pickUpLocation?.coordinates;
+    console.log('task ttttttt', task);
+  };
 
-        if (!locationString) {
-            // showAlertModal('Location not available', true);
-            showAlert(
-                'warning',
-                'Failed',
-                'Location not available.',
-            );
-            return;
-        }
-
-        const [lat, long] = locationString.split(',').map(coord => parseFloat(coord.trim()));
-
-        if (isNaN(lat) || isNaN(long)) {
-            // showAlertModal('Invalid location coordinates', true);
-            showAlert(
-                'warning',
-                'Failed',
-                'Invalid location coordinates.',
-            );
-            return;
-        }
-
-        const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${long}&travelmode=driving`;
-
-        Linking.openURL(url).catch(err => {
-            console.error('Could not open Google Maps', err);
-            showAlertModal('Failed to open Google Maps.', true);
-        });
-    };
-
-
-
-    const [getTaskType, setTaskType] = useState("")
-    const [taskItem, storeTaskItem] = useState("")
-    const onCollectModalOpen = async (task) => {
-        storeTaskItem(task)
-        setTaskId(task.id);
-        // This is for Item Delivery
-        if (task.taskType.taskType == 'Item Delivery') {
-            setCollectModalVisible2(true);
-            setItemDeliveryData(task.items)
-        }
-        // This is for Consignment Pick Up
-        else if (task.taskType.taskType == 'Consignment Pick Up') {
-            setCollectModalVisible3(true);
-            setItemTaskId(task.id);
-            setItemConsignemtData(task.items)
-            setTaskType("Consignment Details")
-        }
-        // This is for Pickup Request
-        else if (task?.request_id && task.taskType.taskType == 'Sample Pickup') {
-            setCollectModalVisible3(true);
-            setItemConsignemtData(task.items)
-            setTaskType("Pickup Request")
-            console.log('hhhhhhhhhhhhh', task.items)
-        }
-        // This is for Cash Collection
-        else if (task.taskType.taskType == 'Cash Collection') {
-            setSelectedClientId(task?.pickUpLocation?.clientId ? String(task.pickUpLocation.clientId) : "")
-            setItemCashData(task?.receipts == 0 ? false : true)
-            setItemTaskId(task.id);
-            // setpayMdlVisible(true);
-            setModalVisible4(true);
-
-        }
-        // || task.taskType.taskType == 'Sample Pickup'     // This is for Sample Pickup
-        else {
-            setCollectModalVisible(true);
-        }
-    };
-
-    // const toggleItemChecked = (itemId) => {
-    //     setItemIds((prevItemIds) => {
-    //         const exists = prevItemIds.some((item) => item.id === itemId);
-
-    //         if (exists) {
-    //             return prevItemIds.filter((item) => item.id !== itemId);
-    //         } else {
-    //             return [...prevItemIds, { id: itemId }];
-    //         }
-    //     });
-    // };
-
-    const deliverItem = async () => {
-        if (itemIds.length === 0) {
-            showAlert(
-                'warning',
-                'Item is Missing',
-                'Please select at least one item to delivery.',
-            );
-            return;
-        }
-        // setLoading(true);
-        let request = {
-            taskId: selectedTaskId || [],
-            remarks: deliverRemarks,
-            itemIds: itemIds,
-        };
-
-        console.log('item delivery: ', images)
-
-        // return
-        try {
-            const response = await TaskService.collectMyTask(request);
-            if (response.status == 1) {
-                addTaskAttachment(selectedTaskId);
-                fetchData();
-                setCollectModalVisible2(false);
-                // showAlertModal('Item Delivered Successfully.', false);
-                showAlert(
-                    'success',
-                    'Item is Delivered',
-                    'Item Delivered Successfully.',
-                );
-                sentNotification(selectedTaskId, 'Delivered Successfully');
-                setDeliveryRemarks('');
-                setItemIds([]);
-                setImages([]);
-            } else {
-                showAlertModal('Failed to Deliver', true);
-                showAlert(
-                    'error',
-                    'Failed',
-                    'Failed to Deliver.',
-                );
-            }
-        } catch (error) {
-            console.error(error);
-            Alert.alert("Something went wrong");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const collectItem = async () => {
-        if (itemIds.length === 0) {
-            showAlert(
-                'warning',
-                'Item is Missing',
-                'Please select at least one item to collect.',
-            );
-            return;
-        }
-        // let request = {
-        //     taskId: selectedTaskId,
-        //     remarks: deliverRemarks,
-        //     itemIds: itemIds,
-        // };
-        if (images.length == 0) {
-            showAlert(
-                'warning',
-                'Attachment is Missing',
-                'Please take a picture of sample collection.',
-            );
-            return;
-        }
-
-        const empId = await AsyncStorage.getItem("user_id");
-
-        const selectedIds = itemIds.map(item => item.itemId);
-
-        const notCollectedIds = (itemDetails || [])
-            .filter(info => !selectedIds.includes(info.itemId))
-            .map(info => ({
-                id: info.itemId,
-                qty: info.quantity || 0,
-            }));
-
-        const payload = {
-            taskId: selectedTaskId,
-            remarks: deliverRemarks || "",
-            empId: Number(empId) || 0,
-
-            // convert itemId -> id
-            itemIds: itemIds.map(item => ({
-                id: item.itemId
-            })),
-
-            notCollectedIds
-        };
-
-        // console.log('heloooooo', payload);
-        // return
-        try {
-            setLoading(true);
-            // setShowAlert(false);
-            const response = await TaskService.collectMyTask(payload);
-            if (response.status == 1) {
-                addTaskAttachment(selectedTaskId);
-                fetchData();
-                setCollectModalVisible3(false);
-                // showAlertModal('Item Collected Successfully.', false);
-                showAlert(
-                    'success',
-                    'Collected',
-                    'Item Collected Successfully.',
-                );
-                sentNotification(selectedTaskId, 'Collected Successfully ');
-                setDeliveryRemarks('');
-                setItemIds([]);
-            } else {
-                // showAlertModal('Failed to Collect.', true);
-                showAlert(
-                    'error',
-                    'Filed',
-                    'Failed to Collect.',
-                );
-            }
-        } catch (error) {
-            console.error(error);
-            Alert.alert("Something went wrong");
-        } finally {
-            setLoading(false); // Stop loading
-        }
-    };
-
-    const sentNotification = async (taskId, message) => {
-        const userId = await AsyncStorage.getItem('user_id');
-        const userName = await AsyncStorage.getItem('user_name');
-        let request = {
-            "message": `Task ID: ${taskId} has been ${message} by ${userName}.`,
-            "srcEmp": userId,
-            "tgtEmp": null,
-            "pageId": 0,
-            "module": "Operation"
-        }
-
-        const response = await TaskService.generateNotification(request);
-    }
-
-
-    const toggleItemChecked = (itemId) => {
-        console.log('ooooooooo images', images)
-        const exists = itemIds.some(item => item.itemId === itemId);
-
-        if (exists) {
-            setItemIds(prev => prev.filter(item => item.itemId !== itemId));
+  // Camera Open
+  const requestPermission = async type => {
+    try {
+      if (Platform.OS === 'android') {
+        if (type === 'camera') {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.CAMERA,
+            {
+              title: 'Camera Permission',
+              message: 'App needs access to your camera to take pictures.',
+              buttonNeutral: 'Ask Me Later',
+              buttonNegative: 'Cancel',
+              buttonPositive: 'OK',
+            },
+          );
+          return granted === PermissionsAndroid.RESULTS.GRANTED;
         } else {
-            setItemIds(prev => [...prev, { itemId }]);
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+            {
+              title: 'Storage Permission',
+              message: 'App needs access to your photos.',
+              buttonNeutral: 'Ask Me Later',
+              buttonNegative: 'Cancel',
+              buttonPositive: 'OK',
+            },
+          );
+          return granted === PermissionsAndroid.RESULTS.GRANTED;
         }
+      }
+      // iOS auto handles permissions via Info.plist
+      return true;
+    } catch (error) {
+      console.error('Permission error:', error);
+      return false;
+    }
+  };
 
-        console.log('ooooooooo', exists)
+  const openCamera = async () => {
+    try {
+      const hasPermission = await requestPermission('camera');
 
-        console.log('ooooooooo images', images)
+      if (!hasPermission) {
+        showAlertModal('Camera access is needed to take pictures.', true);
+        return;
+      }
 
-    };
+      const options = {
+        mediaType: 'photo',
+        includeBase64: false,
+        quality: 0.7,
+        saveToPhotos: false,
+        cameraType: 'back',
+        maxWidth: 1280,
+        maxHeight: 1280,
+      };
 
-    // const handleSelectAll = () => {
-    //     if (checked) {
-    //         setItemIds([]); // Unselect all
-    //     } else {
-    //         const allIds = itemInfo.map((info) => ({ id: info.item.id }));
-    //         setItemIds(allIds); // Select all
-    //     }
-    //     setChecked(!checked);
-    // };
+      const response = await launchCamera(options);
 
+      if (response.didCancel) {
+        console.log('User cancelled camera');
+        return;
+      }
 
+      if (response.errorCode) {
+        console.error(
+          'Camera error:',
+          response.errorCode,
+          response.errorMessage,
+        );
 
-    const [denoms, setDenoms] = useState({ note: [], coin: [] });
-    const [denomMaster, setDenomMaster] = useState([]); // ✅ full API data
-    const [counts, setCounts] = useState({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
+        showAlertModal(response.errorMessage || 'Camera error occurred.', true);
 
-    const getAllDenomination = async () => {
-        try {
-            const response = await TaskService.getAllDenomination();
+        return;
+      }
 
-            if (response.status === 1 && Array.isArray(response.data)) {
+      const image = response.assets?.[0];
 
-                // ✅ store full data for API payload mapping
-                setDenomMaster(response.data);
+      if (!image?.uri) {
+        showAlertModal('Unable to capture image. Please try again.', true);
+        return;
+      }
 
-                // ✅ keep your existing UI binding intact (only values)
-                const notes = response.data
-                    .filter(item => item.type === "Note")
-                    .map(item => Number(item.denominationName))
-                    .filter(n => Number.isFinite(n))
-                    .sort((a, b) => b - a); // highest first
+      console.log('Captured image:', {
+        uri: image.uri,
+        width: image.width,
+        height: image.height,
+        fileSize: image.fileSize,
+      });
 
-                const coins = response.data
-                    .filter(item => item.type === "Coin")
-                    .map(item => Number(item.denominationName))
-                    .filter(n => Number.isFinite(n))
-                    .sort((a, b) => b - a);
+      const compressedImage = await compressImage(image.uri);
 
-                setDenoms({
-                    note: notes,
-                    coin: coins,
-                });
+      if (!compressedImage?.uri) {
+        showAlertModal('Unable to process image. Please try again.', true);
+        return;
+      }
 
-            } else {
-                setDenomMaster([]);
-                setDenoms({ note: [], coin: [] });
-            }
-        } catch (error) {
-            console.error('Error fetching denominations:', error);
-            setDenomMaster([]);
-            setDenoms({ note: [], coin: [] });
-        }
-    };
+      setImages([compressedImage]);
+    } catch (error) {
+      console.error('Camera processing failed:', error);
 
-    const getAllBanks = () => {
-        try {
-            TaskService.getAllBanks().then((response) => {
-                if (response.status == 1) {
-                    setBankName(response.data);
-                } else {
-                    setBankName([]);
-                }
-            });
-        } catch (error) {
-            console.error('Error fetching banks:', error);
-        }
+      showAlertModal(
+        'Unable to process the captured image. Please try again.',
+        true,
+      );
+    }
+  };
+
+  const compressImage = async uri => {
+    if (!uri) {
+      throw new Error('Image URI is missing');
     }
 
-    // Call Button
-    const makeCall = async call => {
-        if (!call || !String(call).trim()) {
-            showAlert(
-                'warning',
-                'Phone Number Missing',
-                'No contact number is available for this user.',
-            );
-            return;
+    const MAX_SIZE_KB = 50;
+    const MAX_ATTEMPTS = 5;
+
+    let currentUri = uri;
+
+    let width = 800;
+    let height = 800;
+    let quality = 65;
+
+    let lastResult = null;
+
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      const resizedImage = await ImageResizer.createResizedImage(
+        currentUri,
+        width,
+        height,
+        'JPEG',
+        quality,
+        0,
+      );
+
+      if (!resizedImage?.uri) {
+        throw new Error('Image compression failed');
+      }
+
+      const base64 = await readFile(resizedImage.uri, 'base64');
+
+      // Calculate the decoded image size.
+      const padding = (base64.match(/=+$/) || [''])[0].length;
+
+      const sizeInKB = ((base64.length * 3) / 4 - padding) / 1024;
+
+      console.log(
+        `Compression attempt ${attempt + 1}:`,
+        sizeInKB.toFixed(2),
+        'KB',
+      );
+
+      lastResult = {
+        uri: resizedImage.uri,
+        base64,
+      };
+
+      if (sizeInKB <= MAX_SIZE_KB) {
+        console.log(
+          'Image compressed successfully:',
+          sizeInKB.toFixed(2),
+          'KB',
+        );
+
+        return lastResult;
+      }
+
+      // Reduce image dimensions and quality gradually.
+      width = Math.max(250, Math.round(width * 0.8));
+      height = Math.max(250, Math.round(height * 0.8));
+
+      quality = Math.max(25, quality - 10);
+
+      currentUri = resizedImage.uri;
+    }
+
+    throw new Error('Unable to compress image below 50 KB.');
+  };
+
+  const selectImages = () => {
+    Alert.alert('Select Image', 'Choose an option', [
+      {text: 'Camera', onPress: openCamera},
+      // { text: 'Gallery', onPress: openGallery },
+      {text: 'Cancel', style: 'cancel'},
+    ]);
+  };
+
+  const handleDeleteImage = index => {
+    const updatedImages = images.filter((_, i) => i !== index);
+    setImages(updatedImages);
+  };
+
+  const onCollect = async () => {
+    try {
+      if (images.length === 0 || !images[0].uri) {
+        showAlert(
+          'warning',
+          'Attachment is Missing',
+          'Please select an image to upload.',
+        );
+        return;
+      }
+
+      let requestBody = {
+        taskId: selectedTaskId,
+        remarks: collectCommentText,
+        itemIds: [],
+        hasItems: false,
+      };
+
+      // return
+      const response = await TaskService.collectMyTask(requestBody);
+
+      if (response.status == 1) {
+        addTaskAttachment(selectedTaskId);
+        showAlert('success', 'Collected', 'Task Collected Successfully.');
+        setCollectModalVisible(false);
+        fetchData();
+        if (taskItem?.taskType?.taskType == 'Sample Pickup') {
+          navigation.navigate('Collected');
         }
+      } else {
+        showAlert('error', 'Failed', 'Failed to collect task.');
+      }
+    } catch (error) {
+      console.error('Collect task error:', error);
+      Alert.alert('Error', 'Something went wrong while collecting the task.');
+    }
+  };
 
-        const cleaned = String(call).replace(/\D/g, '');
+  const addTaskAttachment = async selectedTaskId => {
+    try {
+      const formData = new FormData();
+      formData.append('taskId', selectedTaskId);
 
-        const formatted = cleaned.startsWith('91') && cleaned.length === 12
-            ? `+${cleaned}`
-            : cleaned.length === 10
-                ? `+91${cleaned}`
-                : `+${cleaned}`;
-
-        try {
-            await Linking.openURL(`tel:${formatted}`);
-        } catch (error) {
-            showAlert(
-                'error',
-                'Unable to Call',
-                'Could not open the phone dialer. Please try again.',
-            );
-        }
-    };
-
-
-    const formatDate = (date) => {
-        if (!date) return '';
-        const year = date.getFullYear();
-        const month = `${date.getMonth() + 1}`.padStart(2, '0'); // Months are 0-indexed
-        const day = `${date.getDate()}`.padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    };
-
-    const formatDate2 = (isoString) => {
-        if (!isoString) return 'Invalid Date';
-
-        const date = new Date(isoString);
-
-        // Extract day, month, and year
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed in JS
-        const year = date.getFullYear();
-
-        return `${day}-${month}-${year}`;
-    };
-
-    const formatMessageDateTime = (dateValue) => {
-        if (!dateValue) return '';
-
-        const date = new Date(dateValue);
-
-        if (Number.isNaN(date.getTime())) return '';
-
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = String(date.getFullYear()).slice(-2);
-
-        const time = date.toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
+      if (images.length > 0 && images[0].base64) {
+        formData.append('attachment', {
+          uri: 'data:image/jpeg;base64,' + images[0].base64,
+          type: 'image/jpeg',
+          name: 'attachment.jpg',
         });
+      }
+      const response = await TaskService.addTaskAttachment(formData);
+    } catch (error) {
+      console.error('Error adding task attachment:', error);
+    }
+  };
 
-        return `${day}-${month}-${year} at ${time}`;
+  const navigateToUserLocation = task => {
+    const locationString = task?.pickUpLocation?.coordinates;
+
+    if (!locationString) {
+      // showAlertModal('Location not available', true);
+      showAlert('warning', 'Failed', 'Location not available.');
+      return;
+    }
+
+    const [lat, long] = locationString
+      .split(',')
+      .map(coord => parseFloat(coord.trim()));
+
+    if (isNaN(lat) || isNaN(long)) {
+      // showAlertModal('Invalid location coordinates', true);
+      showAlert('warning', 'Failed', 'Invalid location coordinates.');
+      return;
+    }
+
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${long}&travelmode=driving`;
+
+    Linking.openURL(url).catch(err => {
+      console.error('Could not open Google Maps', err);
+      showAlertModal('Failed to open Google Maps.', true);
+    });
+  };
+
+  const [getTaskType, setTaskType] = useState('');
+  const [taskItem, storeTaskItem] = useState('');
+  const onCollectModalOpen = async task => {
+    storeTaskItem(task);
+    setTaskId(task.id);
+    // This is for Item Delivery
+    if (task.taskType.taskType == 'Item Delivery') {
+      setCollectModalVisible2(true);
+      setItemDeliveryData(task.items);
+    }
+    // This is for Consignment Pick Up
+    else if (task.taskType.taskType == 'Consignment Pick Up') {
+      setCollectModalVisible3(true);
+      setItemTaskId(task.id);
+      setItemConsignemtData(task.items);
+      setTaskType('Consignment Details');
+    }
+    // This is for Pickup Request
+    else if (task?.request_id && task.taskType.taskType == 'Sample Pickup') {
+      setCollectModalVisible3(true);
+      setItemConsignemtData(task.items);
+      setTaskType('Pickup Request');
+      console.log('hhhhhhhhhhhhh', task.items);
+    }
+    // This is for Cash Collection
+    else if (task.taskType.taskType == 'Cash Collection') {
+      setSelectedClientId(
+        task?.pickUpLocation?.clientId
+          ? String(task.pickUpLocation.clientId)
+          : '',
+      );
+      setItemCashData(task?.receipts == 0 ? false : true);
+      setItemTaskId(task.id);
+      // setpayMdlVisible(true);
+      setModalVisible4(true);
+    }
+    // || task.taskType.taskType == 'Sample Pickup'     // This is for Sample Pickup
+    else {
+      setCollectModalVisible(true);
+    }
+  };
+
+  // const toggleItemChecked = (itemId) => {
+  //     setItemIds((prevItemIds) => {
+  //         const exists = prevItemIds.some((item) => item.id === itemId);
+
+  //         if (exists) {
+  //             return prevItemIds.filter((item) => item.id !== itemId);
+  //         } else {
+  //             return [...prevItemIds, { id: itemId }];
+  //         }
+  //     });
+  // };
+
+  const deliverItem = async () => {
+    if (itemIds.length === 0) {
+      showAlert(
+        'warning',
+        'Item is Missing',
+        'Please select at least one item to delivery.',
+      );
+      return;
+    }
+    // setLoading(true);
+    let request = {
+      taskId: selectedTaskId || [],
+      remarks: deliverRemarks,
+      itemIds: itemIds,
     };
 
-    const handleReceivePayment = () => {
-        getClientsAll();
-        setModalVisible4(true);
-        setModalVisible(false);
-        storeTaskId(taskId);
-        setSelectedClientId(selectedItem?.clientId);
+    console.log('item delivery: ', images);
 
-        console.log('handleReceivePayment', selectedItem)
-    };
+    // return
+    try {
+      const response = await TaskService.collectMyTask(request);
+      if (response.status == 1) {
+        addTaskAttachment(selectedTaskId);
+        fetchData();
+        setCollectModalVisible2(false);
+        // showAlertModal('Item Delivered Successfully.', false);
+        showAlert(
+          'success',
+          'Item is Delivered',
+          'Item Delivered Successfully.',
+        );
+        sentNotification(selectedTaskId, 'Delivered Successfully');
+        setDeliveryRemarks('');
+        setItemIds([]);
+        setImages([]);
+      } else {
+        showAlertModal('Failed to Deliver', true);
+        showAlert('error', 'Failed', 'Failed to Deliver.');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Something went wrong');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // useEffect(() => {
-    //     if (selectPaymode) {
-    //         console.log('Paymode changed to:', selectPaymode);
-    //     }
-    // }, [selectPaymode]);
-
-    // const handleSubmit = async () => {
-    //     if (!selectedClientId) {
-    //         showAlertModal('Please select a client.', true);
-    //         return;
-    //     }
-    //     if (!paymentMode) {
-    //         showAlertModal('Please select a payment mode.', true);
-    //         return;
-    //     }
-    //     if (!amount || isNaN(amount)) {
-    //         showAlertModal('Please enter a valid amount.', true);
-    //         return;
-    //     }
-
-    //     const request = {
-    //         taskId: taskId,
-    //         clientId: selectedClientId,
-    //         paymentMode: paymentMode,
-    //         amount: amount,
-    //         remarks: remarks,
-    //     };
-
-
-    //     try {
-    //         const response = await TaskService.generateNewReceipt(request);
-
-    //         if (response?.data?.status === 1) {
-    //             showAlertModal('Payment details submitted successfully!', false);
-    //             setSelectedClientId('');
-    //             setPaymentMode('');
-    //             setAmount('');
-    //             setRemarks('');
-    //             setpayMdlVisible(false);
-    //             fetchData()
-    //         } else {
-    //             showAlertModal('Failed to submit payment details.', true);
-    //         }
-    //     } catch (error) {
-    //         console.error('Error while submitting payment:', error);
-    //         Alert.alert('Error', 'Something went wrong while submitting the payment.');
-    //     }
+  const collectItem = async () => {
+    if (itemIds.length === 0) {
+      showAlert(
+        'warning',
+        'Item is Missing',
+        'Please select at least one item to collect.',
+      );
+      return;
+    }
+    // let request = {
+    //     taskId: selectedTaskId,
+    //     remarks: deliverRemarks,
+    //     itemIds: itemIds,
     // };
+    if (images.length == 0) {
+      showAlert(
+        'warning',
+        'Attachment is Missing',
+        'Please take a picture of sample collection.',
+      );
+      return;
+    }
 
+    const empId = await AsyncStorage.getItem('user_id');
 
-    const formatTime12Hour = (time) => {
-        if (!time) return '';
+    const selectedIds = itemIds.map(item => item.itemId);
 
-        const [hours, minutes] = time.split(':');
+    const notCollectedIds = (itemDetails || [])
+      .filter(info => !selectedIds.includes(info.itemId))
+      .map(info => ({
+        id: info.itemId,
+        qty: info.quantity || 0,
+      }));
 
-        const hour = parseInt(hours, 10);
-        const period = hour >= 12 ? 'PM' : 'AM';
-        const hour12 = hour % 12 || 12;
+    const payload = {
+      taskId: selectedTaskId,
+      remarks: deliverRemarks || '',
+      empId: Number(empId) || 0,
 
-        return `${hour12}:${minutes} ${period}`;
+      // convert itemId -> id
+      itemIds: itemIds.map(item => ({
+        id: item.itemId,
+      })),
+
+      notCollectedIds,
     };
 
-    return (
-        <SafeAreaView style={[styles.container, GlobalStyles.SafeAreaView]}>
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.scrollView}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }>
+    // console.log('heloooooo', payload);
+    // return
+    try {
+      setLoading(true);
+      // setShowAlert(false);
+      const response = await TaskService.collectMyTask(payload);
+      if (response.status == 1) {
+        addTaskAttachment(selectedTaskId);
+        fetchData();
+        setCollectModalVisible3(false);
+        // showAlertModal('Item Collected Successfully.', false);
+        showAlert('success', 'Collected', 'Item Collected Successfully.');
+        sentNotification(selectedTaskId, 'Collected Successfully ');
+        setDeliveryRemarks('');
+        setItemIds([]);
+      } else {
+        // showAlertModal('Failed to Collect.', true);
+        showAlert('error', 'Filed', 'Failed to Collect.');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Something went wrong');
+    } finally {
+      setLoading(false); // Stop loading
+    }
+  };
 
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
-                    <TouchableOpacity onPress={() => navigation.navigate("TaskStack", { screen: "TaskScreen" })} style={{ flexDirection: 'row', alignItems: 'center', }}>
-                        <Image style={{ width: 14, height: 14, }} source={require('../../../assets/leftarrow.png')} />
-                        <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>In Progress Task</Text>
-                    </TouchableOpacity>
-                    <View >
-                        <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
-                            <View pointerEvents="none">
-                                <NotificationCount />
-                            </View>
-                        </TouchableOpacity>
-                    </View>
-                </View>
+  const sentNotification = async (taskId, message) => {
+    const userId = await AsyncStorage.getItem('user_id');
+    const userName = await AsyncStorage.getItem('user_name');
+    let request = {
+      message: `Task ID: ${taskId} has been ${message} by ${userName}.`,
+      srcEmp: userId,
+      tgtEmp: null,
+      pageId: 0,
+      module: 'Operation',
+    };
 
-                <View style={{ position: 'relative', marginTop: 20, }}>
-                    <TextInput
-                        style={{ fontSize: 14, fontFamily: 'Montserrat-Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
-                        placeholder="Search"
-                        placeholderTextColor="#0C0D36"
-                        value={searchQuery}
-                        onChangeText={(text) => search(text, allTasksData)}
-                    />
-                    <Image style={{ position: 'absolute', top: 16, right: 20, width: 20, height: 20, }} source={require('../../../assets/search.png')} />
-                </View>
+    const response = await TaskService.generateNotification(request);
+  };
 
-                {/* <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollContainer}>
+  const toggleItemChecked = itemId => {
+    console.log('ooooooooo images', images);
+    const exists = itemIds.some(item => item.itemId === itemId);
+
+    if (exists) {
+      setItemIds(prev => prev.filter(item => item.itemId !== itemId));
+    } else {
+      setItemIds(prev => [...prev, {itemId}]);
+    }
+
+    console.log('ooooooooo', exists);
+
+    console.log('ooooooooo images', images);
+  };
+
+  // const handleSelectAll = () => {
+  //     if (checked) {
+  //         setItemIds([]); // Unselect all
+  //     } else {
+  //         const allIds = itemInfo.map((info) => ({ id: info.item.id }));
+  //         setItemIds(allIds); // Select all
+  //     }
+  //     setChecked(!checked);
+  // };
+
+  const [denoms, setDenoms] = useState({note: [], coin: []});
+  const [denomMaster, setDenomMaster] = useState([]); // ✅ full API data
+  const [counts, setCounts] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const getAllDenomination = async () => {
+    try {
+      const response = await TaskService.getAllDenomination();
+
+      if (response.status === 1 && Array.isArray(response.data)) {
+        // ✅ store full data for API payload mapping
+        setDenomMaster(response.data);
+
+        // ✅ keep your existing UI binding intact (only values)
+        const notes = response.data
+          .filter(item => item.type === 'Note')
+          .map(item => Number(item.denominationName))
+          .filter(n => Number.isFinite(n))
+          .sort((a, b) => b - a); // highest first
+
+        const coins = response.data
+          .filter(item => item.type === 'Coin')
+          .map(item => Number(item.denominationName))
+          .filter(n => Number.isFinite(n))
+          .sort((a, b) => b - a);
+
+        setDenoms({
+          note: notes,
+          coin: coins,
+        });
+      } else {
+        setDenomMaster([]);
+        setDenoms({note: [], coin: []});
+      }
+    } catch (error) {
+      console.error('Error fetching denominations:', error);
+      setDenomMaster([]);
+      setDenoms({note: [], coin: []});
+    }
+  };
+
+  const getAllBanks = () => {
+    try {
+      TaskService.getAllBanks().then(response => {
+        if (response.status == 1) {
+          setBankName(response.data);
+        } else {
+          setBankName([]);
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching banks:', error);
+    }
+  };
+
+  // Call Button
+  const makeCall = async call => {
+    if (!call || !String(call).trim()) {
+      showAlert(
+        'warning',
+        'Phone Number Missing',
+        'No contact number is available for this user.',
+      );
+      return;
+    }
+
+    const cleaned = String(call).replace(/\D/g, '');
+
+    const formatted =
+      cleaned.startsWith('91') && cleaned.length === 12
+        ? `+${cleaned}`
+        : cleaned.length === 10
+        ? `+91${cleaned}`
+        : `+${cleaned}`;
+
+    try {
+      await Linking.openURL(`tel:${formatted}`);
+    } catch (error) {
+      showAlert(
+        'error',
+        'Unable to Call',
+        'Could not open the phone dialer. Please try again.',
+      );
+    }
+  };
+
+  const formatDate = date => {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0'); // Months are 0-indexed
+    const day = `${date.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const formatDate2 = isoString => {
+    if (!isoString) return 'Invalid Date';
+
+    const date = new Date(isoString);
+
+    // Extract day, month, and year
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed in JS
+    const year = date.getFullYear();
+
+    return `${day}-${month}-${year}`;
+  };
+
+  const formatMessageDateTime = dateValue => {
+    if (!dateValue) return '';
+
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) return '';
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = String(date.getFullYear()).slice(-2);
+
+    const time = date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+
+    return `${day}-${month}-${year} at ${time}`;
+  };
+
+  const handleReceivePayment = () => {
+    getClientsAll();
+    setModalVisible4(true);
+    setModalVisible(false);
+    storeTaskId(taskId);
+    setSelectedClientId(selectedItem?.clientId);
+
+    console.log('handleReceivePayment', selectedItem);
+  };
+
+  // useEffect(() => {
+  //     if (selectPaymode) {
+  //         console.log('Paymode changed to:', selectPaymode);
+  //     }
+  // }, [selectPaymode]);
+
+  // const handleSubmit = async () => {
+  //     if (!selectedClientId) {
+  //         showAlertModal('Please select a client.', true);
+  //         return;
+  //     }
+  //     if (!paymentMode) {
+  //         showAlertModal('Please select a payment mode.', true);
+  //         return;
+  //     }
+  //     if (!amount || isNaN(amount)) {
+  //         showAlertModal('Please enter a valid amount.', true);
+  //         return;
+  //     }
+
+  //     const request = {
+  //         taskId: taskId,
+  //         clientId: selectedClientId,
+  //         paymentMode: paymentMode,
+  //         amount: amount,
+  //         remarks: remarks,
+  //     };
+
+  //     try {
+  //         const response = await TaskService.generateNewReceipt(request);
+
+  //         if (response?.data?.status === 1) {
+  //             showAlertModal('Payment details submitted successfully!', false);
+  //             setSelectedClientId('');
+  //             setPaymentMode('');
+  //             setAmount('');
+  //             setRemarks('');
+  //             setpayMdlVisible(false);
+  //             fetchData()
+  //         } else {
+  //             showAlertModal('Failed to submit payment details.', true);
+  //         }
+  //     } catch (error) {
+  //         console.error('Error while submitting payment:', error);
+  //         Alert.alert('Error', 'Something went wrong while submitting the payment.');
+  //     }
+  // };
+
+  const formatTime12Hour = time => {
+    if (!time) return '';
+
+    const [hours, minutes] = time.split(':');
+
+    const hour = parseInt(hours, 10);
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+
+    return `${hour12}:${minutes} ${period}`;
+  };
+
+  return (
+    <SafeAreaView style={[styles.container, GlobalStyles.SafeAreaView]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('TaskStack', {screen: 'TaskScreen'})
+            }
+            style={{flexDirection: 'row', alignItems: 'center'}}>
+            <Image
+              style={{width: 14, height: 14}}
+              source={require('../../../assets/leftarrow.png')}
+            />
+            <Text
+              style={{
+                fontFamily: 'Montserrat-SemiBold',
+                fontSize: 18,
+                color: '#2F81F5',
+                marginLeft: 4,
+              }}>
+              In Progress Task
+            </Text>
+          </TouchableOpacity>
+          <View>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Notification')}>
+              <View pointerEvents="none">
+                <NotificationCount />
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={{position: 'relative', marginTop: 20}}>
+          <TextInput
+            style={{
+              fontSize: 14,
+              fontFamily: 'Montserrat-Medium',
+              height: 50,
+              backgroundColor: '#F6FAFF',
+              borderRadius: 30,
+              paddingLeft: 20,
+              paddingRight: 50,
+            }}
+            placeholder="Search"
+            placeholderTextColor="#0C0D36"
+            value={searchQuery}
+            onChangeText={text => search(text, allTasksData)}
+          />
+          <Image
+            style={{
+              position: 'absolute',
+              top: 16,
+              right: 20,
+              width: 20,
+              height: 20,
+            }}
+            source={require('../../../assets/search.png')}
+          />
+        </View>
+
+        {/* <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollContainer}>
                     <TaskStatusTabs activeTab="In Progress" />
                 </ScrollView> */}
 
-                <View style={{ paddingHorizontal: 3, }}>
-                    {visibleTasks && visibleTasks.length > 0 ? (
-                        visibleTasks.map((task, index) => (
-                            <View style={styles.mainbox} key={task.id || index}>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15 }}>
-                                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                                        <View style={{ width: 29, height: 29, borderRadius: 50, backgroundColor: '#edfafc', alignItems: 'center', justifyContent: 'center' }}>
-                                            <Image style={{ width: 17, height: 17 }} source={require('../../../assets/texticon.png')} />
-                                        </View>
-                                        {
-                                            task?.request_id && task?.taskType?.taskType === 'Sample Pickup' ? (
-                                                <Text
-                                                    style={{
-                                                        flex: 1,
-                                                        paddingLeft: 7,
-                                                        fontFamily: 'Montserrat-Medium',
-                                                        fontSize: 15,
-                                                        color: '#2F81F5'
-                                                    }}
-                                                >
-                                                    Pickup Request
-                                                </Text>
-                                            ) : (
-                                                <Text
-                                                    style={{
-                                                        flex: 1,
-                                                        paddingLeft: 7,
-                                                        fontFamily: 'Montserrat-Medium',
-                                                        fontSize: 15,
-                                                        color: '#2F81F5'
-                                                    }}
-                                                >
-                                                    {task?.taskType?.taskType}
-                                                </Text>
-                                            )
-                                        }
-                                        {/* <Text style={{ flex: 1, paddingLeft: 7, fontFamily: 'Montserrat-Medium', fontSize: 15, color: '#2F81F5' }}>
+        <View style={{paddingHorizontal: 3}}>
+          {visibleTasks && visibleTasks.length > 0 ? (
+            visibleTasks.map((task, index) => (
+              <View style={styles.mainbox} key={task.id || index}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: 15,
+                  }}>
+                  <View
+                    style={{
+                      flex: 1,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                    }}>
+                    <View
+                      style={{
+                        width: 29,
+                        height: 29,
+                        borderRadius: 50,
+                        backgroundColor: '#edfafc',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                      <Image
+                        style={{width: 17, height: 17}}
+                        source={require('../../../assets/texticon.png')}
+                      />
+                    </View>
+                    {task?.request_id &&
+                    task?.taskType?.taskType === 'Sample Pickup' ? (
+                      <Text
+                        style={{
+                          flex: 1,
+                          paddingLeft: 7,
+                          fontFamily: 'Montserrat-Medium',
+                          fontSize: 15,
+                          color: '#2F81F5',
+                        }}>
+                        Pickup Request
+                      </Text>
+                    ) : (
+                      <Text
+                        style={{
+                          flex: 1,
+                          paddingLeft: 7,
+                          fontFamily: 'Montserrat-Medium',
+                          fontSize: 15,
+                          color: '#2F81F5',
+                        }}>
+                        {task?.taskType?.taskType}
+                      </Text>
+                    )}
+                    {/* <Text style={{ flex: 1, paddingLeft: 7, fontFamily: 'Montserrat-Medium', fontSize: 15, color: '#2F81F5' }}>
                                             {task.taskType?.taskType}
                                         </Text> */}
-                                    </View>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 13 }}>
-                                        {
-                                            task?.request_id && task?.taskType?.taskType === 'Sample Pickup' || task?.taskType?.taskType === 'Sample Pickup' || task?.taskType?.taskType === 'Cash Collection' ? (
-                                                <TouchableOpacity onPress={() => makeCall(task?.client?.contact_number)}>
-                                                    <Image style={{ width: 20, height: 20 }} source={require('../../../assets/call.png')} />
-                                                </TouchableOpacity>
-                                            ) :
-                                                (
-                                                    <TouchableOpacity onPress={() => makeCall(task?.pickUpLocation?.contact)}>
-                                                        <Image style={{ width: 20, height: 20 }} source={require('../../../assets/call.png')} />
-                                                    </TouchableOpacity>
-                                                )
-                                        }
-                                        <TouchableOpacity onPress={() => handleOpenModal(task)}>
-                                            <Image style={{ width: 28, height: 28 }} source={require('../../../assets/dotimg.png')} />
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-
-                                <View style={{ flexDirection: 'row', padding: 15 }}>
-                                    <View style={{ flex: 1 }}>
-                                        <View style={{ position: 'relative', marginBottom: 5 }}>
-                                            <Image style={{ position: 'absolute', left: 0, top: 0, width: 12, height: 12 }} source={require('../../../assets/asicon1.png')} />
-                                            <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
-                                                Task ID: {task?.displayId ?? 'NA'}
-                                            </Text>
-                                        </View>
-                                        <View style={{ position: 'relative', marginBottom: 5 }}>
-                                            <Image style={{ position: 'absolute', left: 0, top: 0, width: 11, height: 13 }} source={require('../../../assets/asicon2.png')} />
-                                            {
-                                                task?.request_id && task?.taskType?.taskType === 'Sample Pickup' || task?.taskType?.taskType === 'Sample Pickup' || task?.taskType?.taskType === 'Cash Collection' ? (
-                                                    <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
-                                                        {task?.client?.address ?? 'No Address'}
-                                                    </Text>
-                                                ) :
-                                                    (
-                                                        <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
-                                                            {task?.pickUpLocation?.address ?? 'No Address'}
-                                                        </Text>
-                                                    )
-                                            }
-                                        </View>
-                                        <View style={{ position: 'relative', marginBottom: 5 }}>
-                                            <Image style={{ position: 'absolute', left: 0, top: 0, width: 13, height: 13 }} source={require('../../../assets/asicon3.png')} />
-                                            <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
-                                                {formatTime12Hour(task?.preferredTime?.start_time)} - {formatTime12Hour(task?.preferredTime?.end_time)}
-                                            </Text>
-                                        </View>
-                                        <View style={{ position: 'relative', marginBottom: 5 }}>
-                                            <Image style={{ position: 'absolute', left: 0, top: 0, width: 13, height: 13 }} source={require('../../../assets/asicon4.png')} />
-                                            <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
-                                                Assigned By: {task?.assigned?.assigner.employee_name}
-                                            </Text>
-                                        </View>
-                                        {(task?.pickUpLocation?.client_name || task?.pickUpLocation?.centreName) && (
-                                            <View style={{ position: 'relative' }}>
-                                                <Image
-                                                    style={{
-                                                        position: 'absolute',
-                                                        left: 0,
-                                                        top: 0,
-                                                        width: 16,
-                                                        height: 16,
-                                                    }}
-                                                    source={
-                                                        task.pickUpLocation.client_name
-                                                            ? require('../../../assets/asicon4.png') // client icon
-                                                            : require('../../../assets/asicon05.png') // center icon
-                                                    }
-                                                />
-                                                <Text
-                                                    style={{
-                                                        fontFamily: 'Montserrat-Medium',
-                                                        fontSize: 13,
-                                                        color: '#0C0D36',
-                                                        paddingLeft: 20,
-                                                    }}
-                                                >
-                                                    {task.pickUpLocation.client_name || task.pickUpLocation.centreName}
-                                                </Text>
-                                            </View>
-                                        )}
-
-                                    </View>
-
-                                    {task?.isUrgent && (
-                                        <View key={task.id || index}>
-                                            <View style={{ position: 'relative', marginTop: 30 }}>
-                                                <View style={{ width: 16, height: 16, borderWidth: 2, borderColor: '#F43232', borderRadius: 50, position: 'absolute', left: 0, top: 2 }}></View>
-                                                <View style={{ width: 8, height: 8, backgroundColor: '#F43232', borderRadius: 50, position: 'absolute', left: 4, top: 6 }}></View>
-                                                <Text style={{ fontFamily: 'Montserrat-Medium', color: '#F43232', paddingLeft: 20 }}>Urgent</Text>
-                                            </View>
-                                        </View>
-                                    )}
-                                </View>
-
-                                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollContainer}>
-                                    {
-                                        task?.taskFrequency == 'Once' && (
-                                            <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 15 }}>
-                                                <Text style={styles.oncetxt}>{formatDate2(task?.preferredDate)}</Text>
-                                                <Text style={styles.oncetxt}>{formatTime12Hour(task?.preferredTime?.start_time)} - {formatTime12Hour(task?.preferredTime?.end_time)}</Text>
-                                            </View>
-                                        )
-                                    }
-                                    {
-                                        task?.taskFrequency == 'Custom days' && (
-                                            <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 15 }}>
-                                                <Text style={styles.oncetxt}>{task?.fromDate} - {task?.toDate}</Text>
-                                            </View>
-                                        )
-                                    }
-                                    {
-                                        task?.taskFrequency == 'Weekly/Daily' && (
-                                            <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 15 }}>
-                                                {Object.entries(task?.selectedDays || {}).map(([day, selected]) =>
-                                                    selected ? <Text key={day} style={styles.oncetxt}>{day.charAt(0).toUpperCase() + day.slice(1)}</Text> : null
-                                                )}
-                                                {/* <Text style={styles.oncetxt}>{task?.fromDate}</Text>
-                                                                               <Text style={styles.oncetxt}>{task?.toDate}</Text> */}
-                                            </View>
-                                        )
-                                    }
-
-                                </ScrollView>
-
-                                <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', padding: 15, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between', }}>
-                                    {/* <TouchableOpacity style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12, }} onPress={() => navigation.navigate('mapNavigation', { task: task })}> */}
-                                    <TouchableOpacity style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12 }} onPress={() => navigateToUserLocation(task)}>
-                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#2F81F5', textAlign: 'center', }}>Navigate</Text>
-                                    </TouchableOpacity>
-                                    {
-                                        task?.taskType?.taskType === 'Item Delivery' ? (
-                                            <TouchableOpacity
-                                                onPress={() => onCollectModalOpen(task)}
-                                                style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12 }}
-                                            >
-                                                <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#fff', textAlign: 'center' }}>
-                                                    Delivery
-                                                </Text>
-                                            </TouchableOpacity>
-                                        ) : (
-                                            <TouchableOpacity
-                                                onPress={() => onCollectModalOpen(task)}
-                                                style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12 }}
-                                            >
-                                                <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#fff', textAlign: 'center' }}>
-                                                    Collect
-                                                </Text>
-                                            </TouchableOpacity>
-                                        )
-                                    }
-
-                                </View>
-                            </View>
-                        ))
+                  </View>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 13,
+                    }}>
+                    {(task?.request_id &&
+                      task?.taskType?.taskType === 'Sample Pickup') ||
+                    task?.taskType?.taskType === 'Sample Pickup' ||
+                    task?.taskType?.taskType === 'Cash Collection' ? (
+                      <TouchableOpacity
+                        onPress={() => makeCall(task?.client?.contact_number)}>
+                        <Image
+                          style={{width: 20, height: 20}}
+                          source={require('../../../assets/call.png')}
+                        />
+                      </TouchableOpacity>
                     ) : (
-                        <View style={{ padding: 20, alignItems: 'center', justifyContent: 'center', marginTop: 200 }}>
-                            {/* <Text style={{ fontSize: 16, color: '#999', fontFamily: 'Montserrat-Medium' }}>
-                                No Data Found
-                            </Text> */}
-                            <Image style={{ width: 200, height: 200, marginTop: -50 }}
-                                source={require('../../../assets/empty.png')}
-                                resizeMode="contain"
-                            />
-                        </View>
+                      <TouchableOpacity
+                        onPress={() => makeCall(task?.pickUpLocation?.contact)}>
+                        <Image
+                          style={{width: 20, height: 20}}
+                          source={require('../../../assets/call.png')}
+                        />
+                      </TouchableOpacity>
                     )}
+                    <TouchableOpacity onPress={() => handleOpenModal(task)}>
+                      <Image
+                        style={{width: 28, height: 28}}
+                        source={require('../../../assets/dotimg.png')}
+                      />
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
-                {/* Comment Modal Start Here */}
-                <Modal
-                    visible={modalVisible}
-                    transparent={true}
-                    animationType="slide"
-                    onRequestClose={() => setModalVisible(false)}>
-                    <View style={styles.modalBackground}>
-                        <View style={[styles.modalContainer, styles.mdlNewContainer]}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
-                                <Text style={styles.modalText}>More Information</Text>
-                                <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-                                    <Image pointerEvents="none" style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
-                                </TouchableOpacity>
-                            </View>
-                            <ScrollView>
-                                <View style={{ padding: 15, }}>
-                                    <View>
-                                        <Text style={styles.label}>Description</Text>
-                                        <TextInput
-                                            style={styles.textarea}
-                                            placeholder="Write here.."
-                                            multiline={true}
-                                            value={selectedItem?.description}
-                                        />
-                                    </View>
+                <View style={{flexDirection: 'row', padding: 15}}>
+                  <View style={{flex: 1}}>
+                    <View style={{position: 'relative', marginBottom: 5}}>
+                      <Image
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          top: 0,
+                          width: 12,
+                          height: 12,
+                        }}
+                        source={require('../../../assets/asicon1.png')}
+                      />
+                      <Text
+                        style={{
+                          fontFamily: 'Montserrat-Medium',
+                          fontSize: 13,
+                          color: '#0C0D36',
+                          paddingLeft: 20,
+                        }}>
+                        Task ID: {task?.displayId ?? 'NA'}
+                      </Text>
+                    </View>
+                    <View style={{position: 'relative', marginBottom: 5}}>
+                      <Image
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          top: 0,
+                          width: 11,
+                          height: 13,
+                        }}
+                        source={require('../../../assets/asicon2.png')}
+                      />
+                      {(task?.request_id &&
+                        task?.taskType?.taskType === 'Sample Pickup') ||
+                      task?.taskType?.taskType === 'Sample Pickup' ||
+                      task?.taskType?.taskType === 'Cash Collection' ? (
+                        <Text
+                          style={{
+                            fontFamily: 'Montserrat-Medium',
+                            fontSize: 13,
+                            color: '#0C0D36',
+                            paddingLeft: 20,
+                          }}>
+                          {task?.client?.address ?? 'No Address'}
+                        </Text>
+                      ) : (
+                        <Text
+                          style={{
+                            fontFamily: 'Montserrat-Medium',
+                            fontSize: 13,
+                            color: '#0C0D36',
+                            paddingLeft: 20,
+                          }}>
+                          {task?.pickUpLocation?.address ?? 'No Address'}
+                        </Text>
+                      )}
+                    </View>
+                    <View style={{position: 'relative', marginBottom: 5}}>
+                      <Image
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          top: 0,
+                          width: 13,
+                          height: 13,
+                        }}
+                        source={require('../../../assets/asicon3.png')}
+                      />
+                      <Text
+                        style={{
+                          fontFamily: 'Montserrat-Medium',
+                          fontSize: 13,
+                          color: '#0C0D36',
+                          paddingLeft: 20,
+                        }}>
+                        {formatTime12Hour(task?.preferredTime?.start_time)} -{' '}
+                        {formatTime12Hour(task?.preferredTime?.end_time)}
+                      </Text>
+                    </View>
+                    <View style={{position: 'relative', marginBottom: 5}}>
+                      <Image
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          top: 0,
+                          width: 13,
+                          height: 13,
+                        }}
+                        source={require('../../../assets/asicon4.png')}
+                      />
+                      <Text
+                        style={{
+                          fontFamily: 'Montserrat-Medium',
+                          fontSize: 13,
+                          color: '#0C0D36',
+                          paddingLeft: 20,
+                        }}>
+                        Assigned By: {task?.assigned?.assigner.employee_name}
+                      </Text>
+                    </View>
+                    {(task?.pickUpLocation?.client_name ||
+                      task?.pickUpLocation?.centreName) && (
+                      <View style={{position: 'relative'}}>
+                        <Image
+                          style={{
+                            position: 'absolute',
+                            left: 0,
+                            top: 0,
+                            width: 16,
+                            height: 16,
+                          }}
+                          source={
+                            task.pickUpLocation.client_name
+                              ? require('../../../assets/asicon4.png') // client icon
+                              : require('../../../assets/asicon05.png') // center icon
+                          }
+                        />
+                        <Text
+                          style={{
+                            fontFamily: 'Montserrat-Medium',
+                            fontSize: 13,
+                            color: '#0C0D36',
+                            paddingLeft: 20,
+                          }}>
+                          {task.pickUpLocation.client_name ||
+                            task.pickUpLocation.centreName}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
 
-                                    <View>
-                                        <View>
-                                            {/* <Text style={styles.label}>Attachment</Text>
+                  {task?.isUrgent && (
+                    <View key={task.id || index}>
+                      <View style={{position: 'relative', marginTop: 30}}>
+                        <View
+                          style={{
+                            width: 16,
+                            height: 16,
+                            borderWidth: 2,
+                            borderColor: '#F43232',
+                            borderRadius: 50,
+                            position: 'absolute',
+                            left: 0,
+                            top: 2,
+                          }}></View>
+                        <View
+                          style={{
+                            width: 8,
+                            height: 8,
+                            backgroundColor: '#F43232',
+                            borderRadius: 50,
+                            position: 'absolute',
+                            left: 4,
+                            top: 6,
+                          }}></View>
+                        <Text
+                          style={{
+                            fontFamily: 'Montserrat-Medium',
+                            color: '#F43232',
+                            paddingLeft: 20,
+                          }}>
+                          Urgent
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+                </View>
+
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.scrollContainer}>
+                  {task?.taskFrequency == 'Once' && (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        gap: 4,
+                        paddingHorizontal: 15,
+                      }}>
+                      <Text style={styles.oncetxt}>
+                        {formatDate2(task?.preferredDate)}
+                      </Text>
+                      <Text style={styles.oncetxt}>
+                        {formatTime12Hour(task?.preferredTime?.start_time)} -{' '}
+                        {formatTime12Hour(task?.preferredTime?.end_time)}
+                      </Text>
+                    </View>
+                  )}
+                  {task?.taskFrequency == 'Custom days' && (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        gap: 4,
+                        paddingHorizontal: 15,
+                      }}>
+                      <Text style={styles.oncetxt}>
+                        {task?.fromDate} - {task?.toDate}
+                      </Text>
+                    </View>
+                  )}
+                  {task?.taskFrequency == 'Weekly/Daily' && (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        gap: 4,
+                        paddingHorizontal: 15,
+                      }}>
+                      {Object.entries(task?.selectedDays || {}).map(
+                        ([day, selected]) =>
+                          selected ? (
+                            <Text key={day} style={styles.oncetxt}>
+                              {day.charAt(0).toUpperCase() + day.slice(1)}
+                            </Text>
+                          ) : null,
+                      )}
+                      {/* <Text style={styles.oncetxt}>{task?.fromDate}</Text>
+                                                                               <Text style={styles.oncetxt}>{task?.toDate}</Text> */}
+                    </View>
+                  )}
+                </ScrollView>
+
+                <View
+                  style={{
+                    borderTopWidth: 1,
+                    borderTopColor: '#ECEDF0',
+                    padding: 15,
+                    marginTop: 12,
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                  }}>
+                  {/* <TouchableOpacity style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12, }} onPress={() => navigation.navigate('mapNavigation', { task: task })}> */}
+                  <TouchableOpacity
+                    style={{
+                      width: '47%',
+                      backgroundColor: '#EFF6FF',
+                      borderRadius: 28,
+                      padding: 12,
+                    }}
+                    onPress={() => navigateToUserLocation(task)}>
+                    <Text
+                      style={{
+                        fontFamily: 'Montserrat-SemiBold',
+                        color: '#2F81F5',
+                        textAlign: 'center',
+                      }}>
+                      Navigate
+                    </Text>
+                  </TouchableOpacity>
+                  {task?.taskType?.taskType === 'Item Delivery' ? (
+                    <TouchableOpacity
+                      onPress={() => onCollectModalOpen(task)}
+                      style={{
+                        width: '47%',
+                        backgroundColor: '#2F81F5',
+                        borderRadius: 28,
+                        padding: 12,
+                      }}>
+                      <Text
+                        style={{
+                          fontFamily: 'Montserrat-SemiBold',
+                          color: '#fff',
+                          textAlign: 'center',
+                        }}>
+                        Delivery
+                      </Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      onPress={() => onCollectModalOpen(task)}
+                      style={{
+                        width: '47%',
+                        backgroundColor: '#2F81F5',
+                        borderRadius: 28,
+                        padding: 12,
+                      }}>
+                      <Text
+                        style={{
+                          fontFamily: 'Montserrat-SemiBold',
+                          color: '#fff',
+                          textAlign: 'center',
+                        }}>
+                        Collect
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            ))
+          ) : (
+            <View
+              style={{
+                padding: 20,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginTop: 200,
+              }}>
+              {/* <Text style={{ fontSize: 16, color: '#999', fontFamily: 'Montserrat-Medium' }}>
+                                No Data Found
+                            </Text> */}
+              <Image
+                style={{width: 200, height: 200, marginTop: -50}}
+                source={require('../../../assets/empty.png')}
+                resizeMode="contain"
+              />
+            </View>
+          )}
+        </View>
+
+        {/* Comment Modal Start Here */}
+        <Modal
+          visible={modalVisible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setModalVisible(false)}>
+          <View style={styles.modalBackground}>
+            <View style={[styles.modalContainer, styles.mdlNewContainer]}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 15,
+                  paddingVertical: 15,
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#ECEDF0',
+                }}>
+                <Text style={styles.modalText}>More Information</Text>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setModalVisible(false)}>
+                  <Image
+                    pointerEvents="none"
+                    style={{width: 18, height: 18}}
+                    source={require('../../../assets/mdlclose.png')}
+                  />
+                </TouchableOpacity>
+              </View>
+              <ScrollView>
+                <View style={{padding: 15}}>
+                  <View>
+                    <Text style={styles.label}>Description</Text>
+                    <TextInput
+                      style={styles.textarea}
+                      placeholder="Write here.."
+                      multiline={true}
+                      value={selectedItem?.description}
+                    />
+                  </View>
+
+                  <View>
+                    <View>
+                      {/* <Text style={styles.label}>Attachment</Text>
                                             <TouchableOpacity style={styles.uploadContainer} onPress={selectImages}>
                                                 <Image style={{ width: 30, height: 28, marginHorizontal: 'auto', }} source={require('../../../assets/upload-icon.png')} />
                                                 <Text style={styles.uploadTitle}>Upload</Text>
                                                 <Text style={styles.uploadSubTitle}>Supports JPG, JPEG, and PNG</Text>
                                             </TouchableOpacity> */}
 
-                                            {images.length > 0 ? (
-                                                <FlatList
-                                                    style={styles.flatList}
-                                                    data={images}
-                                                    keyExtractor={(item, index) => index.toString()}
-                                                    renderItem={({ item, index }) => (
-                                                        <View>
-                                                            <Image source={{ uri: item.uri }} style={{ width: 60, height: 60, borderRadius: 5, marginRight: 10, }} />
-                                                            <TouchableOpacity
-                                                                onPress={() => handleDeleteImage(index)}
-                                                                style={{
-                                                                    position: 'absolute',
-                                                                    top: -5,
-                                                                    right: 5,
-                                                                    backgroundColor: 'red',
-                                                                    borderRadius: 12,
-                                                                    width: 22,
-                                                                    height: 22,
-                                                                    justifyContent: 'center',
-                                                                    alignItems: 'center'
-                                                                }}
-                                                            >
-                                                                <Text style={{ color: 'white', fontSize: 12, lineHeight: 14, }}>✕</Text>
-                                                            </TouchableOpacity>
-                                                        </View>
-                                                    )}
-                                                    horizontal
-                                                />
-                                            ) : (
-                                                <Text ></Text>
-                                            )}
-                                        </View>
-
-                                        <View>
-                                            <Text style={styles.label}>Comments</Text>
-                                            <View>
-
-                                                {selectedTask?.map((item, index) => (
-                                                    <View key={item.id || index} style={styles.phleBox}>
-                                                        <View style={styles.phleImg}>
-                                                            <Image
-                                                                style={{ width: 25, height: 25 }}
-                                                                source={require('../../../assets/userImg.png')}
-                                                            />
-                                                        </View>
-                                                        <View style={styles.phleText}>
-                                                            <View style={styles.phleFlexBox}>
-                                                                <Text style={styles.phleTitle}>{item.commentor?.employee_name}</Text>
-                                                                <Text style={styles.phleTime}>
-                                                                    {formatMessageDateTime(item.createdAt)}
-                                                                </Text>
-                                                            </View>
-                                                            {item?.attachment?.path && item.attachment.path !== "" ? (
-                                                                <TouchableOpacity
-                                                                    onPress={() => {
-                                                                        const imageUrl = `${BASE_API_URL}/${item.attachment.path.replace(/\\/g, "/")}`;
-                                                                        setFullImageUri(imageUrl);
-                                                                        setModalVisible2(true);
-                                                                    }}
-                                                                >
-                                                                    <Image
-                                                                        style={{ width: 320, height: 200, marginVertical: 5 }}
-                                                                        source={{ uri: `${BASE_API_URL}/${item.attachment.path.replace(/\\/g, "/")}` }}
-                                                                    />
-                                                                </TouchableOpacity>
-                                                            ) : null}
-
-                                                            <Text style={styles.phleDesc}>{item.comment}</Text>
-                                                        </View>
-                                                    </View>
-                                                ))}
-
-                                            </View>
-                                        </View>
-                                    </View>
-
-
-                                </View>
-                            </ScrollView>
-                            {/* Comments Send */}
-                            <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingTop: 8, paddingHorizontal: 15, }}>
-                                {/* Comment Input */}
-                                <View style={{ flex: 1 }}>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Your Comments"
-                                        multiline={true}
-                                        placeholderTextColor="#0C0D36"
-                                        value={commentText}
-                                        onChangeText={setCommentText}
-                                    />
-                                </View>
-
-                                {/* Attachment Icon */}
-                                <TouchableOpacity style={styles.attachmentBtn} onPress={selectImages}>
-                                    <FontAwesome name="paperclip" size={24} color="#333" />
-                                </TouchableOpacity>
-
-                                {/* Send Button */}
-                                <TouchableOpacity style={styles.sendBtn} onPress={sendComment}>
-                                    <FontAwesome name="paper-plane-o" size={24} color="#fff" />
-                                </TouchableOpacity>
+                      {images.length > 0 ? (
+                        <FlatList
+                          style={styles.flatList}
+                          data={images}
+                          keyExtractor={(item, index) => index.toString()}
+                          renderItem={({item, index}) => (
+                            <View>
+                              <Image
+                                source={{uri: item.uri}}
+                                style={{
+                                  width: 60,
+                                  height: 60,
+                                  borderRadius: 5,
+                                  marginRight: 10,
+                                }}
+                              />
+                              <TouchableOpacity
+                                onPress={() => handleDeleteImage(index)}
+                                style={{
+                                  position: 'absolute',
+                                  top: -5,
+                                  right: 5,
+                                  backgroundColor: 'red',
+                                  borderRadius: 12,
+                                  width: 22,
+                                  height: 22,
+                                  justifyContent: 'center',
+                                  alignItems: 'center',
+                                }}>
+                                <Text
+                                  style={{
+                                    color: 'white',
+                                    fontSize: 12,
+                                    lineHeight: 14,
+                                  }}>
+                                  ✕
+                                </Text>
+                              </TouchableOpacity>
                             </View>
-
-                            <TouchableOpacity onPress={handleReceivePayment} style={{ backgroundColor: '#2F81F5', borderRadius: 28, paddingVertical: 16, paddingHorizontal: 10, marginHorizontal: 15, marginBottom: 15, }}>
-                                <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 16, color: 'white', textAlign: 'center', }}>Receive Payment</Text>
-                            </TouchableOpacity>
-
-                        </View>
+                          )}
+                          horizontal
+                        />
+                      ) : (
+                        <Text></Text>
+                      )}
                     </View>
-                </Modal>
 
-                {/* Payment Modal */}
-                <Modal
-                    visible={payMdlVisible}
-                    transparent={true}
-                    animationType="slide"
-                    onRequestClose={() => setpayMdlVisible(false)}>
-                    <View style={styles.modalBackground}>
-                        <View style={styles.modalContainer}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
-                                <Text style={styles.modalText}>Payment Details</Text>
-                                <TouchableOpacity style={styles.closeButton} onPress={() => setpayMdlVisible(false)}>
-                                    <Image pointerEvents="none" style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
-                                </TouchableOpacity>
+                    <View>
+                      <Text style={styles.label}>Comments</Text>
+                      <View>
+                        {selectedTask?.map((item, index) => (
+                          <View key={item.id || index} style={styles.phleBox}>
+                            <View style={styles.phleImg}>
+                              <Image
+                                style={{width: 25, height: 25}}
+                                source={require('../../../assets/userImg.png')}
+                              />
                             </View>
-                            <View style={{ padding: 15 }}>
-                                <View>
-                                    <Text style={styles.label}>Client Name </Text>
-                                    <View style={styles.pickerContainer}>
-                                        <Picker
-                                            selectedValue={selectedClientId}
-                                            onValueChange={(itemValue) => setSelectedClientId(itemValue)}
-                                            style={styles.picker}
-                                            dropdownIconColor={lightTheme.inputText}
-                                            enabled={!selectedClientId}
-                                        >
-                                            <Picker.Item label="Select Client" value="" />
-                                            {allClients.map((client) => (
-                                                <Picker.Item
-                                                    key={client.id}
-                                                    label={client.client_name}
-                                                    value={String(client.id)}
-                                                />
-                                            ))}
-                                        </Picker>
-                                    </View>
-                                </View>
+                            <View style={styles.phleText}>
+                              <View style={styles.phleFlexBox}>
+                                <Text style={styles.phleTitle}>
+                                  {item.commentor?.employee_name}
+                                </Text>
+                                <Text style={styles.phleTime}>
+                                  {formatMessageDateTime(item.createdAt)}
+                                </Text>
+                              </View>
+                              {item?.attachment?.path &&
+                              item.attachment.path !== '' ? (
+                                <TouchableOpacity
+                                  onPress={() => {
+                                    const imageUrl = `${BASE_API_URL}/${item.attachment.path.replace(
+                                      /\\/g,
+                                      '/',
+                                    )}`;
+                                    setFullImageUri(imageUrl);
+                                    setModalVisible2(true);
+                                  }}>
+                                  <Image
+                                    style={{
+                                      width: 320,
+                                      height: 200,
+                                      marginVertical: 5,
+                                    }}
+                                    source={{
+                                      uri: `${BASE_API_URL}/${item.attachment.path.replace(
+                                        /\\/g,
+                                        '/',
+                                      )}`,
+                                    }}
+                                  />
+                                </TouchableOpacity>
+                              ) : null}
 
-                                <View>
-                                    <Text style={styles.label}>Payment Mode</Text>
-                                    <View style={styles.pickerContainer}>
-                                        <Picker
-                                            selectedValue={paymentMode}
-                                            onValueChange={(itemValue) => setPaymentMode(itemValue)}
-                                            style={styles.picker} // Apply text color here
-                                            dropdownIconColor={lightTheme.inputText} // Android only
-                                        >
-                                            <Picker.Item label="Select Mode" value="" />
-                                            <Picker.Item label="Cash" value="Cash" />
-                                            {/* <Picker.Item label="UPI" value="UPI" />
+                              <Text style={styles.phleDesc}>
+                                {item.comment}
+                              </Text>
+                            </View>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </ScrollView>
+              {/* Comments Send */}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'flex-end',
+                  gap: 8,
+                  paddingTop: 8,
+                  paddingHorizontal: 15,
+                }}>
+                {/* Comment Input */}
+                <View style={{flex: 1}}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Your Comments"
+                    multiline={true}
+                    placeholderTextColor="#0C0D36"
+                    value={commentText}
+                    onChangeText={setCommentText}
+                  />
+                </View>
+
+                {/* Attachment Icon */}
+                <TouchableOpacity
+                  style={styles.attachmentBtn}
+                  onPress={selectImages}>
+                  <FontAwesome name="paperclip" size={24} color="#333" />
+                </TouchableOpacity>
+
+                {/* Send Button */}
+                <TouchableOpacity style={styles.sendBtn} onPress={sendComment}>
+                  <FontAwesome name="paper-plane-o" size={24} color="#fff" />
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity
+                onPress={handleReceivePayment}
+                style={{
+                  backgroundColor: '#2F81F5',
+                  borderRadius: 28,
+                  paddingVertical: 16,
+                  paddingHorizontal: 10,
+                  marginHorizontal: 15,
+                  marginBottom: 15,
+                }}>
+                <Text
+                  style={{
+                    fontFamily: 'Montserrat-SemiBold',
+                    fontSize: 16,
+                    color: 'white',
+                    textAlign: 'center',
+                  }}>
+                  Receive Payment
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Payment Modal */}
+        <Modal
+          visible={payMdlVisible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setpayMdlVisible(false)}>
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 15,
+                  paddingVertical: 15,
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#ECEDF0',
+                }}>
+                <Text style={styles.modalText}>Payment Details</Text>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setpayMdlVisible(false)}>
+                  <Image
+                    pointerEvents="none"
+                    style={{width: 18, height: 18}}
+                    source={require('../../../assets/mdlclose.png')}
+                  />
+                </TouchableOpacity>
+              </View>
+              <View style={{padding: 15}}>
+                <View>
+                  <Text style={styles.label}>Client Name </Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={selectedClientId}
+                      onValueChange={itemValue =>
+                        setSelectedClientId(itemValue)
+                      }
+                      style={styles.picker}
+                      dropdownIconColor={lightTheme.inputText}
+                      enabled={!selectedClientId}>
+                      <Picker.Item label="Select Client" value="" />
+                      {allClients.map(client => (
+                        <Picker.Item
+                          key={client.id}
+                          label={client.client_name}
+                          value={String(client.id)}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
+                </View>
+
+                <View>
+                  <Text style={styles.label}>Payment Mode</Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={paymentMode}
+                      onValueChange={itemValue => setPaymentMode(itemValue)}
+                      style={styles.picker} // Apply text color here
+                      dropdownIconColor={lightTheme.inputText} // Android only
+                    >
+                      <Picker.Item label="Select Mode" value="" />
+                      <Picker.Item label="Cash" value="Cash" />
+                      {/* <Picker.Item label="UPI" value="UPI" />
                                             <Picker.Item label="Net Banking" value="Net Banking" /> */}
-                                        </Picker>
-                                    </View>
-                                </View>
+                    </Picker>
+                  </View>
+                </View>
 
-                                <View>
-                                    <Text style={styles.label}>Enter Amount</Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Enter Amount"
-                                        placeholderTextColor="#0C0D36"
-                                        value={amount}
-                                        keyboardType="numeric"
-                                        onChangeText={setAmount}
-                                    />
-                                </View>
+                <View>
+                  <Text style={styles.label}>Enter Amount</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter Amount"
+                    placeholderTextColor="#0C0D36"
+                    value={amount}
+                    keyboardType="numeric"
+                    onChangeText={setAmount}
+                  />
+                </View>
 
-                                <View>
-                                    <Text style={styles.label}>Remarks</Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Enter remarks"
-                                        placeholderTextColor="#0C0D36"
-                                        value={remarks}
-                                        onChangeText={setRemarks}
-                                    />
-                                </View>
+                <View>
+                  <Text style={styles.label}>Remarks</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter remarks"
+                    placeholderTextColor="#0C0D36"
+                    value={remarks}
+                    onChangeText={setRemarks}
+                  />
+                </View>
 
-                                <View>
-                                    <TouchableOpacity disabled={itemCashData}
+                <View>
+                  <TouchableOpacity
+                    disabled={itemCashData}
+                    onPress={() => {
+                      if (itemCashData == false) {
+                        handleSubmit();
+                      }
+                    }}
+                    style={{
+                      backgroundColor: !itemCashData ? '#2F81F5' : '#B0C4DE',
+                      borderRadius: 28,
+                      paddingVertical: 16,
+                      paddingHorizontal: 10,
+                      opacity: itemCashData ? 1.6 : 1,
+                    }}>
+                    <Text
+                      style={{
+                        fontFamily: 'Montserrat-SemiBold',
+                        fontSize: 16,
+                        color: 'white',
+                        textAlign: 'center',
+                      }}>
+                      Generate Receipt
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
-                                        onPress={() => {
-                                            if (itemCashData == false) {
-                                                handleSubmit();
-                                            }
-                                        }}
-                                        style={{
-                                            backgroundColor: !itemCashData ? '#2F81F5' : '#B0C4DE',
-                                            borderRadius: 28,
-                                            paddingVertical: 16,
-                                            paddingHorizontal: 10,
-                                            opacity: itemCashData ? 1.6 : 1,
-                                        }}
-                                    >
-                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 16, color: 'white', textAlign: 'center' }}>
-                                            Generate Receipt
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
+        {/* Sample pickup collect Modal */}
+        <Modal
+          visible={collectModalVisible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => collectModalVisible(false)}>
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 15,
+                  paddingVertical: 15,
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#ECEDF0',
+                }}>
+                <Text style={styles.modalText}>Collect Modal</Text>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setCollectModalVisible(false)}>
+                  <Image
+                    pointerEvents="none"
+                    style={{width: 18, height: 18}}
+                    source={require('../../../assets/mdlclose.png')}
+                  />
+                </TouchableOpacity>
+              </View>
+              <View style={{padding: 15}}>
+                <View>
+                  <Text style={styles.label}>Attachment</Text>
 
+                  <TouchableOpacity
+                    style={styles.uploadContainer}
+                    onPress={selectImages}>
+                    <Image
+                      style={{width: 30, height: 28, marginHorizontal: 'auto'}}
+                      source={require('../../../assets/upload-icon.png')}
+                    />
+                    <Text style={styles.uploadTitle}>Upload</Text>
+                    <Text style={styles.uploadSubTitle}>
+                      Supports JPG, JPEG, and PNG
+                    </Text>
+                  </TouchableOpacity>
+
+                  {images.length > 0 ? (
+                    <FlatList
+                      style={styles.flatList}
+                      data={images}
+                      keyExtractor={(item, index) => index.toString()}
+                      renderItem={({item, index}) => (
+                        <View>
+                          <Image
+                            source={{uri: item.uri}}
+                            style={{
+                              width: 60,
+                              height: 60,
+                              borderRadius: 5,
+                              marginRight: 10,
+                            }}
+                          />
+                          <TouchableOpacity
+                            onPress={() => handleDeleteImage(index)}
+                            style={{
+                              position: 'absolute',
+                              top: -5,
+                              right: 5,
+                              backgroundColor: 'red',
+                              borderRadius: 12,
+                              width: 22,
+                              height: 22,
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                            }}>
+                            <Text
+                              style={{
+                                color: 'white',
+                                fontSize: 12,
+                                lineHeight: 14,
+                              }}>
+                              ✕
+                            </Text>
+                          </TouchableOpacity>
                         </View>
-                    </View>
-                </Modal>
+                      )}
+                      horizontal
+                    />
+                  ) : (
+                    <Text style={styles.noImgSelected}>No images selected</Text>
+                  )}
+                </View>
 
-                {/* Sample pickup collect Modal */}
-                <Modal
-                    visible={collectModalVisible}
-                    transparent={true}
-                    animationType="slide"
-                    onRequestClose={() => collectModalVisible(false)}>
-                    <View style={styles.modalBackground}>
-                        <View style={styles.modalContainer}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
-                                <Text style={styles.modalText}>Collect Modal</Text>
-                                <TouchableOpacity style={styles.closeButton} onPress={() => setCollectModalVisible(false)}>
-                                    <Image pointerEvents="none" style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
-                                </TouchableOpacity>
-                            </View>
-                            <View style={{ padding: 15, }}>
+                <View>
+                  <Text style={styles.label}>Remarks</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Your Comments"
+                    placeholderTextColor="#0C0D36"
+                    value={collectCommentText}
+                    onChangeText={setCollectCommentText}
+                  />
+                </View>
+                <View
+                  style={{
+                    borderTopWidth: 1,
+                    borderTopColor: '#ECEDF0',
+                    padding: 15,
+                    marginTop: 12,
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                  }}>
+                  <TouchableOpacity
+                    onPress={() => setCollectModalVisible(false)}
+                    style={{
+                      width: '47%',
+                      backgroundColor: '#EFF6FF',
+                      borderRadius: 28,
+                      padding: 12,
+                    }}>
+                    <Text
+                      style={{
+                        fontFamily: 'Montserrat-SemiBold',
+                        color: '#2F81F5',
+                        textAlign: 'center',
+                      }}>
+                      Close
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={onCollect}
+                    style={{
+                      width: '47%',
+                      backgroundColor: '#2F81F5',
+                      borderRadius: 28,
+                      padding: 12,
+                    }}>
+                    <Text
+                      style={{
+                        fontFamily: 'Montserrat-SemiBold',
+                        color: '#fff',
+                        textAlign: 'center',
+                      }}>
+                      Collect
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
-                                <View>
-                                    <Text style={styles.label}>Attachment</Text>
+        {/* Report Dispatched Modal */}
+        <Modal
+          visible={collectModalVisible1}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => collectModalVisible1(false)}>
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 15,
+                  paddingVertical: 15,
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#ECEDF0',
+                }}>
+                <Text style={styles.modalText}>Collect Modal</Text>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setCollectModalVisible(false)}>
+                  <Image
+                    pointerEvents="none"
+                    style={{width: 18, height: 18}}
+                    source={require('../../../assets/mdlclose.png')}
+                  />
+                </TouchableOpacity>
+              </View>
+              <View style={{padding: 15}}>
+                <View>
+                  <Text style={styles.label}>Attachment</Text>
 
-                                    <TouchableOpacity style={styles.uploadContainer} onPress={selectImages}>
-                                        <Image style={{ width: 30, height: 28, marginHorizontal: 'auto', }} source={require('../../../assets/upload-icon.png')} />
-                                        <Text style={styles.uploadTitle}>Upload</Text>
-                                        <Text style={styles.uploadSubTitle}>Supports JPG, JPEG, and PNG</Text>
-                                    </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.uploadContainer}
+                    onPress={selectImages}>
+                    <Image
+                      style={{width: 30, height: 28, marginHorizontal: 'auto'}}
+                      source={require('../../../assets/upload-icon.png')}
+                    />
+                    <Text style={styles.uploadTitle}>Upload</Text>
+                    <Text style={styles.uploadSubTitle}>
+                      Supports JPG, JPEG, and PNG
+                    </Text>
+                  </TouchableOpacity>
 
-                                    {images.length > 0 ? (
-                                        <FlatList
-                                            style={styles.flatList}
-                                            data={images}
-                                            keyExtractor={(item, index) => index.toString()}
-                                            renderItem={({ item, index }) => (
-                                                <View>
-                                                    <Image source={{ uri: item.uri }} style={{ width: 60, height: 60, borderRadius: 5, marginRight: 10, }} />
-                                                    <TouchableOpacity
-                                                        onPress={() => handleDeleteImage(index)}
-                                                        style={{
-                                                            position: 'absolute',
-                                                            top: -5,
-                                                            right: 5,
-                                                            backgroundColor: 'red',
-                                                            borderRadius: 12,
-                                                            width: 22,
-                                                            height: 22,
-                                                            justifyContent: 'center',
-                                                            alignItems: 'center'
-                                                        }}
-                                                    >
-                                                        <Text style={{ color: 'white', fontSize: 12, lineHeight: 14, }}>✕</Text>
-                                                    </TouchableOpacity>
-                                                </View>
-                                            )}
-                                            horizontal
-                                        />
-                                    ) : (
-                                        <Text style={styles.noImgSelected}>No images selected</Text>
-                                    )}
-                                </View>
-
-                                <View>
-                                    <Text style={styles.label}>Remarks</Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Your Comments"
-                                        placeholderTextColor="#0C0D36"
-                                        value={collectCommentText}
-                                        onChangeText={setCollectCommentText}
-                                    />
-                                </View>
-                                <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', padding: 15, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between', }}>
-                                    <TouchableOpacity onPress={() => setCollectModalVisible(false)} style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12, }}>
-                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#2F81F5', textAlign: 'center', }}>Close</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={onCollect} style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12, }}>
-                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#fff', textAlign: 'center', }}>Collect</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
+                  {images.length > 0 ? (
+                    <FlatList
+                      style={styles.flatList}
+                      data={images}
+                      keyExtractor={(item, index) => index.toString()}
+                      renderItem={({item, index}) => (
+                        <View>
+                          <Image
+                            source={{uri: item.uri}}
+                            style={{
+                              width: 60,
+                              height: 60,
+                              borderRadius: 5,
+                              marginRight: 10,
+                            }}
+                          />
+                          <TouchableOpacity
+                            onPress={() => handleDeleteImage(index)}
+                            style={{
+                              position: 'absolute',
+                              top: -5,
+                              right: 5,
+                              backgroundColor: 'red',
+                              borderRadius: 12,
+                              width: 22,
+                              height: 22,
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                            }}>
+                            <Text
+                              style={{
+                                color: 'white',
+                                fontSize: 12,
+                                lineHeight: 14,
+                              }}>
+                              ✕
+                            </Text>
+                          </TouchableOpacity>
                         </View>
+                      )}
+                      horizontal
+                    />
+                  ) : (
+                    <Text style={styles.noImgSelected}>No images selected</Text>
+                  )}
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 6,
+                  }}>
+                  <Text
+                    style={{
+                      fontFamily: 'Montserrat-Medium',
+                      fontSize: 16,
+                      color: '#0C0D36',
+                    }}>
+                    Select All
+                  </Text>
+                  <Checkbox
+                    status={checked ? 'checked' : 'unchecked'}
+                    onPress={() => setChecked(!checked)}
+                  />
+                </View>
+
+                <Text
+                  style={{
+                    fontFamily: 'Montserrat-Medium',
+                    fontSize: 16,
+                    color: '#0C0D36',
+                    paddingBottom: 18,
+                  }}>
+                  Akash Kundu (Investigation ID)
+                </Text>
+
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 6,
+                  }}>
+                  <View style={{flexDirection: 'row', flex: 1}}>
+                    <View
+                      style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: '50%',
+                        borderWidth: 1,
+                        borderColor: '#8FEE95',
+                        backgroundColor: '#F0FFF1',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                      <Image
+                        style={{width: 14, height: 14}}
+                        source={require('../../../assets/texticon2.png')}
+                      />
                     </View>
-                </Modal>
+                    <Text
+                      style={{
+                        fontFamily: 'Montserrat-Medium',
+                        fontSize: 14,
+                        color: '#0C0D36',
+                        paddingLeft: 10,
+                      }}>
+                      Container Type (Bar Code)
+                    </Text>
+                  </View>
+                  <Checkbox
+                    status={checked ? 'checked' : 'unchecked'}
+                    onPress={() => setChecked(!checked)}
+                  />
+                </View>
 
-                {/* Report Dispatched Modal */}
-                <Modal
-                    visible={collectModalVisible1}
-                    transparent={true}
-                    animationType="slide"
-                    onRequestClose={() => collectModalVisible1(false)}>
-                    <View style={styles.modalBackground}>
-                        <View style={styles.modalContainer}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
-                                <Text style={styles.modalText}>Collect Modal</Text>
-                                <TouchableOpacity style={styles.closeButton} onPress={() => setCollectModalVisible(false)}>
-                                    <Image pointerEvents="none" style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
-                                </TouchableOpacity>
-                            </View>
-                            <View style={{ padding: 15, }}>
+                <View>
+                  <Text style={styles.label}>Remarks</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Placeholder"
+                    placeholderTextColor="#0C0D36"
+                  />
+                </View>
+                <View
+                  style={{
+                    borderTopWidth: 1,
+                    borderTopColor: '#ECEDF0',
+                    padding: 15,
+                    marginTop: 12,
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                  }}>
+                  <TouchableOpacity
+                    onPress={() => setCollectModalVisible(false)}
+                    style={{
+                      width: '47%',
+                      backgroundColor: '#EFF6FF',
+                      borderRadius: 28,
+                      padding: 12,
+                    }}>
+                    <Text
+                      style={{
+                        fontFamily: 'Montserrat-SemiBold',
+                        color: '#2F81F5',
+                        textAlign: 'center',
+                      }}>
+                      Close
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('Collected')}
+                    style={{
+                      width: '47%',
+                      backgroundColor: '#2F81F5',
+                      borderRadius: 28,
+                      padding: 12,
+                    }}>
+                    <Text
+                      style={{
+                        fontFamily: 'Montserrat-SemiBold',
+                        color: '#fff',
+                        textAlign: 'center',
+                      }}>
+                      Collect
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
-                                <View>
-                                    <Text style={styles.label}>Attachment</Text>
+        {/* Delivery Modal */}
+        <Modal
+          visible={collectModalVisible2}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => collectModalVisible2(false)}>
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 15,
+                  paddingVertical: 15,
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#ECEDF0',
+                }}>
+                <Text style={styles.modalText}>Delivery Modal</Text>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setCollectModalVisible2(false)}>
+                  <Image
+                    pointerEvents="none"
+                    style={{width: 18, height: 18}}
+                    source={require('../../../assets/mdlclose.png')}
+                  />
+                </TouchableOpacity>
+              </View>
+              <ScrollView>
+                <View style={{padding: 15}}>
+                  <View>
+                    <Text style={styles.label}>Attachment</Text>
 
-                                    <TouchableOpacity style={styles.uploadContainer} onPress={selectImages}>
-                                        <Image style={{ width: 30, height: 28, marginHorizontal: 'auto', }} source={require('../../../assets/upload-icon.png')} />
-                                        <Text style={styles.uploadTitle}>Upload</Text>
-                                        <Text style={styles.uploadSubTitle}>Supports JPG, JPEG, and PNG</Text>
-                                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.uploadContainer}
+                      onPress={selectImages}>
+                      <Image
+                        style={{
+                          width: 30,
+                          height: 28,
+                          marginHorizontal: 'auto',
+                        }}
+                        source={require('../../../assets/upload-icon.png')}
+                      />
+                      <Text style={styles.uploadTitle}>Upload</Text>
+                      <Text style={styles.uploadSubTitle}>
+                        Supports JPG, JPEG, and PNG
+                      </Text>
+                    </TouchableOpacity>
 
-                                    {images.length > 0 ? (
-                                        <FlatList
-                                            style={styles.flatList}
-                                            data={images}
-                                            keyExtractor={(item, index) => index.toString()}
-                                            renderItem={({ item, index }) => (
-                                                <View>
-                                                    <Image source={{ uri: item.uri }} style={{ width: 60, height: 60, borderRadius: 5, marginRight: 10, }} />
-                                                    <TouchableOpacity
-                                                        onPress={() => handleDeleteImage(index)}
-                                                        style={{
-                                                            position: 'absolute',
-                                                            top: -5,
-                                                            right: 5,
-                                                            backgroundColor: 'red',
-                                                            borderRadius: 12,
-                                                            width: 22,
-                                                            height: 22,
-                                                            justifyContent: 'center',
-                                                            alignItems: 'center'
-                                                        }}
-                                                    >
-                                                        <Text style={{ color: 'white', fontSize: 12, lineHeight: 14, }}>✕</Text>
-                                                    </TouchableOpacity>
-                                                </View>
-                                            )}
-                                            horizontal
-                                        />
-                                    ) : (
-                                        <Text style={styles.noImgSelected}>No images selected</Text>
-                                    )}
-                                </View>
+                    {images.length > 0 ? (
+                      <FlatList
+                        style={styles.flatList}
+                        data={images}
+                        keyExtractor={(item, index) => index.toString()}
+                        renderItem={({item, index}) => (
+                          <View>
+                            <Image
+                              source={{uri: item.uri}}
+                              style={{
+                                width: 60,
+                                height: 60,
+                                borderRadius: 5,
+                                marginRight: 10,
+                              }}
+                            />
+                            <TouchableOpacity
+                              onPress={() => handleDeleteImage(index)}
+                              style={{
+                                position: 'absolute',
+                                top: -5,
+                                right: 5,
+                                backgroundColor: 'red',
+                                borderRadius: 12,
+                                width: 22,
+                                height: 22,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                              }}>
+                              <Text
+                                style={{
+                                  color: 'white',
+                                  fontSize: 12,
+                                  lineHeight: 14,
+                                }}>
+                                ✕
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                        horizontal
+                      />
+                    ) : (
+                      <Text style={styles.noImgSelected}>
+                        No images selected
+                      </Text>
+                    )}
+                  </View>
 
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, }}>
-                                    <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 16, color: '#0C0D36', }}>Select All</Text>
-                                    <Checkbox status={checked ? "checked" : "unchecked"} onPress={() => setChecked(!checked)} />
-                                </View>
+                  <Text
+                    style={{
+                      fontFamily: 'Montserrat-Medium',
+                      fontSize: 16,
+                      color: '#0C0D36',
+                      paddingBottom: 18,
+                      marginTop: 5,
+                    }}>
+                    Item Details
+                  </Text>
 
-                                <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 16, color: '#0C0D36', paddingBottom: 18, }}>Akash Kundu (Investigation ID)</Text>
-
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, }}>
-                                    <View style={{ flexDirection: 'row', flex: 1, }}>
-                                        <View style={{ width: 24, height: 24, borderRadius: '50%', borderWidth: 1, borderColor: '#8FEE95', backgroundColor: '#F0FFF1', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', }}>
-                                            <Image style={{ width: 14, height: 14, }} source={require('../../../assets/texticon2.png')} />
-                                        </View>
-                                        <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 14, color: '#0C0D36', paddingLeft: 10, }}>Container Type (Bar Code)</Text>
-                                    </View>
-                                    <Checkbox status={checked ? "checked" : "unchecked"} onPress={() => setChecked(!checked)} />
-                                </View>
-
-                                <View>
-                                    <Text style={styles.label}>Remarks</Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Placeholder"
-                                        placeholderTextColor="#0C0D36"
-                                    />
-                                </View>
-                                <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', padding: 15, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between', }}>
-                                    <TouchableOpacity onPress={() => setCollectModalVisible(false)} style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12, }}>
-                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#2F81F5', textAlign: 'center', }}>Close</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => navigation.navigate('Collected')} style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12, }}>
-                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#fff', textAlign: 'center', }}>Collect</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-                </Modal>
-
-                {/* Delivery Modal */}
-                <Modal
-                    visible={collectModalVisible2}
-                    transparent={true}
-                    animationType="slide"
-                    onRequestClose={() => collectModalVisible2(false)}>
-                    <View style={styles.modalBackground}>
-                        <View style={styles.modalContainer}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
-                                <Text style={styles.modalText}>Delivery Modal</Text>
-                                <TouchableOpacity style={styles.closeButton} onPress={() => setCollectModalVisible2(false)}>
-                                    <Image pointerEvents="none" style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
-                                </TouchableOpacity>
-                            </View>
-                            <ScrollView>
-                                <View style={{ padding: 15, }}>
-
-                                    <View>
-                                        <Text style={styles.label}>Attachment</Text>
-
-                                        <TouchableOpacity style={styles.uploadContainer} onPress={selectImages}>
-                                            <Image style={{ width: 30, height: 28, marginHorizontal: 'auto', }} source={require('../../../assets/upload-icon.png')} />
-                                            <Text style={styles.uploadTitle}>Upload</Text>
-                                            <Text style={styles.uploadSubTitle}>Supports JPG, JPEG, and PNG</Text>
-                                        </TouchableOpacity>
-
-                                        {images.length > 0 ? (
-                                            <FlatList
-                                                style={styles.flatList}
-                                                data={images}
-                                                keyExtractor={(item, index) => index.toString()}
-                                                renderItem={({ item, index }) => (
-                                                    <View>
-                                                        <Image source={{ uri: item.uri }} style={{ width: 60, height: 60, borderRadius: 5, marginRight: 10, }} />
-                                                        <TouchableOpacity
-                                                            onPress={() => handleDeleteImage(index)}
-                                                            style={{
-                                                                position: 'absolute',
-                                                                top: -5,
-                                                                right: 5,
-                                                                backgroundColor: 'red',
-                                                                borderRadius: 12,
-                                                                width: 22,
-                                                                height: 22,
-                                                                justifyContent: 'center',
-                                                                alignItems: 'center'
-                                                            }}
-                                                        >
-                                                            <Text style={{ color: 'white', fontSize: 12, lineHeight: 14, }}>✕</Text>
-                                                        </TouchableOpacity>
-                                                    </View>
-                                                )}
-                                                horizontal
-                                            />
-                                        ) : (
-                                            <Text style={styles.noImgSelected}>No images selected</Text>
-                                        )}
-                                    </View>
-
-
-                                    <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 16, color: '#0C0D36', paddingBottom: 18, marginTop: 5 }}>Item Details</Text>
-
-                                    {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                                 <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 16, color: '#0C0D36' }}>Select All</Text>
                                 <Checkbox status={checked ? "checked" : "unchecked"} onPress={handleSelectAll} />
                                 </View> */}
-                                    {itemInfo?.map((info, index) => (
-                                        <View
-                                            key={info.id}
-                                            style={{
-                                                flexDirection: 'row',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center',
-                                                marginBottom: 6,
-                                            }}
-                                        >
-                                            <View style={{ flexDirection: 'row', flex: 1 }}>
-                                                <View
-                                                    style={{
-                                                        width: 24,
-                                                        height: 24,
-                                                        borderRadius: 12,
-                                                        borderWidth: 1,
-                                                        borderColor: '#8FEE95',
-                                                        backgroundColor: info.item?.color,
-                                                        flexDirection: 'row',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                    }}
-                                                >
-                                                    <Image
-                                                        style={{ width: 14, height: 14 }}
-                                                        source={require('../../../assets/texticon2.png')}
-                                                    />
-                                                </View>
-                                                <Text
-                                                    style={{
-                                                        fontFamily: 'Montserrat-Medium',
-                                                        fontSize: 14,
-                                                        color: '#0C0D36',
-                                                        paddingLeft: 10,
-                                                    }}
-                                                >
-                                                    {info.item_name ?? 'Unknown Item'} - {info.quantity}
-                                                </Text>
-                                            </View>
-                                            <Checkbox
-                                                status={
-                                                    itemIds.some(item => item.itemId === info.itemId)
-                                                        ? 'checked'
-                                                        : 'unchecked'
-                                                }
-                                                onPress={() => toggleItemChecked(info.itemId)}
-                                            />
-
-
-                                        </View>
-                                    ))}
-
-
-                                    <View>
-                                        <Text style={styles.label}>Remarks</Text>
-                                        <TextInput
-                                            style={styles.input}
-                                            placeholder="Write here..."
-                                            placeholderTextColor="#0C0D36"
-                                            value={deliverRemarks}
-                                            onChangeText={text => setDeliveryRemarks(text)}
-                                        />
-                                    </View>
-                                    <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', padding: 15, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between', }}>
-                                        <TouchableOpacity onPress={() => setCollectModalVisible2(false)} style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12, }}>
-                                            <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#2F81F5', textAlign: 'center', }}>Close</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity onPress={() => deliverItem()} style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12, }}>
-                                            <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#fff', textAlign: 'center', }}>Deliver</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                    {loading && (
-                                        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)' }}>
-                                            <ActivityIndicator size="large" color="#2F81F5" />
-                                        </View>
-                                    )}
-                                </View>
-                            </ScrollView>
+                  {itemInfo?.map((info, index) => (
+                    <View
+                      key={info.id}
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: 6,
+                      }}>
+                      <View style={{flexDirection: 'row', flex: 1}}>
+                        <View
+                          style={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: '#8FEE95',
+                            backgroundColor: info.item?.color,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}>
+                          <Image
+                            style={{width: 14, height: 14}}
+                            source={require('../../../assets/texticon2.png')}
+                          />
                         </View>
-                    </View>
-                </Modal>
-
-                {/* Consignment Pickup Modal */}
-                <Modal
-                    visible={collectModalVisible3}
-                    transparent={true}
-                    animationType="slide"
-                    onRequestClose={() => collectModalVisible3(false)}>
-                    <View style={styles.modalBackground}>
-                        <View style={styles.modalContainer}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0', }}>
-                                <Text style={styles.modalText}>{getTaskType}</Text>
-                                <TouchableOpacity style={styles.closeButton} onPress={() => setCollectModalVisible3(false)}>
-                                    <Image pointerEvents="none" style={{ width: 18, height: 18, }} source={require('../../../assets/mdlclose.png')} />
-                                </TouchableOpacity>
-                            </View>
-                            <ScrollView>
-                            <View style={{ padding: 15, }}>
-
-                                <View>
-                                    <Text style={styles.label}>Attachment</Text>
-
-                                    <TouchableOpacity style={styles.uploadContainer} onPress={selectImages}>
-                                        <Image style={{ width: 30, height: 28, marginHorizontal: 'auto', }} source={require('../../../assets/upload-icon.png')} />
-                                        <Text style={styles.uploadTitle}>Upload</Text>
-                                        <Text style={styles.uploadSubTitle}>Supports JPG, JPEG, and PNG</Text>
-                                    </TouchableOpacity>
-
-                                    {images.length > 0 ? (
-                                        <FlatList
-                                            style={styles.flatList}
-                                            data={images}
-                                            keyExtractor={(item, index) => index.toString()}
-                                            renderItem={({ item, index }) => (
-                                                <View>
-                                                    <Image source={{ uri: item.uri }} style={{ width: 60, height: 60, borderRadius: 5, marginRight: 10, }} />
-                                                    <TouchableOpacity
-                                                        onPress={() => handleDeleteImage(index)}
-                                                        style={{
-                                                            position: 'absolute',
-                                                            top: -5,
-                                                            right: 5,
-                                                            backgroundColor: 'red',
-                                                            borderRadius: 12,
-                                                            width: 22,
-                                                            height: 22,
-                                                            justifyContent: 'center',
-                                                            alignItems: 'center'
-                                                        }}
-                                                    >
-                                                        <Text style={{ color: 'white', fontSize: 12, lineHeight: 14, }}>✕</Text>
-                                                    </TouchableOpacity>
-                                                </View>
-                                            )}
-                                            horizontal
-                                        />
-                                    ) : (
-                                        <Text style={styles.noImgSelected}>No images selected</Text>
-                                    )}
-                                </View>
-
-
-                                <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 16, color: '#0C0D36', paddingBottom: 18, }}>Item Details:</Text>
-
-                                {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, }}>
-                                    <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 16, color: '#0C0D36', }}>Select All</Text>
-                                    <Checkbox status={checked ? "checked" : "unchecked"} onPress={handleSelectAll} />
-                                </View> */}
-                                {itemDetails?.map((info, index) => (
-
-                                    <View
-                                        key={info.id}
-                                        style={{
-                                            flexDirection: 'row',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center',
-                                            marginBottom: 6,
-                                        }}
-                                    >
-                                        <View style={{ flexDirection: 'row', flex: 1 }}>
-                                            <View
-                                                style={{
-                                                    width: 24,
-                                                    height: 24,
-                                                    borderRadius: 12,
-                                                    borderWidth: 1,
-                                                    borderColor: '#8FEE95',
-                                                    backgroundColor: '#F0FFF1',
-                                                    flexDirection: 'row',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                }}
-                                            >
-                                                <Image
-                                                    style={{ width: 14, height: 14 }}
-                                                    source={require('../../../assets/texticon2.png')}
-                                                />
-                                            </View>
-                                            <Text
-                                                style={{
-                                                    fontFamily: 'Montserrat-Medium',
-                                                    fontSize: 14,
-                                                    color: '#0C0D36',
-                                                    paddingLeft: 10,
-                                                }}
-                                            >
-                                                {info?.item_name ?? 'Unknown Item'} - {info?.quantity}
-                                            </Text>
-                                        </View>
-                                        <Checkbox
-                                            status={itemIds.some(item => item.itemId === info.itemId) ? 'checked' : 'unchecked'}
-                                            onPress={() => toggleItemChecked(info.itemId)}
-                                        />
-
-                                    </View>
-                                ))}
-
-
-                                <View>
-                                    <Text style={styles.label}>Remarks</Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Write here..."
-                                        placeholderTextColor="#0C0D36"
-                                        value={deliverRemarks}
-                                        onChangeText={text => setDeliveryRemarks(text)}
-                                    />
-                                </View>
-                                <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', padding: 15, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between', }}>
-                                    <TouchableOpacity onPress={() => setCollectModalVisible3(false)} style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12, }}>
-                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#2F81F5', textAlign: 'center', }}>Close</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => collectItem()} style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12, }}>
-                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#fff', textAlign: 'center', }}>Collect</Text>
-                                    </TouchableOpacity>
-                                </View>
-                                {loading && (
-                                    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)' }}>
-                                        <ActivityIndicator size="large" color="#2F81F5" />
-                                    </View>
-                                )}
-                                </View>
-                            </ScrollView>
-                        </View>
-                    </View>
-                </Modal>
-
-                {/* Full image modal */}
-                <Modal visible={modalVisible2} transparent={true}>
-                    <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' }}>
-
-                        {/* Close Button */}
-                        <TouchableOpacity
-                            style={{
-                                position: 'absolute',
-                                top: 40,
-                                right: 20,
-                                zIndex: 1,
-                                backgroundColor: '#fff',
-                                borderRadius: 20,
-                                padding: 5,
-                            }}
-                            onPress={() => setModalVisible2(false)}
-                        >
-                            <Text pointerEvents="none" style={{ fontSize: 18, fontWeight: 'bold' }}>✕</Text>
-                        </TouchableOpacity>
-
-                        {/* Full Image */}
-                        <Image
-                            style={{ width: '90%', height: '70%', resizeMode: 'contain' }}
-                            source={{ uri: fullImageUri }}
-                        />
-
-                    </View>
-                </Modal>
-
-
-                {/* Comman Payment Modal */}
-                {/* <> */}
-                {/* <TouchableOpacity onPress={() => setModalVisible(true)}>
-                    <Text>Open Receipt</Text>
-                </TouchableOpacity> */}
-
-                <PaymentReceiptModal
-                    visible={modalVisible4}
-                    onClose={() => setModalVisible4(false)}
-
-                    clients={
-                        allClients.filter(
-                            client =>
-                                String(client.id) === String(selectedClientId)
-                        )
-                    }
-                    banks={bankName}
-                    denominations={denomMaster}   // ✅ IMPORTANT: full API list
-
-                    fetchBanks={getAllBanks}
-                    fetchDenominations={getAllDenomination}
-                    initialClientId={selectedClientId}
-                    styles={styles}
-                    toWords={toWords}
-                    formatDate={formatDate}
-                    empId={getUserId}
-                    taskId={taskId}
-                    showAlert={(msg, isErr) => showAlertModal(msg, isErr)}
-                    isFromTask={true}
-                    onOpenGateway={async ({ amount, mode }) => {
-                        // ✅ later integrate gateway
-                        // must return: { success: true, transaction_id: "..." }
-                        console.log('gateway: ', amount, mode)
-                        return { success: true, transaction_id: "DUMMY_TXN_123" };
-                    }}
-
-                    onSubmit={async (fd, ctx) => {
-                        setIsSubmitting(true);
-
-                        try {
-
-                            console.log("========== PAYMENT CONTEXT ==========", sharedTaskId);
-                            console.log(JSON.stringify(ctx, null, 2));
-
-                            console.log("========== FORMDATA ==========");
-                            if (fd?._parts?.length) {
-                                fd._parts.forEach(([k, v]) => console.log(k, ":", v));
-                            } else {
-                                console.log("No _parts found on FormData");
-                            }
-
-                            // return
-                            const data = await TaskService.generateNewReceipt(fd);
-
-                            console.log("API RESPONSE:", data);
-
-                            if (data?.status === 1) {
-                                showAlertModal("Submitted Successfully!", false);
-                                setModalVisible(false);
-                                onRefresh();
-                                navigation.navigate('Receipt', { page: 'Progress' })
-                                return data;
-                            }
-
-                            showAlertModal(data?.message || "Something went wrong", true);
-                            return data;
-                        } catch (e) {
-                            console.log("submit error:", e?.message, e);
-                            showAlertModal(e?.message || "Something went wrong", true);
-                            return { status: 0, message: e?.message || "Unknown error" };
-                        } finally {
-                            setIsSubmitting(false);
+                        <Text
+                          style={{
+                            fontFamily: 'Montserrat-Medium',
+                            fontSize: 14,
+                            color: '#0C0D36',
+                            paddingLeft: 10,
+                          }}>
+                          {info.item_name ?? 'Unknown Item'} - {info.quantity}
+                        </Text>
+                      </View>
+                      <Checkbox
+                        status={
+                          itemIds.some(item => item.itemId === info.itemId)
+                            ? 'checked'
+                            : 'unchecked'
                         }
-                    }}
-                />
-                {/* </> */}
+                        onPress={() => toggleItemChecked(info.itemId)}
+                      />
+                    </View>
+                  ))}
 
-            </ScrollView>
-
-            {loading && (
-                <View
+                  <View>
+                    <Text style={styles.label}>Remarks</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Write here..."
+                      placeholderTextColor="#0C0D36"
+                      value={deliverRemarks}
+                      onChangeText={text => setDeliveryRemarks(text)}
+                    />
+                  </View>
+                  <View
                     style={{
+                      borderTopWidth: 1,
+                      borderTopColor: '#ECEDF0',
+                      padding: 15,
+                      marginTop: 12,
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                    }}>
+                    <TouchableOpacity
+                      onPress={() => setCollectModalVisible2(false)}
+                      style={{
+                        width: '47%',
+                        backgroundColor: '#EFF6FF',
+                        borderRadius: 28,
+                        padding: 12,
+                      }}>
+                      <Text
+                        style={{
+                          fontFamily: 'Montserrat-SemiBold',
+                          color: '#2F81F5',
+                          textAlign: 'center',
+                        }}>
+                        Close
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={handleDeliverItem}
+                      style={{
+                        width: '47%',
+                        backgroundColor: '#2F81F5',
+                        borderRadius: 28,
+                        padding: 12,
+                      }}>
+                      <Text
+                        style={{
+                          fontFamily: 'Montserrat-SemiBold',
+                          color: '#fff',
+                          textAlign: 'center',
+                        }}>
+                        Deliver
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* <TouchableOpacity
+                      onPress={() => deliverItem()}
+                      style={{
+                        width: '47%',
+                        backgroundColor: '#2F81F5',
+                        borderRadius: 28,
+                        padding: 12,
+                      }}>
+                      <Text
+                        style={{
+                          fontFamily: 'Montserrat-SemiBold',
+                          color: '#fff',
+                          textAlign: 'center',
+                        }}>
+                        Deliver
+                      </Text>
+                    </TouchableOpacity> */}
+                  </View>
+                  {loading && (
+                    <View
+                      style={{
                         position: 'absolute',
                         top: 0,
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        zIndex: 9999,
-                    }}
-                >
-                    <ActivityIndicator size="large" color="#FFFFFF" />
-                    <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
+                        backgroundColor: 'rgba(0,0,0,0.2)',
+                      }}>
+                      <ActivityIndicator size="large" color="#2F81F5" />
+                    </View>
+                  )}
                 </View>
-            )}
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
 
-            <CustomAlert
-                visible={alertVisible}
-                type={alertData.type}
-                title={alertData.title}
-                message={alertData.message}
-                onClose={() => setAlertVisible(false)}
+        {/* Consignment Pickup Modal */}
+        <Modal
+          visible={collectModalVisible3}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => collectModalVisible3(false)}>
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 15,
+                  paddingVertical: 15,
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#ECEDF0',
+                }}>
+                <Text style={styles.modalText}>{getTaskType}</Text>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setCollectModalVisible3(false)}>
+                  <Image
+                    pointerEvents="none"
+                    style={{width: 18, height: 18}}
+                    source={require('../../../assets/mdlclose.png')}
+                  />
+                </TouchableOpacity>
+              </View>
+              <ScrollView>
+                <View style={{padding: 15}}>
+                  <View>
+                    <Text style={styles.label}>Attachment</Text>
+
+                    <TouchableOpacity
+                      style={styles.uploadContainer}
+                      onPress={selectImages}>
+                      <Image
+                        style={{
+                          width: 30,
+                          height: 28,
+                          marginHorizontal: 'auto',
+                        }}
+                        source={require('../../../assets/upload-icon.png')}
+                      />
+                      <Text style={styles.uploadTitle}>Upload</Text>
+                      <Text style={styles.uploadSubTitle}>
+                        Supports JPG, JPEG, and PNG
+                      </Text>
+                    </TouchableOpacity>
+
+                    {images.length > 0 ? (
+                      <FlatList
+                        style={styles.flatList}
+                        data={images}
+                        keyExtractor={(item, index) => index.toString()}
+                        renderItem={({item, index}) => (
+                          <View>
+                            <Image
+                              source={{uri: item.uri}}
+                              style={{
+                                width: 60,
+                                height: 60,
+                                borderRadius: 5,
+                                marginRight: 10,
+                              }}
+                            />
+                            <TouchableOpacity
+                              onPress={() => handleDeleteImage(index)}
+                              style={{
+                                position: 'absolute',
+                                top: -5,
+                                right: 5,
+                                backgroundColor: 'red',
+                                borderRadius: 12,
+                                width: 22,
+                                height: 22,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                              }}>
+                              <Text
+                                style={{
+                                  color: 'white',
+                                  fontSize: 12,
+                                  lineHeight: 14,
+                                }}>
+                                ✕
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                        horizontal
+                      />
+                    ) : (
+                      <Text style={styles.noImgSelected}>
+                        No images selected
+                      </Text>
+                    )}
+                  </View>
+
+                  <Text
+                    style={{
+                      fontFamily: 'Montserrat-Medium',
+                      fontSize: 16,
+                      color: '#0C0D36',
+                      paddingBottom: 18,
+                    }}>
+                    Item Details:
+                  </Text>
+
+                  {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, }}>
+                                    <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 16, color: '#0C0D36', }}>Select All</Text>
+                                    <Checkbox status={checked ? "checked" : "unchecked"} onPress={handleSelectAll} />
+                                </View> */}
+                  {itemDetails?.map((info, index) => (
+                    <View
+                      key={info.id}
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: 6,
+                      }}>
+                      <View style={{flexDirection: 'row', flex: 1}}>
+                        <View
+                          style={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: '#8FEE95',
+                            backgroundColor: '#F0FFF1',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}>
+                          <Image
+                            style={{width: 14, height: 14}}
+                            source={require('../../../assets/texticon2.png')}
+                          />
+                        </View>
+                        <Text
+                          style={{
+                            fontFamily: 'Montserrat-Medium',
+                            fontSize: 14,
+                            color: '#0C0D36',
+                            paddingLeft: 10,
+                          }}>
+                          {info?.item_name ?? 'Unknown Item'} - {info?.quantity}
+                        </Text>
+                      </View>
+                      <Checkbox
+                        status={
+                          itemIds.some(item => item.itemId === info.itemId)
+                            ? 'checked'
+                            : 'unchecked'
+                        }
+                        onPress={() => toggleItemChecked(info.itemId)}
+                      />
+                    </View>
+                  ))}
+
+                  <View>
+                    <Text style={styles.label}>Remarks</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Write here..."
+                      placeholderTextColor="#0C0D36"
+                      value={deliverRemarks}
+                      onChangeText={text => setDeliveryRemarks(text)}
+                    />
+                  </View>
+                  <View
+                    style={{
+                      borderTopWidth: 1,
+                      borderTopColor: '#ECEDF0',
+                      padding: 15,
+                      marginTop: 12,
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                    }}>
+                    <TouchableOpacity
+                      onPress={() => setCollectModalVisible3(false)}
+                      style={{
+                        width: '47%',
+                        backgroundColor: '#EFF6FF',
+                        borderRadius: 28,
+                        padding: 12,
+                      }}>
+                      <Text
+                        style={{
+                          fontFamily: 'Montserrat-SemiBold',
+                          color: '#2F81F5',
+                          textAlign: 'center',
+                        }}>
+                        Close
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => collectItem()}
+                      style={{
+                        width: '47%',
+                        backgroundColor: '#2F81F5',
+                        borderRadius: 28,
+                        padding: 12,
+                      }}>
+                      <Text
+                        style={{
+                          fontFamily: 'Montserrat-SemiBold',
+                          color: '#fff',
+                          textAlign: 'center',
+                        }}>
+                        Collect
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  {loading && (
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: 'rgba(0,0,0,0.2)',
+                      }}>
+                      <ActivityIndicator size="large" color="#2F81F5" />
+                    </View>
+                  )}
+                </View>
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Full image modal */}
+        <Modal visible={modalVisible2} transparent={true}>
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(0,0,0,0.9)',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            {/* Close Button */}
+            <TouchableOpacity
+              style={{
+                position: 'absolute',
+                top: 40,
+                right: 20,
+                zIndex: 1,
+                backgroundColor: '#fff',
+                borderRadius: 20,
+                padding: 5,
+              }}
+              onPress={() => setModalVisible2(false)}>
+              <Text
+                pointerEvents="none"
+                style={{fontSize: 18, fontWeight: 'bold'}}>
+                ✕
+              </Text>
+            </TouchableOpacity>
+
+            {/* Full Image */}
+            <Image
+              style={{width: '90%', height: '70%', resizeMode: 'contain'}}
+              source={{uri: fullImageUri}}
             />
+          </View>
+        </Modal>
 
-        </SafeAreaView>
-    )
+        {/* Comman Payment Modal */}
+        {/* <> */}
+        {/* <TouchableOpacity onPress={() => setModalVisible(true)}>
+                    <Text>Open Receipt</Text>
+                </TouchableOpacity> */}
+
+        <PaymentReceiptModal
+          visible={modalVisible4}
+          onClose={() => setModalVisible4(false)}
+          clients={allClients.filter(
+            client => String(client.id) === String(selectedClientId),
+          )}
+          banks={bankName}
+          denominations={denomMaster} // ✅ IMPORTANT: full API list
+          fetchBanks={getAllBanks}
+          fetchDenominations={getAllDenomination}
+          initialClientId={selectedClientId}
+          styles={styles}
+          toWords={toWords}
+          formatDate={formatDate}
+          empId={getUserId}
+          taskId={taskId}
+          showAlert={(msg, isErr) => showAlertModal(msg, isErr)}
+          isFromTask={true}
+          onOpenGateway={async ({amount, mode}) => {
+            // ✅ later integrate gateway
+            // must return: { success: true, transaction_id: "..." }
+            console.log('gateway: ', amount, mode);
+            return {success: true, transaction_id: 'DUMMY_TXN_123'};
+          }}
+          onSubmit={async (fd, ctx) => {
+            setIsSubmitting(true);
+
+            try {
+              console.log(
+                '========== PAYMENT CONTEXT ==========',
+                sharedTaskId,
+              );
+              console.log(JSON.stringify(ctx, null, 2));
+
+              console.log('========== FORMDATA ==========');
+              if (fd?._parts?.length) {
+                fd._parts.forEach(([k, v]) => console.log(k, ':', v));
+              } else {
+                console.log('No _parts found on FormData');
+              }
+
+              // return
+              const data = await TaskService.generateNewReceipt(fd);
+
+              console.log('API RESPONSE:', data);
+
+              if (data?.status === 1) {
+                showAlertModal('Submitted Successfully!', false);
+                setModalVisible(false);
+                onRefresh();
+                navigation.navigate('Receipt', {page: 'Progress'});
+                return data;
+              }
+
+              showAlertModal(data?.message || 'Something went wrong', true);
+              return data;
+            } catch (e) {
+              console.log('submit error:', e?.message, e);
+              showAlertModal(e?.message || 'Something went wrong', true);
+              return {status: 0, message: e?.message || 'Unknown error'};
+            } finally {
+              setIsSubmitting(false);
+            }
+          }}
+        />
+        {/* </> */}
+      </ScrollView>
+
+      {loading && (
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999,
+          }}>
+          <ActivityIndicator size="large" color="#FFFFFF" />
+          <Text style={{color: '#FFFFFF', marginTop: 10}}>Proccessing...</Text>
+        </View>
+      )}
+
+      <CustomAlert
+        visible={alertVisible}
+        type={alertData.type}
+        title={alertData.title}
+        message={alertData.message}
+        onClose={() => setAlertVisible(false)}
+      />
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
+  // Deno Table Start
+  payDtl: {
+    backgroundColor: '#fff',
+    // iOS shadow
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    // Android shadow
+    elevation: 4,
+    borderRadius: 12,
+    padding: 12,
+    marginHorizontal: 2,
+    marginBottom: 15,
+    overflow: 'hidden',
+  },
+  payDtlText: {
+    fontFamily: 'Montserrat-SemiBold',
+    fontSize: 15,
+    lineHeight: 18,
+    color: '#0C0D36',
+    paddingBottom: 8,
+    marginBottom: 20,
+    borderBottomColor: 'rgba(0, 0, 0, 0.25)',
+    borderBottomWidth: 1,
+  },
+  denoBoxMain: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.25)',
+    paddingBottom: 12,
+    marginBottom: 15,
+  },
+  denoBoxInn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingBottom: 14,
+  },
+  denoLabel: {
+    fontFamily: 'Montserrat-SemiBold',
+    fontSize: 13,
+    lineHeight: 16,
+    color: '#0C0D36',
+  },
+  denoValue: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 13,
+    lineHeight: 16,
+    color: '#0C0D36',
+  },
+  denoValue2: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: '10',
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 13,
+    lineHeight: 16,
+    color: '#0C0D36',
+  },
+  centerColumn: {
+    textAlign: 'center',
+    alignSelf: 'center',
+  },
+  rightColumn: {
+    textAlign: 'right',
+  },
+  sumTotal: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 10,
+    paddingBottom: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 0, 0, 0.25)',
+    // marginBottom: 15,
+  },
+  sumTotalLabel: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 13,
+    lineHeight: 16,
+    color: '#0C0D36',
+  },
+  sumTotaValue: {
+    fontFamily: 'Montserrat-SemiBold',
+    fontSize: 13,
+    lineHeight: 16,
+    color: '#0C0D36',
+  },
+  amtWords: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  amountInWdLabel: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 14,
+    lineHeight: 16,
+    color: '#0C0D36',
+  },
+  amountInWdValue: {
+    fontFamily: 'Montserrat-SemiBold',
+    fontSize: 15,
+    lineHeight: 18,
+    color: '#0C0D36',
+  },
+  isCheckBox: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  isCheckBoxBorder: {
+    borderTopWidth: 1,
+    borderColor: 'rgba(0,0,0,0.25)',
+    paddingTop: 15,
+  },
+  isCheckBoxLabel: {
+    flex: 1,
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 14,
+    lineHeight: 16,
+    color: '#0C0D36',
+    textAlign: 'left',
+  },
+  isCheckBoxValue: {
+    width: 200,
+    fontFamily: 'Montserrat-SemiBold',
+    fontSize: 15,
+    lineHeight: 18,
+    color: '#0C0D36',
+    textAlign: 'right',
+  },
 
-    // Deno Table Start
-    payDtl: {
-        backgroundColor: "#fff",
-        // iOS shadow
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        // Android shadow
-        elevation: 4,
-        borderRadius: 12,
-        padding: 12,
-        marginHorizontal: 2,
-        marginBottom: 15,
-        overflow: 'hidden',
-    },
-    payDtlText: {
-        fontFamily: 'Montserrat-SemiBold',
-        fontSize: 15,
-        lineHeight: 18,
-        color: "#0C0D36",
-        paddingBottom: 8,
-        marginBottom: 20,
-        borderBottomColor: 'rgba(0, 0, 0, 0.25)',
-        borderBottomWidth: 1,
-    },
-    denoBoxMain: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(0,0,0,0.25)',
-        paddingBottom: 12,
-        marginBottom: 15,
-    },
-    denoBoxInn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingBottom: 14,
-    },
-    denoLabel: {
-        fontFamily: 'Montserrat-SemiBold',
-        fontSize: 13,
-        lineHeight: 16,
-        color: '#0C0D36',
-    },
-    denoValue: {
-        fontFamily: 'Montserrat-Medium',
-        fontSize: 13,
-        lineHeight: 16,
-        color: '#0C0D36',
-    },
-    denoValue2: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: '10',
-        fontFamily: 'Montserrat-Medium',
-        fontSize: 13,
-        lineHeight: 16,
-        color: '#0C0D36',
-    },
-    centerColumn: {
-        textAlign: 'center',
-        alignSelf: 'center',
-    },
-    rightColumn: {
-        textAlign: 'right',
-    },
-    sumTotal: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingTop: 10,
-        paddingBottom: 10,
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(0, 0, 0, 0.25)',
-        // marginBottom: 15,
-    },
-    sumTotalLabel: {
-        fontFamily: 'Montserrat-Medium',
-        fontSize: 13,
-        lineHeight: 16,
-        color: '#0C0D36',
-    },
-    sumTotaValue: {
-        fontFamily: 'Montserrat-SemiBold',
-        fontSize: 13,
-        lineHeight: 16,
-        color: '#0C0D36',
-    },
-    amtWords: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    amountInWdLabel: {
-        fontFamily: 'Montserrat-Medium',
-        fontSize: 14,
-        lineHeight: 16,
-        color: '#0C0D36',
-    },
-    amountInWdValue: {
-        fontFamily: 'Montserrat-SemiBold',
-        fontSize: 15,
-        lineHeight: 18,
-        color: '#0C0D36',
-    },
-    isCheckBox: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 15,
-    },
-    isCheckBoxBorder: {
-        borderTopWidth: 1,
-        borderColor: 'rgba(0,0,0,0.25)',
-        paddingTop: 15,
-    },
-    isCheckBoxLabel: {
-        flex: 1,
-        fontFamily: 'Montserrat-Medium',
-        fontSize: 14,
-        lineHeight: 16,
-        color: '#0C0D36',
-        textAlign: 'left',
-    },
-    isCheckBoxValue: {
-        width: 200,
-        fontFamily: 'Montserrat-SemiBold',
-        fontSize: 15,
-        lineHeight: 18,
-        color: '#0C0D36',
-        textAlign: 'right',
-    },
+  // Upload Attachment
+  uploadContainer: {
+    borderWidth: 1,
+    borderRadius: 12,
+    borderStyle: 'dashed',
+    backgroundColor: '#FAFAFA',
+    borderColor: '#E5E5E5',
+    marginBottom: 15,
+    padding: 12,
+    alignItems: 'center',
+  },
+  uploadTitle: {
+    fontFamily: 'Montserrat-SemiBold',
+    fontSize: 14,
+    color: '#2F81F5',
+    textAlign: 'center',
+    paddingTop: 10,
+    paddingBottom: 3,
+  },
+  uploadSubTitle: {
+    fontFamily: 'Montserrat-Regular',
+    fontSize: 13,
+    color: '#0C0D36',
+    textAlign: 'center',
+  },
+  flatList: {
+    borderWidth: 1,
+    borderRadius: 12,
+    borderStyle: 'dashed',
+    backgroundColor: '#FAFAFA',
+    borderColor: '#E5E5E5',
+    padding: 12,
+    marginBottom: 10,
+  },
+  noImgSelected: {
+    fontFamily: 'Montserrat-SemiBold',
+    fontSize: 13,
+    color: '#0C0D36',
+    textAlign: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    borderStyle: 'dashed',
+    backgroundColor: '#FAFAFA',
+    borderColor: '#E5E5E5',
+    padding: 12,
+    marginBottom: 10,
+  },
 
-    // Upload Attachment
-    uploadContainer: {
-        borderWidth: 1,
-        borderRadius: 12,
-        borderStyle: 'dashed',
-        backgroundColor: '#FAFAFA',
-        borderColor: '#E5E5E5',
-        marginBottom: 15,
-        padding: 12,
-        alignItems: 'center',
-    },
-    uploadTitle: {
-        fontFamily: 'Montserrat-SemiBold',
-        fontSize: 14,
-        color: '#2F81F5',
-        textAlign: 'center',
-        paddingTop: 10,
-        paddingBottom: 3,
-    },
-    uploadSubTitle: {
-        fontFamily: 'Montserrat-Regular',
-        fontSize: 13,
-        color: '#0C0D36',
-        textAlign: 'center',
-    },
-    flatList: {
-        borderWidth: 1,
-        borderRadius: 12,
-        borderStyle: 'dashed',
-        backgroundColor: '#FAFAFA',
-        borderColor: '#E5E5E5',
-        padding: 12,
-        marginBottom: 10,
-    },
-    noImgSelected: {
-        fontFamily: 'Montserrat-SemiBold',
-        fontSize: 13,
-        color: '#0C0D36',
-        textAlign: 'center',
-        borderWidth: 1,
-        borderRadius: 12,
-        borderStyle: 'dashed',
-        backgroundColor: '#FAFAFA',
-        borderColor: '#E5E5E5',
-        padding: 12,
-        marginBottom: 10,
-    },
+  // Toggle Tabs
+  toggleWrap: {flexDirection: 'row', gap: 4, marginBottom: 20},
+  toggleBtn: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#0C0D36',
+    borderRadius: 8,
+  },
+  toggleBtnActive: {backgroundColor: '#2F81F5', borderColor: '#2F81F5'},
+  toggleBtnActiveText: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 12,
+    color: '#fff',
+  },
+  // Denomination Rows
+  DenoRows: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  amount: {fontFamily: 'Montserrat-Medium', fontSize: 16, width: 80},
+  // Counter Controls
+  counter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ECEDF0',
+    borderRadius: 5,
+    padding: 5,
+  },
+  counterBtn: {
+    width: 35,
+    height: 35,
+    backgroundColor: '#EFEFEF',
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  countText: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 14,
+    color: '#000',
+    paddingHorizontal: 24,
+  },
+  // Footer Total
+  totalBox: {
+    padding: 15,
+    marginBottom: 20,
+    backgroundColor: '#FAFAFA',
+    borderWidth: 1,
+    borderColor: '#ECEDF0',
+    borderRadius: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  totalText: {fontFamily: 'Montserrat-SemiBold', color: '#000', fontSize: 14},
 
-    // Toggle Tabs
-    toggleWrap: { flexDirection: "row", gap: 4, marginBottom: 20, },
-    toggleBtn: { paddingHorizontal: 20, paddingVertical: 8, borderWidth: 1, borderColor: '#0C0D36', borderRadius: 8, },
-    toggleBtnActive: { backgroundColor: "#2F81F5", borderColor: '#2F81F5', },
-    toggleBtnActiveText: { fontFamily: 'Montserrat-Medium', fontSize: 12, color: "#fff", },
-    // Denomination Rows
-    DenoRows: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15, },
-    amount: { fontFamily: 'Montserrat-Medium', fontSize: 16, width: 80 },
-    // Counter Controls
-    counter: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#ECEDF0", borderRadius: 5, padding: 5, },
-    counterBtn: { width: 35, height: 35, backgroundColor: "#EFEFEF", borderRadius: 5, justifyContent: "center", alignItems: "center" },
-    countText: { fontFamily: 'Montserrat-Medium', fontSize: 14, color: '#000', paddingHorizontal: 24, },
-    // Footer Total
-    totalBox: { padding: 15, marginBottom: 20, backgroundColor: "#FAFAFA", borderWidth: 1, borderColor: '#ECEDF0', borderRadius: 10, flexDirection: "row", justifyContent: "space-between" },
-    totalText: { fontFamily: 'Montserrat-SemiBold', color: "#000", fontSize: 14, },
+  // Deno Table End
 
-    // Deno Table End
+  label: {
+    fontSize: 16,
+    marginBottom: 8,
+    color: lightTheme.text,
+  },
+  pickerContainer: {
+    backgroundColor: lightTheme.inputBackground,
+    borderWidth: 1,
+    borderColor: lightTheme.border,
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  picker: {
+    height: 50,
+    color: lightTheme.inputText, // Works on iOS and sometimes Android
+  },
 
-    label: {
-        fontSize: 16,
-        marginBottom: 8,
-        color: lightTheme.text,
-    },
-    pickerContainer: {
-        backgroundColor: lightTheme.inputBackground,
-        borderWidth: 1,
-        borderColor: lightTheme.border,
-        borderRadius: 8,
-        overflow: 'hidden',
-        marginBottom: 16,
-    },
-    picker: {
-        height: 50,
-        color: lightTheme.inputText, // Works on iOS and sometimes Android
-    },
+  container: {
+    flex: 1,
+    padding: 15,
+    backgroundColor: '#fff',
+  },
+  tcbtn: {
+    borderWidth: 1,
+    borderColor: '#0C0D36',
+    borderRadius: 8,
+    marginRight: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+  },
+  active: {
+    backgroundColor: '#2F81F5',
+    borderColor: '#2F81F5',
+  },
+  acttext: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 12,
+    color: '#0C0D36',
+  },
+  testactive: {
+    color: '#fff',
+  },
+  mainbox: {
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 3,
+    marginTop: 20,
+    borderRadius: 15,
+    marginBottom: 20,
+  },
+  oncetxt: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 12,
+    color: '#2F81F5',
+    backgroundColor: 'rgba(48, 133, 254, 0.1)',
+    borderWidth: 1,
+    borderColor: '#2F81F5',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  // Modal Start
+  modalBackground: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  modalContainer: {
+    width: '100%',
+    backgroundColor: '#fff',
+    borderTopEndRadius: 20,
+    borderTopLeftRadius: 20,
+    maxHeight: '80%',
+  },
+  modalText: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 16,
+    color: '#0C0D36',
+  },
+  label: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 15,
+    color: '#0C0D36',
+    paddingBottom: 10,
+  },
+  input: {
+    height: 54,
+    borderWidth: 1,
+    borderColor: '#ECEDF0',
+    backgroundColor: '#FAFAFA',
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    borderRadius: 10,
+  },
+  pickerContainer: {
+    height: 54,
+    borderWidth: 1,
+    borderColor: '#ECEDF0',
+    backgroundColor: '#FAFAFA',
+    paddingHorizontal: 0,
+    marginBottom: 15,
+    borderRadius: 10,
+  },
+  textarea: {
+    height: 54,
+    borderWidth: 1,
+    borderColor: '#ECEDF0',
+    backgroundColor: '#FAFAFA',
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    borderRadius: 10,
+  },
+  //
+  mdlNewContainer: {
+    maxHeight: '70%',
+  },
+  sendBtn: {
+    backgroundColor: '#2F81F5',
+    height: 54,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  phleBox: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 20,
+  },
+  phleImg: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#7b8691',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  phleText: {
+    flex: 1,
+    backgroundColor: '#edf1f3',
+    borderRadius: 10,
+    padding: 10,
+  },
+  phleFlexBox: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 6,
+  },
+  phleTitle: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 13,
+    color: '#2F81F5',
+    flex: 1,
+    paddingRight: 15,
+  },
+  phleTime: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 10,
+    color: '#0C0D36',
+  },
+  phleDesc: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 13,
+    color: '#0C0D36',
+  },
+  //
+  uploadContainer: {
+    borderWidth: 1,
+    borderRadius: 12,
+    borderStyle: 'dashed',
+    backgroundColor: '#FAFAFA',
+    borderColor: '#E5E5E5',
+    marginBottom: 15,
+    padding: 12,
+  },
+  uploadTitle: {
+    fontFamily: 'Montserrat-SemiBold',
+    fontSize: 14,
+    color: '#2F81F5',
+    textAlign: 'center',
+    paddingTop: 10,
+    paddingBottom: 3,
+  },
+  uploadSubTitle: {
+    fontFamily: 'Montserrat-Regular',
+    fontSize: 13,
+    color: '#0C0D36',
+    textAlign: 'center',
+  },
+  flatList: {
+    borderWidth: 1,
+    borderRadius: 12,
+    borderStyle: 'dashed',
+    backgroundColor: '#FAFAFA',
+    borderColor: '#E5E5E5',
+    padding: 12,
+  },
+  noImgSelected: {
+    fontFamily: 'Montserrat-SemiBold',
+    fontSize: 13,
+    color: '#0C0D36',
+    textAlign: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    borderStyle: 'dashed',
+    backgroundColor: '#FAFAFA',
+    borderColor: '#E5E5E5',
+    padding: 12,
+  },
 
+  uploadContainer: {
+    borderWidth: 1,
+    borderRadius: 12,
+    borderStyle: 'dashed',
+    backgroundColor: '#FAFAFA',
+    borderColor: '#E5E5E5',
+    marginBottom: 15,
+    padding: 12,
+  },
+  uploadTitle: {
+    fontFamily: 'Montserrat-SemiBold',
+    fontSize: 14,
+    color: '#2F81F5',
+    textAlign: 'center',
+    paddingTop: 10,
+    paddingBottom: 3,
+  },
+  uploadSubTitle: {
+    fontFamily: 'Montserrat-Regular',
+    fontSize: 13,
+    color: '#0C0D36',
+    textAlign: 'center',
+  },
+  flatList: {
+    borderWidth: 1,
+    borderRadius: 12,
+    borderStyle: 'dashed',
+    backgroundColor: '#FAFAFA',
+    borderColor: '#E5E5E5',
+    padding: 12,
+  },
+  noImgSelected: {
+    fontFamily: 'Montserrat-SemiBold',
+    fontSize: 13,
+    color: '#0C0D36',
+    textAlign: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    borderStyle: 'dashed',
+    backgroundColor: '#FAFAFA',
+    borderColor: '#E5E5E5',
+    padding: 12,
+  },
 
-    container: {
-        flex: 1,
-        padding: 15,
-        backgroundColor: '#fff',
-    },
-    tcbtn: {
-        borderWidth: 1,
-        borderColor: '#0C0D36',
-        borderRadius: 8,
-        marginRight: 4,
-        paddingHorizontal: 16,
-        paddingVertical: 9,
-    },
-    active: {
-        backgroundColor: '#2F81F5',
-        borderColor: '#2F81F5',
-    },
-    acttext: {
-        fontFamily: 'Montserrat-Medium',
-        fontSize: 12,
-        color: '#0C0D36',
-    },
-    testactive: {
-        color: '#fff',
-    },
-    mainbox: {
-        backgroundColor: '#fff',
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.3,
-        shadowRadius: 15,
-        elevation: 3,
-        marginTop: 20,
-        borderRadius: 15,
-        marginBottom: 20,
-    },
-    oncetxt: {
-        fontFamily: 'Montserrat-Medium',
-        fontSize: 12,
-        color: '#2F81F5',
-        backgroundColor: 'rgba(48, 133, 254, 0.1)',
-        borderWidth: 1,
-        borderColor: '#2F81F5',
-        borderRadius: 16,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-    },
-    // Modal Start 
-    modalBackground: {
-        flex: 1,
-        justifyContent: 'flex-end',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.3)',
-    },
-    modalContainer: {
-        width: '100%',
-        backgroundColor: '#fff',
-        borderTopEndRadius: 20,
-        borderTopLeftRadius: 20,
-        maxHeight: '80%',
-    },
-    modalText: {
-        fontFamily: 'Montserrat-Medium',
-        fontSize: 16,
-        color: '#0C0D36',
-    },
-    label: {
-        fontFamily: 'Montserrat-Medium',
-        fontSize: 15,
-        color: '#0C0D36',
-        paddingBottom: 10,
-    },
-    input: {
-        height: 54,
-        borderWidth: 1,
-        borderColor: '#ECEDF0',
-        backgroundColor: '#FAFAFA',
-        paddingHorizontal: 15,
-        marginBottom: 15,
-        borderRadius: 10,
-    },
-    pickerContainer: {
-        height: 54,
-        borderWidth: 1,
-        borderColor: '#ECEDF0',
-        backgroundColor: '#FAFAFA',
-        paddingHorizontal: 0,
-        marginBottom: 15,
-        borderRadius: 10,
-    },
-    textarea: {
-        height: 54,
-        borderWidth: 1,
-        borderColor: '#ECEDF0',
-        backgroundColor: '#FAFAFA',
-        paddingHorizontal: 15,
-        marginBottom: 15,
-        borderRadius: 10,
-    },
-    // 
-    mdlNewContainer: {
-        maxHeight: '70%',
-    },
-    sendBtn: {
-        backgroundColor: '#2F81F5',
-        height: 54,
-        borderRadius: 10,
-        paddingHorizontal: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    phleBox: {
-        flexDirection: 'row',
-        gap: 10,
-        marginBottom: 20,
-    },
-    phleImg: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        backgroundColor: '#7b8691',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    phleText: {
-        flex: 1,
-        backgroundColor: '#edf1f3',
-        borderRadius: 10,
-        padding: 10,
-    },
-    phleFlexBox: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingBottom: 6,
-    },
-    phleTitle: {
-        fontFamily: 'Montserrat-Medium',
-        fontSize: 13,
-        color: '#2F81F5',
-        flex: 1,
-        paddingRight: 15,
-    },
-    phleTime: {
-        fontFamily: 'Montserrat-Medium',
-        fontSize: 10,
-        color: '#0C0D36',
-    },
-    phleDesc: {
-        fontFamily: 'Montserrat-Medium',
-        fontSize: 13,
-        color: '#0C0D36',
-    },
-    // 
-    uploadContainer: {
-        borderWidth: 1,
-        borderRadius: 12,
-        borderStyle: 'dashed',
-        backgroundColor: '#FAFAFA',
-        borderColor: '#E5E5E5',
-        marginBottom: 15,
-        padding: 12,
-    },
-    uploadTitle: {
-        fontFamily: 'Montserrat-SemiBold',
-        fontSize: 14,
-        color: '#2F81F5',
-        textAlign: 'center',
-        paddingTop: 10,
-        paddingBottom: 3,
-    },
-    uploadSubTitle: {
-        fontFamily: 'Montserrat-Regular',
-        fontSize: 13,
-        color: '#0C0D36',
-        textAlign: 'center',
-    },
-    flatList: {
-        borderWidth: 1,
-        borderRadius: 12,
-        borderStyle: 'dashed',
-        backgroundColor: '#FAFAFA',
-        borderColor: '#E5E5E5',
-        padding: 12,
-    },
-    noImgSelected: {
-        fontFamily: 'Montserrat-SemiBold',
-        fontSize: 13,
-        color: '#0C0D36',
-        textAlign: 'center',
-        borderWidth: 1,
-        borderRadius: 12,
-        borderStyle: 'dashed',
-        backgroundColor: '#FAFAFA',
-        borderColor: '#E5E5E5',
-        padding: 12,
-    },
+  attachmentBtn: {
+    backgroundColor: '#eee',
+    padding: 10,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
 
-    uploadContainer: {
-        borderWidth: 1,
-        borderRadius: 12,
-        borderStyle: 'dashed',
-        backgroundColor: '#FAFAFA',
-        borderColor: '#E5E5E5',
-        marginBottom: 15,
-        padding: 12,
-    },
-    uploadTitle: {
-        fontFamily: 'Montserrat-SemiBold',
-        fontSize: 14,
-        color: '#2F81F5',
-        textAlign: 'center',
-        paddingTop: 10,
-        paddingBottom: 3,
-    },
-    uploadSubTitle: {
-        fontFamily: 'Montserrat-Regular',
-        fontSize: 13,
-        color: '#0C0D36',
-        textAlign: 'center',
-    },
-    flatList: {
-        borderWidth: 1,
-        borderRadius: 12,
-        borderStyle: 'dashed',
-        backgroundColor: '#FAFAFA',
-        borderColor: '#E5E5E5',
-        padding: 12,
-    },
-    noImgSelected: {
-        fontFamily: 'Montserrat-SemiBold',
-        fontSize: 13,
-        color: '#0C0D36',
-        textAlign: 'center',
-        borderWidth: 1,
-        borderRadius: 12,
-        borderStyle: 'dashed',
-        backgroundColor: '#FAFAFA',
-        borderColor: '#E5E5E5',
-        padding: 12,
-    },
+  sendBtn: {
+    backgroundColor: '#007BFF',
+    padding: 10,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+});
 
-    attachmentBtn: {
-        backgroundColor: '#eee',
-        padding: 10,
-        borderRadius: 6,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-
-    sendBtn: {
-        backgroundColor: '#007BFF',
-        padding: 10,
-        borderRadius: 6,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-
-})
-
-export default Progress
+export default Progress;
