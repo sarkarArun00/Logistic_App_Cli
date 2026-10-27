@@ -693,7 +693,7 @@ function Notification({navigation}) {
                 {/* Fixed Footer - Always Visible */}
                 <View style={styles.footerRow}>
                   <TouchableOpacity
-                    style={[styles.confirmButton, {backgroundColor: '#EF4444'}]}
+                    style={[styles.confirmButton, {backgroundColor: '#EFF6FF'}]}
                     activeOpacity={0.8}
                     onPress={() => {
                       handleDecline(approvalDetails?.id);
@@ -703,14 +703,14 @@ function Notification({navigation}) {
                       <Ionicons
                         name="close-circle-outline"
                         size={18}
-                        color="#FFFFFF"
+                        color="#2F81F5"
                       />
                       <Text style={styles.confirmButtonText}>Decline</Text>
                     </View>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[styles.confirmButton, {backgroundColor: '#10B981'}]}
+                    style={[styles.confirmButton, {backgroundColor: '#2F81F5'}]}
                     activeOpacity={0.8}
                     onPress={() => {
                       handleApprove(
@@ -725,7 +725,9 @@ function Notification({navigation}) {
                         size={18}
                         color="#FFFFFF"
                       />
-                      <Text style={styles.confirmButtonText}>Approve</Text>
+                      <Text style={styles.confirmApproveButtonText}>
+                        Approve
+                      </Text>
                     </View>
                   </TouchableOpacity>
                 </View>
@@ -1029,7 +1031,12 @@ const styles = StyleSheet.create({
   },
 
   confirmButtonText: {
-    color: '#FFFFFF',
+    color: '#2F81F5',
+    fontSize: 12,
+    fontFamily: 'Montserrat-SemiBold',
+  },
+  confirmApproveButtonText: {
+    color: '#ffffff',
     fontSize: 12,
     fontFamily: 'Montserrat-SemiBold',
   },

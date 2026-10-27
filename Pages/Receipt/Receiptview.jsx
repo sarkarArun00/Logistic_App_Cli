@@ -19,7 +19,8 @@ import {toWords} from 'number-to-words';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import Share from 'react-native-share';
 import FileViewer from 'react-native-file-viewer';
-
+import ReactNativeBlobUtil from 'react-native-blob-util';
+import RNFS from 'react-native-fs';
 function Receiptview({navigation, route}) {
   // const [fontsLoaded] = useFonts({
   //     Montserrat-SemiBold,
@@ -39,8 +40,7 @@ function Receiptview({navigation, route}) {
 
   useEffect(() => {
     const fetchReceipt = async () => {
-      try { 
-
+      try {
         const response = await TaskService.getReceiptById({receiptId});
         console.log('status query', response.data);
         if (response.status == 1) {
@@ -353,21 +353,60 @@ body{ font-family: "Montserrat", sans-serif; background:#f0f4f8; padding:20px;  
     return `${monthName} ${day} ${year} at ${hourFormatted}:${minutes} ${ampm}`;
   };
 
-  const downloadReceipt = async item => {
+  // const downloadReceipt = async item => {
+  //   try {
+  //     console.log('Downloading receipt:', item.receiptId);
+
+  //     const url = await TaskService.openReceiptInBrowser(item.receiptId);
+  //     console.log('Downloading receipt: url ', url);
+  //     const supported = await Linking.canOpenURL(url);
+
+  //     if (supported) {
+  //       await Linking.openURL(url);
+  //     } else {
+  //       console.log('Cannot open URL:', url);
+  //     }
+  //   } catch (error) {
+  //     console.log('downloadReceipt error:', error);
+  //   }
+  // };
+
+  const downloadReceipt = async receiptId => {
     try {
-      console.log('Downloading receipt:', item.receiptId);
+      // safety: accept either the ID string or the whole object
+      const id =
+        typeof receiptId === 'string'
+          ? receiptId
+          : receiptId?.receiptId || receiptId?.data?.receiptId;
 
-      const url = await TaskService.openReceiptInBrowser(item.receiptId);
-console.log('Downloading receipt: url ', url);
-      const supported = await Linking.canOpenURL(url);
-
-      if (supported) {
-        await Linking.openURL(url);
-      } else {
-        console.log('Cannot open URL:', url);
+      if (!id) {
+        console.log('receiptId missing:', receiptId);
+        return;
       }
-    } catch (error) {
-      console.log('downloadReceipt error:', error);
+
+      const fileName = `${id.replace(/\//g, '-')}.pdf`;
+
+      // your function, unchanged
+      const url = `https://lims-testing-api.nirnayanhealthcare.com/accounts/payment/downloadReceipt/${id}`;
+      console.log('Downloading receipt: url', url);
+
+      const res = await ReactNativeBlobUtil.config({
+        addAndroidDownloads: {
+          useDownloadManager: true,
+          notification: true,
+          title: fileName,
+          description: 'Downloading receipt',
+          path: `${ReactNativeBlobUtil.fs.dirs.DownloadDir}/${fileName}`,
+          mime: 'application/pdf',
+          mediaScannable: true,
+        },
+      }).fetch('GET', url, {
+        // Authorization: `Bearer ${token}`, // add only if your API needs it
+      });
+
+      console.log('Saved to:', res.path());
+    } catch (e) {
+      console.log('download error', e);
     }
   };
 
@@ -522,9 +561,7 @@ console.log('Downloading receipt: url ', url);
             />
             <Text
               style={styles.pdfText}
-              onPress={() => {
-                downloadReceipt(receiptData);
-              }}>
+              onPress={() => downloadReceipt(receiptData)}>
               Get PDF Receipt
             </Text>
           </TouchableOpacity>

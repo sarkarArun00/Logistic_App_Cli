@@ -11,6 +11,7 @@ import {
   TextInput,
   Linking,
   Modal,
+  FlatList,
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
@@ -22,6 +23,13 @@ import {GlobalStyles} from '../../GlobalStyles';
 import {useGlobalAlert} from '../../../Context/GlobalAlertContext';
 import {useSearch} from '../../../hooks/userSearch1';
 import CustomAlert from '../../Components/CustomAlert';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
+import ImageResizer from 'react-native-image-resizer';
+import {readFile} from 'react-native-fs';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Vibration} from 'react-native';
+import {BASE_API_URL} from '../../Services/API';
 
 const wait = timeout => {
   return new Promise(resolve => setTimeout(resolve, timeout));
@@ -36,9 +44,9 @@ function Accepted({navigation}) {
   const [selectedItem, setSelectedTaskDesc] = useState('');
   // const [visibleCount, setVisibleCount] = useState(5);
   // const [visibleTasks, setVisibleTasks] = useState([]);
-
+  const [commentText, setCommentText] = useState('');
   const [loadingMore, setLoadingMore] = useState(false);
-
+  const [images, setImages] = useState([]);
   const {showAlertModal, hideAlert} = useGlobalAlert();
   const [allTasksData, setAllTasksData] = useState([]);
   const [visibleCount, setVisibleCount] = useState(5);
@@ -48,8 +56,11 @@ function Accepted({navigation}) {
     : filteredData.slice(0, visibleCount); // Show limited if not
   const [acceptedTaskDetails, setAcceptedTaskDetails] = useState(null);
   const [acceptedTaskLoading, setAcceptedTaskLoading] = useState(false);
-
+  const [modalVisible2, setModalVisible2] = useState(false);
+  const [modalVisible3, setModalVisible3] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
+  const [fullImageUri, setFullImageUri] = useState(null);
+  const [note, setNote] = useState('');
 
   const [alertData, setAlertData] = useState({
     type: 'success',
@@ -140,7 +151,329 @@ function Accepted({navigation}) {
       setLoading(false);
     }
   };
+  const sendComment = async () => {
+    if (!commentText.trim()) return;
 
+    try {
+      const user_id = await AsyncStorage.getItem('user_id');
+      const formData = new FormData();
+
+      formData.append('taskId', selectedItem.id);
+      formData.append('comment', commentText);
+      formData.append('commentorId', user_id);
+
+      // Append attachment only if there's an image
+      if (images.length > 0 && images[0].base64) {
+        formData.append('attachment', {
+          uri: 'data:image/jpeg;base64,' + images[0].base64,
+          type: 'image/jpeg',
+          name: 'attachment.jpg',
+        });
+      }
+
+      // Send the formData via TaskService
+      const response = await TaskService.addNewComment(formData); // Send as FormData
+
+      if (response.status == 1) {
+        Vibration.vibrate(100);
+      }
+
+      // Update the state with the new comment data
+      setSelectedTask(prev => [...prev, response.data]);
+      setCommentText('');
+      setImages([]); // Clear images after submission
+
+      // Optionally, fetch the latest task comments
+      const res = await TaskService.getTaskComments({taskId: selectedItem.id});
+      setSelectedTask(res.data);
+    } catch (error) {
+      console.error('Error sending comment:', error);
+    }
+  };
+  const handleSave = async () => {
+    try {
+      const userId = await AsyncStorage.getItem('user_id');
+      const response = await TaskService.declineTask({
+        taskId: taskId,
+        empId: userId,
+        remarks: note,
+      });
+      if (response.status == 1) {
+        // showAlertModal("Task Rejected Successfully!", false);
+        showAlert('success', 'Rejected', 'Task Rejected Successfully!');
+        setTimeout(() => {
+          hideAlert();
+        }, 3000);
+        fetchData();
+        setNote('');
+        setTaskId(null);
+        setModalVisible3(false);
+      } else {
+        Alert.alert(response.data);
+      }
+    } catch (error) {
+      console.error('Error rejecting task:', error);
+    }
+  };
+
+  const handleClose = () => {
+    setModalVisible3(false);
+  };
+
+  const declineTaskByUser = async task_Id => {
+    setTaskId(task_Id);
+    setModalVisible3(true);
+  };
+
+  // ================================
+  // CAMERA PERMISSION
+  // ================================
+
+  const requestPermission = async type => {
+    try {
+      if (Platform.OS !== 'android') {
+        return true;
+      }
+
+      if (type === 'camera') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: 'Camera Permission',
+            message: 'App needs access to your camera to take pictures.',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'Allow',
+          },
+        );
+
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      }
+
+      // The system photo picker does not require
+      // broad storage permission.
+      return true;
+    } catch (error) {
+      console.log('Permission error:', error);
+      return false;
+    }
+  };
+
+  // ================================
+  // IMAGE COMPRESSION
+  // ================================
+
+  const compressImage = async uri => {
+    if (!uri) {
+      throw new Error('Image URI is missing');
+    }
+
+    const MAX_SIZE_KB = 50;
+    const MAX_ATTEMPTS = 5;
+
+    let currentUri = uri;
+
+    let width = 800;
+    let height = 800;
+    let quality = 65;
+
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      const resizedImage = await ImageResizer.createResizedImage(
+        currentUri,
+        width,
+        height,
+        'JPEG',
+        quality,
+        0,
+      );
+
+      if (!resizedImage?.uri) {
+        throw new Error('Image compression failed');
+      }
+
+      const base64 = await readFile(resizedImage.uri, 'base64');
+
+      const padding = (base64.match(/=+$/) || [''])[0].length;
+
+      const sizeInKB = ((base64.length * 3) / 4 - padding) / 1024;
+
+      console.log(
+        `Compression attempt ${attempt + 1}:`,
+        sizeInKB.toFixed(2),
+        'KB',
+      );
+
+      if (sizeInKB <= MAX_SIZE_KB) {
+        return {
+          uri: resizedImage.uri,
+          base64,
+        };
+      }
+
+      width = Math.max(250, Math.round(width * 0.8));
+
+      height = Math.max(250, Math.round(height * 0.8));
+
+      quality = Math.max(25, quality - 10);
+
+      currentUri = resizedImage.uri;
+    }
+
+    throw new Error('Unable to compress image below 50 KB.');
+  };
+
+  const formatMessageDateTime = dateValue => {
+    if (!dateValue) return '';
+
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) return '';
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = String(date.getFullYear()).slice(-2);
+
+    const time = date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+
+    return `${day}-${month}-${year} at ${time}`;
+  };
+  // ================================
+  // OPEN CAMERA
+  // ================================
+
+  const openCamera = async () => {
+    try {
+      const hasPermission = await requestPermission('camera');
+
+      if (!hasPermission) {
+        showAlertModal('Camera access is needed to take pictures.', true);
+        return;
+      }
+
+      const response = await launchCamera({
+        mediaType: 'photo',
+        includeBase64: false,
+        quality: 0.7,
+        saveToPhotos: false,
+        cameraType: 'back',
+        maxWidth: 1280,
+        maxHeight: 1280,
+      });
+
+      if (response.didCancel) {
+        return;
+      }
+
+      if (response.errorCode) {
+        console.log('Camera error:', response.errorCode, response.errorMessage);
+
+        showAlertModal(response.errorMessage || 'Camera error occurred.', true);
+
+        return;
+      }
+
+      const image = response.assets?.[0];
+
+      if (!image?.uri) {
+        showAlertModal('Unable to capture image. Please try again.', true);
+        return;
+      }
+
+      const compressedImage = await compressImage(image.uri);
+
+      setImages([compressedImage]);
+    } catch (error) {
+      console.log('Camera error:', error);
+
+      showAlertModal(
+        error?.message || 'Unable to process the captured image.',
+        true,
+      );
+    }
+  };
+
+  // ================================
+  // OPEN GALLERY
+  // ================================
+
+  const openGallery = async () => {
+    try {
+      const response = await launchImageLibrary({
+        mediaType: 'photo',
+        selectionLimit: 1,
+        includeBase64: false,
+        quality: 0.7,
+        maxWidth: 1280,
+        maxHeight: 1280,
+      });
+
+      if (response.didCancel) {
+        return;
+      }
+
+      if (response.errorCode) {
+        console.log(
+          'Gallery error:',
+          response.errorCode,
+          response.errorMessage,
+        );
+
+        showAlertModal(
+          response.errorMessage || 'Unable to open gallery.',
+          true,
+        );
+
+        return;
+      }
+
+      const image = response.assets?.[0];
+
+      if (!image?.uri) {
+        showAlertModal('Unable to select image. Please try again.', true);
+        return;
+      }
+
+      const compressedImage = await compressImage(image.uri);
+
+      setImages([compressedImage]);
+    } catch (error) {
+      console.log('Gallery error:', error);
+
+      showAlertModal(
+        error?.message || 'Unable to process the selected image.',
+        true,
+      );
+    }
+  };
+
+  // ================================
+  // CAMERA / GALLERY POPUP
+  // ================================
+
+  const selectImages = () => {
+    Alert.alert('Select Image', 'Choose an option', [
+      {
+        text: 'Camera',
+        onPress: openCamera,
+      },
+      {
+        text: 'Gallery',
+        onPress: openGallery,
+      },
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+    ]);
+  };
+
+  const handleDeleteImage = index => {
+    const updatedImages = images.filter((_, i) => i !== index);
+    setImages(updatedImages);
+  };
   const startTask = async task_Id => {
     try {
       setLoading(true);
@@ -196,6 +529,13 @@ function Accepted({navigation}) {
   const handleOpenModal = async task => {
     setModalVisible(true);
     setSelectedTaskDesc(task);
+
+    try {
+      const response = await TaskService.getTaskComments({taskId: task.id});
+      setSelectedTask(response.data);
+    } catch (error) {
+      // console.error('Error fetching task comments:', error);
+    }
 
     fetchAcceptedTask(task.id);
   };
@@ -801,7 +1141,7 @@ function Accepted({navigation}) {
           )}
         </View>
 
-        {/* Modal Start Here */}
+        {/* ================= MORE INFORMATION MODAL ================= */}
         <Modal
           visible={modalVisible}
           transparent={true}
@@ -809,17 +1149,10 @@ function Accepted({navigation}) {
           onRequestClose={() => setModalVisible(false)}>
           <View style={styles.modalBackground}>
             <View style={styles.modalContainer}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  paddingHorizontal: 15,
-                  paddingVertical: 15,
-                  borderBottomWidth: 1,
-                  borderBottomColor: '#ECEDF0',
-                }}>
+              {/* FIXED HEADER */}
+              <View style={styles.modalHeader}>
                 <Text style={styles.modalText}>More Information</Text>
+
                 <TouchableOpacity
                   style={styles.closeButton}
                   onPress={() => setModalVisible(false)}>
@@ -829,12 +1162,15 @@ function Accepted({navigation}) {
                   />
                 </TouchableOpacity>
               </View>
+
+              {/* SCROLLABLE CONTENT: ITEMS, DESCRIPTION, COMMENTS */}
               <ScrollView
                 style={styles.modalScrollView}
                 contentContainerStyle={styles.modalScrollContent}
                 showsVerticalScrollIndicator={true}
                 keyboardShouldPersistTaps="handled"
-                nestedScrollEnabled>
+                nestedScrollEnabled={true}>
+                {/* ITEM DETAILS */}
                 <View style={styles.itemsSection}>
                   <Text style={styles.itemsSectionTitle}>Item Details</Text>
 
@@ -843,7 +1179,6 @@ function Accepted({navigation}) {
                   ) : acceptedTaskDetails?.items?.length > 0 ? (
                     acceptedTaskDetails.items.map((item, index) => (
                       <View key={item.id ?? index} style={styles.itemCard}>
-                        {/* Header */}
                         <View style={styles.itemHeader}>
                           <View
                             style={[
@@ -864,22 +1199,11 @@ function Accepted({navigation}) {
                             </Text>
                           </View>
 
-                          <View
-                            style={[
-                              styles.statusIndicator,
-                              {
-                                backgroundColor: item.isCollected
-                                  ? '#D1FAE5'
-                                  : '#D1FAE5',
-                              },
-                            ]}
-                          />
+                          <View style={styles.statusIndicator} />
                         </View>
 
-                        {/* Divider */}
                         <View style={styles.itemDivider} />
 
-                        {/* Details */}
                         <View style={styles.itemDetailsRow}>
                           <View style={styles.itemDetailColumn}>
                             <Text style={styles.itemLabel}>Quantity</Text>
@@ -901,60 +1225,243 @@ function Accepted({navigation}) {
                     ))
                   ) : (
                     <Text style={styles.noItemsText}>
-                      {acceptedTaskDetails ? 'No items found' : ' '}
+                      {acceptedTaskDetails ? 'No items found' : ''}
+                    </Text>
+                  )}
+                </View>
+
+                {/* DESCRIPTION AND COMMENTS */}
+                <View style={{padding: 15}}>
+                  {/* SELECTED IMAGE PREVIEW */}
+                  {images.length > 0 && (
+                    <FlatList
+                      data={images}
+                      horizontal
+                      scrollEnabled={false}
+                      keyExtractor={(_, index) => index.toString()}
+                      contentContainerStyle={{paddingVertical: 5}}
+                      renderItem={({item, index}) => (
+                        <View style={{marginRight: 10}}>
+                          <Image
+                            source={{uri: item.uri}}
+                            style={{
+                              width: 60,
+                              height: 60,
+                              borderRadius: 6,
+                            }}
+                          />
+
+                          <TouchableOpacity
+                            onPress={() => handleDeleteImage(index)}
+                            style={styles.deleteImageButton}>
+                            <Text style={{color: '#fff', fontWeight: 'bold'}}>
+                              ✕
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                    />
+                  )}
+
+                  {/* DESCRIPTION */}
+                  <Text style={styles.label}>Description</Text>
+
+                  <TextInput
+                    style={styles.textarea}
+                    value={selectedItem?.description || 'No Description'}
+                    placeholder="Description here..."
+                    multiline={true}
+                    editable={false}
+                  />
+
+                  {/* COMMENTS HEADING */}
+                  <Text style={styles.label}>Comments</Text>
+
+                  {/* ALL COMMENTS SCROLL WITH THE CONTENT */}
+                  {selectedTask?.length > 0 ? (
+                    selectedTask.map((item, index) => (
+                      <View key={item.id ?? index} style={styles.phleBox}>
+                        <View style={styles.phleImg}>
+                          <Image
+                            style={{
+                              width: 25,
+                              height: 25,
+                              borderRadius: 12.5,
+                            }}
+                            source={
+                              item?.commentor?.employeePhoto
+                                ? {
+                                    uri: `${BASE_API_URL}/${item.commentor.employeePhoto}`,
+                                  }
+                                : require('../../../assets/userImg.png')
+                            }
+                          />
+                        </View>
+
+                        <View style={styles.phleText}>
+                          <View style={styles.phleFlexBox}>
+                            <Text style={styles.phleTitle}>
+                              {item.commentor?.employee_name || 'Unknown'}
+                            </Text>
+
+                            <Text style={styles.phleTime}>
+                              {formatMessageDateTime(item.createdAt)}
+                            </Text>
+                          </View>
+
+                          {/* COMMENT ATTACHMENT */}
+                          {item?.attachment?.path ? (
+                            <TouchableOpacity
+                              onPress={() => {
+                                const imageUrl = `${BASE_API_URL}/${item.attachment.path.replace(
+                                  /\\/g,
+                                  '/',
+                                )}`;
+
+                                setFullImageUri(imageUrl);
+                                setModalVisible2(true);
+                              }}>
+                              <Image
+                                style={{
+                                  width: '100%',
+                                  height: 200,
+                                  resizeMode: 'cover',
+                                  marginVertical: 5,
+                                  borderRadius: 8,
+                                }}
+                                source={{
+                                  uri: `${BASE_API_URL}/${item.attachment.path.replace(
+                                    /\\/g,
+                                    '/',
+                                  )}`,
+                                }}
+                              />
+                            </TouchableOpacity>
+                          ) : null}
+
+                          {/* COMMENT TEXT */}
+                          <Text style={styles.phleDesc}>{item.comment}</Text>
+                        </View>
+                      </View>
+                    ))
+                  ) : (
+                    <Text style={{color: '#888', marginVertical: 10}}>
+                      No comments yet.
                     </Text>
                   )}
                 </View>
               </ScrollView>
 
-              <View style={{padding: 15}}>
-                {/* <View style={{ marginBottom: 10, }}>
-                                    <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 15, paddingBottom: 15, }}>Akash Kundu (#ABG70015) </Text>
-                                    <View style={{ flexDirection: 'row', marginBottom: 10, }}>
-                                        <View style={{ width: 24, height: 24, borderWidth: 1, borderColor: '#1AA123', borderRadius: '50%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
-                                            <Image style={{ width: 14, height: 14, }} source={require('../../../assets/texticon2.png')} />
-                                        </View>
-                                        <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 15, paddingLeft: 10, }}>Container Name (Bar Code)</Text>
-                                    </View>
-                                    <View style={{ flexDirection: 'row', marginBottom: 10, }}>
-                                        <View style={{ width: 24, height: 24, borderWidth: 1, borderColor: '#1AA123', borderRadius: '50%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
-                                            <Image style={{ width: 14, height: 14, }} source={require('../../../assets/texticon2.png')} />
-                                        </View>
-                                        <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 15, paddingLeft: 10, }}>Container Name (Bar Code)</Text>
-                                    </View>
+              {/* FIXED BOTTOM COMMENT COMPOSER */}
+              <View style={styles.commentComposer}>
+                <TextInput
+                  style={styles.commentInput}
+                  placeholder="Your Comments"
+                  placeholderTextColor="#888"
+                  multiline={true}
+                  value={commentText}
+                  onChangeText={setCommentText}
+                />
 
-                                </View> */}
+                {/* ATTACHMENT BUTTON */}
+                <TouchableOpacity
+                  style={styles.attachmentBtn}
+                  onPress={selectImages}>
+                  <FontAwesome name="paperclip" size={22} color="#333" />
+                </TouchableOpacity>
 
-                <View>
-                  <Text style={styles.label}>Description</Text>
-                  <TextInput
-                    readOnly
-                    style={styles.textarea}
-                    value={selectedItem?.description || 'No Description'}
-                    placeholder="Description here..."
-                    multiline={true}
-                  />
-                </View>
+                {/* SEND BUTTON */}
+                <TouchableOpacity
+                  style={styles.sendBtn}
+                  onPress={sendComment}
+                  disabled={!commentText.trim() && images.length === 0}>
+                  <FontAwesome name="paper-plane-o" size={22} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* ================= FULL IMAGE PREVIEW MODAL ================= */}
+        <Modal
+          visible={modalVisible2}
+          transparent={true}
+          animationType="fade"
+          statusBarTranslucent={true}
+          onRequestClose={() => setModalVisible2(false)}>
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(0,0,0,0.95)',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            {/* CLOSE BUTTON */}
+            <TouchableOpacity
+              style={{
+                position: 'absolute',
+                top: 45,
+                right: 20,
+                zIndex: 10,
+                backgroundColor: '#fff',
+                borderRadius: 22,
+                width: 42,
+                height: 42,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+              onPress={() => setModalVisible2(false)}>
+              <Text style={{fontSize: 22, fontWeight: 'bold', color: '#000'}}>
+                ✕
+              </Text>
+            </TouchableOpacity>
+
+            {/* FULL IMAGE */}
+            {fullImageUri ? (
+              <Image
+                style={{
+                  width: '95%',
+                  height: '75%',
+                  resizeMode: 'contain',
+                }}
+                source={{uri: fullImageUri}}
+              />
+            ) : null}
+          </View>
+        </Modal>
+
+        {/* ================= REJECT REMARKS MODAL ================= */}
+        <Modal
+          visible={modalVisible3}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={handleClose}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.rejectModalContainer}>
+              <Text style={styles.title}>Enter your remarks</Text>
+
+              <TextInput
+                style={styles.textArea}
+                placeholder="Write something..."
+                placeholderTextColor="#aaa"
+                multiline={true}
+                numberOfLines={6}
+                value={note}
+                onChangeText={setNote}
+                textAlignVertical="top"
+              />
+
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={styles.buttonClose}
+                  onPress={handleClose}>
+                  <Text style={styles.buttonText}>Close</Text>
+                </TouchableOpacity>
 
                 <TouchableOpacity
-                  onPress={() => {
-                    setModalVisible(false);
-                  }}
-                  style={{
-                    backgroundColor: '#2F81F5',
-                    borderRadius: 28,
-                    paddingVertical: 16,
-                    paddingHorizontal: 10,
-                  }}>
-                  <Text
-                    style={{
-                      fontFamily: 'Montserrat-SemiBold',
-                      fontSize: 16,
-                      color: 'white',
-                      textAlign: 'center',
-                    }}>
-                    Close
-                  </Text>
+                  style={styles.buttonSave}
+                  onPress={handleSave}>
+                  <Text style={styles.buttonText}>Submit</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1031,6 +1538,14 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     marginBottom: 20,
   },
+  attachmentBtn: {
+    backgroundColor: '#eee',
+    padding: 10,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   oncetxt: {
     fontFamily: 'Montserrat-Medium',
     fontSize: 12,
@@ -1041,6 +1556,14 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 8,
+  },
+  sendBtn: {
+    backgroundColor: '#007BFF',
+    padding: 10,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   // Modal Start
   modalBackground: {
@@ -1311,6 +1834,146 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat-SemiBold',
     fontSize: 16,
     color: '#FFFFFF',
+  },
+  flatList: {
+    borderWidth: 1,
+    borderRadius: 12,
+    borderStyle: 'dashed',
+    backgroundColor: '#FAFAFA',
+    borderColor: '#E5E5E5',
+    padding: 12,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  buttonClose: {
+    backgroundColor: '#aaa',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  buttonSave: {
+    backgroundColor: '#3085FE',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+
+  modalBackground: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+
+  modalContainer: {
+    width: '100%',
+    height: '85%',
+    maxHeight: '85%',
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    overflow: 'hidden',
+  },
+
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ECEDF0',
+  },
+
+  modalScrollView: {
+    flex: 1,
+    minHeight: 0,
+  },
+
+  modalScrollContent: {
+    paddingBottom: 12,
+  },
+
+  commentComposer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 12,
+    gap: 8,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#ECEDF0',
+  },
+
+  commentInput: {
+    flex: 1,
+    minHeight: 46,
+    maxHeight: 100,
+    borderWidth: 1,
+    borderColor: '#ECEDF0',
+    backgroundColor: '#FAFAFA',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: '#0C0D36',
+    fontFamily: 'Montserrat-Regular',
+    fontSize: 14,
+    textAlignVertical: 'top',
+  },
+
+  attachmentBtn: {
+    width: 46,
+    height: 46,
+    padding: 0,
+    marginBottom: 0,
+    borderRadius: 10,
+    backgroundColor: '#eee',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  sendBtn: {
+    width: 46,
+    height: 46,
+    padding: 0,
+    marginBottom: 0,
+    borderRadius: 10,
+    backgroundColor: '#007BFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  deleteImageButton: {
+    position: 'absolute',
+    top: -5,
+    right: 3,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'red',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+
+  rejectModalContainer: {
+    width: '90%',
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 15,
   },
 });
 

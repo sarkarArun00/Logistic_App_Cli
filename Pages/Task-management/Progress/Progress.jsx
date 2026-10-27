@@ -1541,12 +1541,29 @@ function Progress({navigation}) {
                       <View>
                         {selectedTask?.map((item, index) => (
                           <View key={item.id || index} style={styles.phleBox}>
-                            <View style={styles.phleImg}>
+                            {/* <View style={styles.phleImg}>
                               <Image
                                 style={{width: 25, height: 25}}
                                 source={require('../../../assets/userImg.png')}
                               />
-                            </View>
+                            </View> */}
+
+                            <View style={styles.phleImg}>
+                                                        <Image
+                                                          style={{
+                                                            width: 25,
+                                                            height: 25,
+                                                            borderRadius: 12.5,
+                                                          }}
+                                                          source={
+                                                            item?.commentor?.employeePhoto
+                                                              ? {
+                                                                  uri: `${BASE_API_URL}/${item.commentor.employeePhoto}`,
+                                                                }
+                                                              : require('../../../assets/userImg.png')
+                                                          }
+                                                        />
+                                                      </View>
                             <View style={styles.phleText}>
                               <View style={styles.phleFlexBox}>
                                 <Text style={styles.phleTitle}>

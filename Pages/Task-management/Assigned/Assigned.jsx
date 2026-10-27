@@ -154,8 +154,6 @@ function Assigned({navigation}) {
     }
   };
 
-  
-
   const handleSave = async () => {
     try {
       const userId = await AsyncStorage.getItem('user_id');
@@ -754,7 +752,6 @@ function Assigned({navigation}) {
                     <TouchableOpacity
                       onPress={() => {
                         handleOpenModal(task);
-                        
                       }}>
                       <Image
                         style={{width: 28, height: 28}}
@@ -1145,8 +1142,6 @@ function Assigned({navigation}) {
                 </TouchableOpacity>
               </View>
 
-             
-
               <ScrollView>
                 <View>
                   {/* <Text style={styles.label}>Attachment</Text>
@@ -1223,10 +1218,27 @@ function Assigned({navigation}) {
                     <View>
                       {selectedTask?.map((item, index) => (
                         <View key={item.id || index} style={styles.phleBox}>
-                          <View style={styles.phleImg}>
+                          {/* <View style={styles.phleImg}>
                             <Image
                               style={{width: 25, height: 25}}
                               source={require('../../../assets/userImg.png')}
+                            />
+                          </View> */}
+
+                          <View style={styles.phleImg}>
+                            <Image
+                              style={{
+                                width: 25,
+                                height: 25,
+                                borderRadius: 12.5,
+                              }}
+                              source={
+                                item?.commentor?.employeePhoto
+                                  ? {
+                                      uri: `${BASE_API_URL}/${item.commentor.employeePhoto}`,
+                                    }
+                                  : require('../../../assets/userImg.png')
+                              }
                             />
                           </View>
                           <View style={styles.phleText}>
