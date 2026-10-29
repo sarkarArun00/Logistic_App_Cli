@@ -763,35 +763,78 @@ function Assigned({navigation}) {
 
                 <View style={{flexDirection: 'row', padding: 15}}>
                   <View style={{flex: 1}}>
-                    <View style={{position: 'relative', marginBottom: 5}}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 5,
+                      }}>
                       <Image
                         style={{
-                          position: 'absolute',
-                          left: 0,
-                          top: 0,
                           width: 12,
                           height: 12,
+                          resizeMode: 'contain',
+                          marginRight: 12,
                         }}
                         source={require('../../../assets/asicon1.png')}
                       />
+
                       <Text
                         style={{
                           fontFamily: 'Montserrat-Medium',
                           fontSize: 13,
                           color: '#0C0D36',
-                          paddingLeft: 20,
+                          flexShrink: 1,
                         }}>
                         Task ID: {task?.displayId ?? 'NA'}
                       </Text>
                     </View>
-                    <View style={{position: 'relative', marginBottom: 5}}>
+
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        marginBottom: 5,
+                      }}>
                       <Image
                         style={{
-                          position: 'absolute',
-                          left: 0,
-                          top: 0,
-                          width: 11,
+                          width: 13,
                           height: 13,
+                          resizeMode: 'contain',
+                          marginRight: 12,
+                          marginTop: 1,
+                        }}
+                        source={require('../../../assets/asicon2.png')}
+                      />
+
+                      <Text
+                        style={{
+                          flex: 1,
+                          fontFamily: 'Montserrat-Medium',
+                          fontSize: 13,
+                          color: '#0C0D36',
+                          lineHeight: 20,
+                        }}>
+                        {task?.taskType?.taskType === 'Sample Pickup' ||
+                        task?.taskType?.taskType === 'Cash Collection'
+                          ? task?.client?.address ?? 'No Address'
+                          : task?.pickUpLocation?.address ?? 'No Address'}
+                      </Text>
+                    </View>
+
+                    {/* <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        marginBottom: 5,
+                      }}>
+                      <Image
+                        style={{
+                          width: 13,
+                          height: 13,
+                          resizeMode: 'contain',
+                          marginRight: 12,
+                          marginTop: 1,
                         }}
                         source={require('../../../assets/asicon2.png')}
                       />
@@ -801,55 +844,65 @@ function Assigned({navigation}) {
                       task?.taskType?.taskType === 'Cash Collection' ? (
                         <Text
                           style={{
+                            flex: 1,
                             fontFamily: 'Montserrat-Medium',
                             fontSize: 13,
                             color: '#0C0D36',
-                            paddingLeft: 20,
+                            lineHeight: 20,
                           }}>
                           {task?.client?.address ?? 'No Address'}
                         </Text>
                       ) : (
                         <Text
                           style={{
+                            flex: 1,
                             fontFamily: 'Montserrat-Medium',
                             fontSize: 13,
                             color: '#0C0D36',
-                            paddingLeft: 20,
+                            lineHeight: 20,
                           }}>
                           {task?.pickUpLocation?.address ?? 'No Address'}
                         </Text>
                       )}
-                    </View>
-                    <View style={{position: 'relative', marginBottom: 5}}>
+                    </View> */}
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 5,
+                      }}>
                       <Image
                         style={{
-                          position: 'absolute',
-                          left: 0,
-                          top: 0,
                           width: 13,
                           height: 13,
+                          resizeMode: 'contain',
+                          marginRight: 12,
                         }}
                         source={require('../../../assets/asicon3.png')}
                       />
                       <Text
                         style={{
+                          flex: 1,
                           fontFamily: 'Montserrat-Medium',
                           fontSize: 13,
                           color: '#0C0D36',
-                          paddingLeft: 20,
                         }}>
                         {formatTime12Hour(task?.preferredTime?.start_time)} -{' '}
                         {formatTime12Hour(task?.preferredTime?.end_time)}
                       </Text>
                     </View>
-                    <View style={{position: 'relative', marginBottom: 5}}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 5,
+                      }}>
                       <Image
                         style={{
-                          position: 'absolute',
-                          left: 0,
-                          top: 0,
                           width: 13,
                           height: 13,
+                          resizeMode: 'contain',
+                          marginRight: 12,
                         }}
                         source={require('../../../assets/asicon4.png')}
                       />
@@ -857,10 +910,10 @@ function Assigned({navigation}) {
                       {task?.assigned?.assigner?.employee_name && (
                         <Text
                           style={{
+                            flex: 1,
                             fontFamily: 'Montserrat-Medium',
                             fontSize: 13,
                             color: '#0C0D36',
-                            paddingLeft: 20,
                           }}>
                           Assigned By: {task.assigned.assigner.employee_name}
                         </Text>
@@ -880,14 +933,14 @@ function Assigned({navigation}) {
 
                     {(task?.pickUpLocation?.client_name ||
                       task?.pickUpLocation?.centreName) && (
-                      <View style={{position: 'relative'}}>
+                      <View
+                        style={{flexDirection: 'row', alignItems: 'center'}}>
                         <Image
                           style={{
-                            position: 'absolute',
-                            left: 0,
-                            top: 0,
-                            width: 16,
-                            height: 16,
+                            width: 13,
+                            height: 13,
+                            resizeMode: 'contain',
+                            marginRight: 12,
                           }}
                           source={
                             task.pickUpLocation.client_name
@@ -897,10 +950,10 @@ function Assigned({navigation}) {
                         />
                         <Text
                           style={{
+                            flex: 1,
                             fontFamily: 'Montserrat-Medium',
                             fontSize: 13,
                             color: '#0C0D36',
-                            paddingLeft: 20,
                           }}>
                           {task.pickUpLocation.client_name ||
                             task.pickUpLocation.centreName}
@@ -1205,11 +1258,22 @@ function Assigned({navigation}) {
 
                       <TextInput
                         style={styles.textarea}
+                        value={selectedItem?.description || ''}
+                        placeholder="Description here.."
+                        multiline={true}
+                        editable={false}
+                        scrollEnabled={false}
+                        textAlignVertical="top"
+                        autoCapitalize="none"
+                      />
+
+                      {/* <TextInput
+                        style={styles.textarea}
                         value={selectedItem.description}
                         placeholder="Description here.."
                         multiline={true}
                         editable={false}
-                      />
+                      /> */}
                     </View>
                   ) : null}
 
@@ -1228,9 +1292,9 @@ function Assigned({navigation}) {
                           <View style={styles.phleImg}>
                             <Image
                               style={{
-                                width: 25,
-                                height: 25,
-                                borderRadius: 12.5,
+                                width: 50,
+                                height: 50,
+                                borderRadius: 25,
                               }}
                               source={
                                 item?.commentor?.employeePhoto
@@ -1497,16 +1561,22 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     borderRadius: 10,
   },
+
   textarea: {
-    fontFamily: 'Montserrat-Regular',
-    height: 54,
+    minHeight: 54,
     borderWidth: 1,
     borderColor: '#ECEDF0',
     backgroundColor: '#FAFAFA',
     paddingHorizontal: 15,
+    paddingVertical: 10,
     marginBottom: 15,
     borderRadius: 10,
+    fontFamily: 'Montserrat-Regular',
+    fontSize: 14,
+    lineHeight: 21,
+    color: '#222222',
   },
+
   //
   mdlNewContainer: {
     maxHeight: '70%',

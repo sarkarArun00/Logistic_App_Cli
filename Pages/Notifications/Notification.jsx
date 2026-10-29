@@ -302,8 +302,11 @@ function Notification({navigation}) {
       />
       <View style={styles.textContainer}>
         <View style={{flex: 1}}>
+          {/* <Text style={styles.name}>
+            {item.name} <Text style={styles.messageTitle}>{item.message?.trim()}</Text>
+          </Text> */}
           <Text style={styles.name}>
-            {item.name} <Text style={styles.message}>{item.message}</Text>
+            {`${item.name || ''} ${item.message || 'No message'}`.trim()}
           </Text>
           <Text style={styles.time}>
             {dayjs(item.createdAt).format('MMMM D, YYYY h:mm A')}
@@ -605,8 +608,8 @@ function Notification({navigation}) {
                               <Image
                                 source={
                                   item.denomination_type === 'Coin'
-                                    ? require('../../assets/coin.png')
-                                    : require('../../assets/note.png')
+                                    ? require('../../assets/coins.png')
+                                    : require('../../assets/Iconmoney.png')
                                 }
                                 style={styles.denominationImage}
                               />
@@ -770,6 +773,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat-Medium',
     color: '#4B5563',
   },
+
   time: {
     fontFamily: 'Montserrat-Medium',
     fontSize: 12,

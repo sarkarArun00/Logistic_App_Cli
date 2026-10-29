@@ -1,288 +1,314 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, Linking, TextInput, Modal, ActivityIndicator, RefreshControl } from 'react-native';
+import React, {useEffect, useState, useCallback} from 'react';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  Linking,
+  TextInput,
+  Modal,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
 // import { useFonts, Montserrat_600SemiBold, Montserrat_500Medium } from '@expo-google-fonts/montserrat';
-import { Picker } from '@react-native-picker/picker';
+import {Picker} from '@react-native-picker/picker';
 import TaskStatusTabs from '../TaskStatusTabs';
 import TaskService from '../../Services/task_service';
 import NotificationCount from '../../Notifications/NotificationCount';
 
-import { GlobalStyles } from '../../GlobalStyles';
-import { useSearch } from '../../../hooks/userSearch1';
-import { Platform } from 'react-native';
+import {GlobalStyles} from '../../GlobalStyles';
+import {useSearch} from '../../../hooks/userSearch1';
+import {Platform} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker'; // install if not already
-import { lightTheme } from '../../GlobalStyles';
+import {lightTheme} from '../../GlobalStyles';
 // import { useSearch } from '../../../hooks/useSearch';
-import CustomAlert from '../../Components/CustomAlert'
+import CustomAlert from '../../Components/CustomAlert';
 
-const wait = (timeout) => {
-    return new Promise(resolve => setTimeout(resolve, timeout));
+const wait = timeout => {
+  return new Promise(resolve => setTimeout(resolve, timeout));
 };
 
+function Completed({navigation}) {
+  const [filter, setFilter] = useState(false);
+  const [selectClient, setSelectClient] = useState();
+  const [selectTask, setSelectTask] = useState();
+  const [selectPriority, setSelectPriority] = useState('false');
+  const [loading, setLoading] = useState(true);
+  const [completedTasks, setCompletedTasks] = useState([]);
+  const [visibleCount, setVisibleCount] = useState(5);
+  const {searchQuery, filteredData, search} = useSearch(completedTasks);
+  const visibleTasks = searchQuery
+    ? filteredData // Show all if searching
+    : filteredData.slice(0, visibleCount); // Show limited if not
 
+  const [clients, setClients] = useState([]);
+  const [fromDate, setFromDate] = useState(null);
+  const [toDate, setToDate] = useState(null);
 
+  const [showFromDatePicker, setShowFromDatePicker] = useState(false);
+  const [showToDatePicker, setShowToDatePicker] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [allTaskType, setTaskType] = useState([]);
 
-function Completed({ navigation }) {
-    const [filter, setFilter] = useState(false);
-    const [selectClient, setSelectClient] = useState();
-    const [selectTask, setSelectTask] = useState();
-    const [selectPriority, setSelectPriority] = useState('false');
-    const [loading, setLoading] = useState(true);
-    const [completedTasks, setCompletedTasks] = useState([]);
-    const [visibleCount, setVisibleCount] = useState(5);
-    const { searchQuery, filteredData, search } = useSearch(completedTasks);
-    const visibleTasks = searchQuery
-        ? filteredData           // Show all if searching
-        : filteredData.slice(0, visibleCount); // Show limited if not
+  const [alertVisible, setAlertVisible] = useState(false);
 
-    const [clients, setClients] = useState([]);
-    const [fromDate, setFromDate] = useState(null);
-    const [toDate, setToDate] = useState(null);
+  const [alertData, setAlertData] = useState({
+    type: 'success',
+    title: '',
+    message: '',
+  });
 
-    const [showFromDatePicker, setShowFromDatePicker] = useState(false);
-    const [showToDatePicker, setShowToDatePicker] = useState(false);
-    const [refreshing, setRefreshing] = useState(false);
-    const [allTaskType, setTaskType] = useState([])
-
-
-    const [alertVisible, setAlertVisible] = useState(false);
-
-    const [alertData, setAlertData] = useState({
-        type: 'success',
-        title: '',
-        message: '',
+  const showAlert = (type, title, message) => {
+    setAlertData({
+      type,
+      title,
+      message,
     });
 
-    const showAlert = (type, title, message) => {
-        setAlertData({
-            type,
-            title,
-            message,
-        });
+    setAlertVisible(true);
+  };
 
-        setAlertVisible(true);
-    };
+  const formatDate = date => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${year}-${month}-${day}`;
+  };
 
-
-    const formatDate = (date) => {
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${year}-${month}-${day}`;
-    };
-
-
-    const handleFromDateChange = (event, selectedDate) => {
-        setShowFromDatePicker(false);
-        if (selectedDate) {
-            setFromDate(formatDate(selectedDate));
-        }
-    };
-
-    const handleToDateChange = (event, selectedDate) => {
-        setShowToDatePicker(false);
-        if (selectedDate) {
-            setToDate(formatDate(selectedDate));
-        }
-    };
-
-
-
-    const formatDateTime = (isoString) => {
-        const date = new Date(isoString);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
-        const year = String(date.getFullYear()).slice(-2); // Get last two digits
-        const hours = date.getHours();
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        const hour12 = hours % 12 || 12;
-
-        return `${day}-${month}-${year} ${hour12}:${minutes} ${ampm}`;
-    };
-
-
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    useEffect(() => {
-        fetchClients(); // New call for clients
-    }, []);
-
-
-    const onRefresh = useCallback(() => {
-        fetchData();
-        fetchClients();
-        wait(2000).then(() => setRefreshing(false));
-    }, []);
-
-    const fetchClients = async () => {
-        try {
-            const response = await TaskService.getClientListByLogistic();
-            console.log("Get All clients:", response.data)
-            if (response?.status == 1) {
-                setClients(response.data);
-                if (response.data.length > 0) {
-                    setSelectClient(response.data[0].id);
-                }
-            }
-        } catch (error) {
-            console.error('Error fetching clients:', error);
-        }
-    };
-
-    const fetchData = async () => {
-        setLoading(true)
-        try {
-            const payload =
-            {
-                "fromDate": null,
-                "toDate": null,
-                "clientId": null,
-                "taskType": null,
-                "priority": null
-            }
-            const response = await TaskService.getMyCompletedTasks(payload);
-            if (response.status == 1) {
-                setCompletedTasks(response.data);
-                search('', response.data); // initialize filtered data
-                va(false)
-            } else {
-                setCompletedTasks([]);
-                search('', []); // empty list if error
-                setLoading(false)
-            }
-        } catch (error) {
-            // console.error('Error fetching tasks:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const applyFilters = async () => {
-        setLoading(true);
-        try {
-            const payload = {
-                fromDate: fromDate || null,
-                toDate: toDate || null,
-                clientId: selectClient || null,
-                taskType: selectTask || null,
-                priority: selectPriority === 'true' ? true : (selectPriority === 'false' ? false : null)
-            };
-
-            console.log('filter payload: ', payload)
-
-            const response = await TaskService.getMyCompletedTasks(payload);
-
-            if (response.status === 1) {
-                setCompletedTasks(response.data);
-                search('', response.data);
-                setFilter(false);
-            } else {
-                setCompletedTasks([]);
-                search('', []);
-            }
-        } catch (error) {
-            console.error('Filter apply failed:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-
-    const taskTypes = async () => {
-        try {
-            const response = await TaskService.getAllTaskTypes();
-            console.log('Task Type: ', response)
-            if (response.status == 1) {
-                setTaskType(response.data)
-            } else {
-                setTaskType([])
-            }
-        } catch (error) {
-            console.log(error)
-        }
+  const handleFromDateChange = (event, selectedDate) => {
+    setShowFromDatePicker(false);
+    if (selectedDate) {
+      setFromDate(formatDate(selectedDate));
     }
-    const makeCall = async call => {
-        if (!call || !String(call).trim()) {
-            showAlert(
-                'warning',
-                'Phone Number Missing',
-                'No contact number is available for this user.',
-            );
-            return;
+  };
+
+  const handleToDateChange = (event, selectedDate) => {
+    setShowToDatePicker(false);
+    if (selectedDate) {
+      setToDate(formatDate(selectedDate));
+    }
+  };
+
+  const formatDateTime = isoString => {
+    const date = new Date(isoString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+    const year = String(date.getFullYear()).slice(-2); // Get last two digits
+    const hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const hour12 = hours % 12 || 12;
+
+    return `${day}-${month}-${year} ${hour12}:${minutes} ${ampm}`;
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    fetchClients(); // New call for clients
+  }, []);
+
+  const onRefresh = useCallback(() => {
+    fetchData();
+    fetchClients();
+    wait(2000).then(() => setRefreshing(false));
+  }, []);
+
+  const fetchClients = async () => {
+    try {
+      const response = await TaskService.getClientListByLogistic();
+      console.log('Get All clients:', response.data);
+      if (response?.status == 1) {
+        setClients(response.data);
+        if (response.data.length > 0) {
+          setSelectClient(response.data[0].id);
         }
+      }
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+    }
+  };
 
-        const cleaned = String(call).replace(/\D/g, '');
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const payload = {
+        fromDate: null,
+        toDate: null,
+        clientId: null,
+        taskType: null,
+        priority: null,
+      };
+      const response = await TaskService.getMyCompletedTasks(payload);
+      if (response.status == 1) {
+        setCompletedTasks(response.data);
+        search('', response.data); // initialize filtered data
+        va(false);
+      } else {
+        setCompletedTasks([]);
+        search('', []); // empty list if error
+        setLoading(false);
+      }
+    } catch (error) {
+      // console.error('Error fetching tasks:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        const formatted = cleaned.startsWith('91') && cleaned.length === 12
-            ? `+${cleaned}`
-            : cleaned.length === 10
-                ? `+91${cleaned}`
-                : `+${cleaned}`;
+  const applyFilters = async () => {
+    setLoading(true);
+    try {
+      const payload = {
+        fromDate: fromDate || null,
+        toDate: toDate || null,
+        clientId: selectClient || null,
+        taskType: selectTask || null,
+        priority:
+          selectPriority === 'true'
+            ? true
+            : selectPriority === 'false'
+            ? false
+            : null,
+      };
 
-        try {
-            await Linking.openURL(`tel:${formatted}`);
-        } catch (error) {
-            showAlert(
-                'error',
-                'Unable to Call',
-                'Could not open the phone dialer. Please try again.',
-            );
-        }
-    };
+      console.log('filter payload: ', payload);
 
-    const formatDate2 = (isoString) => {
-        if (!isoString) return 'Invalid Date';
+      const response = await TaskService.getMyCompletedTasks(payload);
 
-        const date = new Date(isoString);
+      if (response.status === 1) {
+        setCompletedTasks(response.data);
+        search('', response.data);
+        setFilter(false);
+      } else {
+        setCompletedTasks([]);
+        search('', []);
+      }
+    } catch (error) {
+      console.error('Filter apply failed:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        // Extract day, month, and year
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed in JS
-        const year = date.getFullYear();
+  const taskTypes = async () => {
+    try {
+      const response = await TaskService.getAllTaskTypes();
+      console.log('Task Type: ', response);
+      if (response.status == 1) {
+        setTaskType(response.data);
+      } else {
+        setTaskType([]);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const makeCall = async call => {
+    if (!call || !String(call).trim()) {
+      showAlert(
+        'warning',
+        'Phone Number Missing',
+        'No contact number is available for this user.',
+      );
+      return;
+    }
 
-        return `${day}-${month}-${year}`;
-    };
+    const cleaned = String(call).replace(/\D/g, '');
 
-    const formatTime12Hour = (time) => {
-        if (!time) return '';
+    const formatted =
+      cleaned.startsWith('91') && cleaned.length === 12
+        ? `+${cleaned}`
+        : cleaned.length === 10
+        ? `+91${cleaned}`
+        : `+${cleaned}`;
 
-        const [hours, minutes] = time.split(':');
+    try {
+      await Linking.openURL(`tel:${formatted}`);
+    } catch (error) {
+      showAlert(
+        'error',
+        'Unable to Call',
+        'Could not open the phone dialer. Please try again.',
+      );
+    }
+  };
 
-        const hour = parseInt(hours, 10);
-        const period = hour >= 12 ? 'PM' : 'AM';
-        const hour12 = hour % 12 || 12;
+  const formatDate2 = isoString => {
+    if (!isoString) return 'Invalid Date';
 
-        return `${hour12}:${minutes} ${period}`;
-    };
+    const date = new Date(isoString);
 
-    return (
-        <SafeAreaView style={[styles.container, GlobalStyles.SafeAreaView]}>
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.scrollView}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }>
+    // Extract day, month, and year
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed in JS
+    const year = date.getFullYear();
 
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
-                    <TouchableOpacity onPress={() => navigation.navigate("TaskStack", { screen: "TaskScreen" })} style={{ flexDirection: 'row', alignItems: 'center', }}>
-                        <Image style={{ width: 14, height: 14, }} source={require('../../../assets/leftarrow.png')} />
-                        <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 18, color: '#2F81F5', marginLeft: 4, }}>Completed Task</Text>
-                    </TouchableOpacity>
-                    <View >
-                        <TouchableOpacity onPress={() => navigation.navigate('Notification')} >
-                            <View pointerEvents="none">
-                                <NotificationCount />
-                            </View>
-                        </TouchableOpacity>
-                    </View>
-                </View>
+    return `${day}-${month}-${year}`;
+  };
 
-                {/* <View style={{ position: 'relative', marginTop: 20, }}>
+  const formatTime12Hour = time => {
+    if (!time) return '';
+
+    const [hours, minutes] = time.split(':');
+
+    const hour = parseInt(hours, 10);
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+
+    return `${hour12}:${minutes} ${period}`;
+  };
+
+  return (
+    <SafeAreaView style={[styles.container, GlobalStyles.SafeAreaView]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('TaskStack', {screen: 'TaskScreen'})
+            }
+            style={{flexDirection: 'row', alignItems: 'center'}}>
+            <Image
+              style={{width: 14, height: 14}}
+              source={require('../../../assets/leftarrow.png')}
+            />
+            <Text
+              style={{
+                fontFamily: 'Montserrat-SemiBold',
+                fontSize: 18,
+                color: '#2F81F5',
+                marginLeft: 4,
+              }}>
+              Completed Task
+            </Text>
+          </TouchableOpacity>
+          <View>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Notification')}>
+              <View pointerEvents="none">
+                <NotificationCount />
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* <View style={{ position: 'relative', marginTop: 20, }}>
                     <TextInput
                         style={{ fontSize: 14, fontFamily: 'Montserrat_500Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
                         placeholder="Search"
@@ -290,597 +316,906 @@ function Completed({ navigation }) {
                     />
                     <Image style={{ position: 'absolute', top: 16, right: 20, width: 20, height: 20, }} source={require('../../../assets/search.png')} />
                 </View> */}
-                <View style={{ flexDirection: 'row', marginTop: 20, }}>
-                    <View style={{ flex: 1, position: 'relative', }}>
-                        <TextInput
-                            style={{ fontSize: 14, fontFamily: 'Montserrat-Medium', height: 50, backgroundColor: '#F6FAFF', borderRadius: 30, paddingLeft: 20, paddingRight: 50, }}
-                            placeholder="Search"
-                            placeholderTextColor="#0C0D36"
-                            value={searchQuery}
-                            onChangeText={(text) => search(text, completedTasks)}
+        <View style={{flexDirection: 'row', marginTop: 20}}>
+          <View style={{flex: 1, position: 'relative'}}>
+            <TextInput
+              style={{
+                fontSize: 14,
+                fontFamily: 'Montserrat-Medium',
+                height: 50,
+                backgroundColor: '#F6FAFF',
+                borderRadius: 30,
+                paddingLeft: 20,
+                paddingRight: 50,
+              }}
+              placeholder="Search"
+              placeholderTextColor="#0C0D36"
+              value={searchQuery}
+              onChangeText={text => search(text, completedTasks)}
+            />
+            <Image
+              style={{
+                position: 'absolute',
+                top: 16,
+                right: 20,
+                width: 20,
+                height: 20,
+              }}
+              source={require('../../../assets/search.png')}
+            />
+          </View>
+          <TouchableOpacity
+            onPress={() => {
+              setFilter(true);
+              taskTypes();
+            }}
+            style={{
+              width: 50,
+              height: 50,
+              borderRadius: '50%',
+              backgroundColor: '#F6FAFF',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginLeft: 14,
+            }}>
+            <Image
+              style={{width: 25, height: 25}}
+              source={require('../../../assets/filter.png')}
+            />
+            {/* <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>2</Text> */}
+          </TouchableOpacity>
+        </View>
 
-                        />
-                        <Image style={{ position: 'absolute', top: 16, right: 20, width: 20, height: 20, }} source={require('../../../assets/search.png')} />
-                    </View>
-                    <TouchableOpacity onPress={() => {
-                        setFilter(true)
-                        taskTypes()
-                    }}
-                        style={{ width: 50, height: 50, borderRadius: '50%', backgroundColor: '#F6FAFF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginLeft: 14, }}>
-                        <Image style={{ width: 25, height: 25, }} source={require('../../../assets/filter.png')} />
-                        {/* <Text style={{ position: 'absolute', fontFamily: 'Montserrat_400Regular', fontSize: 10, lineHeight: 13, color: '#fff', right: 0, top: 0, width: 15, height: 15, backgroundColor: '#F43232', borderRadius: 50, textAlign: 'center', }}>2</Text> */}
-                    </TouchableOpacity>
-                </View>
-
-                {/* <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollContainer}>
+        {/* <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollContainer}>
                     <TaskStatusTabs activeTab="Completed" />
                 </ScrollView> */}
 
-                <View style={{ paddingHorizontal: 3, }}>
-                    {visibleTasks && visibleTasks.length > 0 ? (
-                        visibleTasks.map((task, index) => (
-                            <View style={styles.mainbox} key={task.id || index}>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, }}>
-                                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', }}>
-                                        <View style={{ width: 29, height: 29, borderRadius: '50%', backgroundColor: '#edfafc', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', }}>
-                                            <Image style={{ width: 17, height: 17, }} source={require('../../../assets/texticon.png')} />
-                                        </View>
-                                        {/* <Text style={{ flex: 1, paddingLeft: 7, fontFamily: 'Montserrat-Medium', fontSize: 15, color: '#2F81F5', }}>{task.taskType?.taskType}</Text> */}
-                                        {
-                                            task?.request_id && task?.taskType?.taskType === 'Sample Pickup' ? (
-                                                <Text
-                                                    style={{
-                                                        flex: 1,
-                                                        paddingLeft: 7,
-                                                        fontFamily: 'Montserrat-Medium',
-                                                        fontSize: 15,
-                                                        color: '#2F81F5'
-                                                    }}
-                                                >
-                                                    Pickup Request
-                                                </Text>
-                                            ) : (
-                                                <Text
-                                                    style={{
-                                                        flex: 1,
-                                                        paddingLeft: 7,
-                                                        fontFamily: 'Montserrat-Medium',
-                                                        fontSize: 15,
-                                                        color: '#2F81F5'
-                                                    }}
-                                                >
-                                                    {task?.taskType?.taskType}
-                                                </Text>
-                                            )
-                                        }
-                                    </View>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 13, }}>
-                                        {
-                                            task?.request_id && task?.taskType?.taskType === 'Sample Pickup' || task?.taskType?.taskType === 'Sample Pickup' || task?.taskType?.taskType === 'Cash Collection' ? (
-                                                <TouchableOpacity onPress={() => makeCall(task?.client?.contact_number)}>
-                                                    <Image style={{ width: 20, height: 20 }} source={require('../../../assets/call.png')} />
-                                                </TouchableOpacity>
-                                            ) :
-                                                (
-                                                    <TouchableOpacity onPress={() => makeCall(task?.pickUpLocation?.contact)}>
-                                                        <Image style={{ width: 20, height: 20 }} source={require('../../../assets/call.png')} />
-                                                    </TouchableOpacity>
-                                                )
-                                        }
-                                    </View>
-                                </View>
-
-                                <View style={{ flexDirection: 'row', padding: 15, }}>
-                                    <View style={{ flex: 1, }}>
-                                        <View style={{ position: 'relative', marginBottom: 5, }}>
-                                            <Image style={{ position: 'absolute', left: 0, top: 0, width: 12, height: 12, }} source={require('../../../assets/asicon1.png')} />
-                                            <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20, }}>Task ID: {task?.displayId ?? 'NA'}</Text>
-                                        </View>
-                                        <View style={{ position: 'relative', marginBottom: 5, }}>
-                                            <Image style={{ position: 'absolute', left: 0, top: 0, width: 11, height: 13, }} source={require('../../../assets/asicon2.png')} />
-                                            {
-                                                task?.request_id && task?.taskType?.taskType === 'Sample Pickup' || task?.taskType?.taskType === 'Sample Pickup' || task?.taskType?.taskType === 'Cash Collection' ? (
-                                                    <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
-                                                        {task?.client?.address ?? 'No Address'}
-                                                    </Text>
-                                                ) :
-                                                    (
-                                                        <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
-                                                            {task?.pickUpLocation?.address ?? 'No Address'}
-                                                        </Text>
-                                                    )
-                                            }
-                                        </View>
-                                        <View style={{ position: 'relative', marginBottom: 5, }}>
-                                            <Image style={{ position: 'absolute', left: 0, top: 0, width: 13, height: 13, }} source={require('../../../assets/asicon3.png')} />
-                                            <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20, }}>{formatTime12Hour(task?.preferredTime?.start_time)} - {formatTime12Hour(task?.preferredTime?.end_time)}</Text>
-                                        </View>
-                                        <View style={{ position: 'relative', marginBottom: 5 }}>
-                                            <Image style={{ position: 'absolute', left: 0, top: 0, width: 13, height: 13 }} source={require('../../../assets/asicon4.png')} />
-                                            <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
-                                                Assigned By: {task?.assigned?.assigner?.employee_name}
-                                                {/* Assigned By:  */}
-                                            </Text>
-                                        </View>
-                                        {/* <View style={{ position: 'relative', }}>
-                                            <Image style={{ position: 'absolute', left: 0, top: 0, width: 16, height: 16, }} source={require('../../../assets/asicon4.png')} />
-                                            <Text style={{ fontFamily: 'Montserrat_500Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20, }}>{task?.pickUpLocation?.client_name ?? task?.pickUpLocation?.centreName ?? '...'}</Text>
-                                        </View> */}
-                                        {(task?.pickUpLocation?.client_name || task?.pickUpLocation?.centreName) && (
-                                            <View style={{ position: 'relative' }}>
-                                                <Image
-                                                    style={{
-                                                        position: 'absolute',
-                                                        left: 0,
-                                                        top: 0,
-                                                        width: 16,
-                                                        height: 16,
-                                                    }}
-                                                    source={
-                                                        task.pickUpLocation.client_name
-                                                            ? require('../../../assets/asicon4.png') // client icon
-                                                            : require('../../../assets/asicon05.png') // center icon
-                                                    }
-                                                />
-                                                <Text
-                                                    style={{
-                                                        fontFamily: 'Montserrat-SemiBold',
-                                                        fontSize: 13,
-                                                        color: '#0C0D36',
-                                                        paddingLeft: 20,
-                                                    }}
-                                                >
-                                                    {task.pickUpLocation.client_name || task.pickUpLocation.centreName}
-                                                </Text>
-                                            </View>
-                                        )}
-                                    </View>
-                                    {task?.isUrgent && (
-                                        <View key={task.id || index}>
-                                            <View style={{ position: 'relative', marginTop: 30 }}>
-                                                <View style={{ width: 16, height: 16, borderWidth: 2, borderColor: '#F43232', borderRadius: 50, position: 'absolute', left: 0, top: 2 }}></View>
-                                                <View style={{ width: 8, height: 8, backgroundColor: '#F43232', borderRadius: 50, position: 'absolute', left: 4, top: 6 }}></View>
-                                                <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#F43232', paddingLeft: 20 }}>Urgent</Text>
-                                            </View>
-                                        </View>
-                                    )}
-                                </View>
-
-                                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollContainer}>
-                                    {
-                                        task?.taskFrequency == 'Once' && (
-                                            <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 15 }}>
-                                                <Text style={styles.oncetxt}>{formatDate2(task?.preferredDate)}</Text>
-                                                <Text style={styles.oncetxt}>{formatTime12Hour(task?.preferredTime?.start_time)} - {formatTime12Hour(task?.preferredTime?.end_time)}</Text>
-                                            </View>
-                                        )
-                                    }
-                                    {
-                                        task?.taskFrequency == 'Custom days' && (
-                                            <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 15 }}>
-                                                <Text style={styles.oncetxt}>{task?.fromDate} - {task?.toDate}</Text>
-                                            </View>
-                                        )
-                                    }
-                                    {
-                                        task?.taskFrequency == 'Weekly/Daily' && (
-                                            <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 15 }}>
-                                                {Object.entries(task?.selectedDays || {}).map(([day, selected]) =>
-                                                    selected ? <Text key={day} style={styles.oncetxt}>{day.charAt(0).toUpperCase() + day.slice(1)}</Text> : null
-                                                )}
-                                                {/* <Text style={styles.oncetxt}>{task?.fromDate}</Text>
-                                                                                                   <Text style={styles.oncetxt}>{task?.toDate}</Text> */}
-                                            </View>
-                                        )
-                                    }
-
-                                </ScrollView>
-
-                                <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', padding: 15, marginTop: 12, flexDirection: 'row', alignItems: 'center', }}>
-
-                                    {
-                                        task.verifiedById != null ? (
-                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                <Image
-                                                    style={{ width: 22, height: 22 }}
-                                                    source={require('../../../assets/tick.png')}
-                                                />
-                                                <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 12, color: '#2F81F5', paddingLeft: 8 }}>
-                                                    Verified at {formatDateTime(task.updated_at)}
-                                                </Text>
-                                            </View>
-                                        ) : (
-                                            <Text style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 12, color: '#2F81F5', paddingLeft: 8 }}>
-                                                {/* Task Completed at {formatDateTime(task.updated_at)} */}
-                                                Pending verification
-                                            </Text>
-                                        )
-                                    }
-                                </View>
-                            </View>
-                        ))
+        <View style={{paddingHorizontal: 3}}>
+          {visibleTasks && visibleTasks.length > 0 ? (
+            visibleTasks.map((task, index) => (
+              <View style={styles.mainbox} key={task.id || index}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: 15,
+                  }}>
+                  <View
+                    style={{
+                      flex: 1,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                    }}>
+                    <View
+                      style={{
+                        width: 29,
+                        height: 29,
+                        borderRadius: '50%',
+                        backgroundColor: '#edfafc',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                      <Image
+                        style={{width: 17, height: 17}}
+                        source={require('../../../assets/texticon.png')}
+                      />
+                    </View>
+                    {/* <Text style={{ flex: 1, paddingLeft: 7, fontFamily: 'Montserrat-Medium', fontSize: 15, color: '#2F81F5', }}>{task.taskType?.taskType}</Text> */}
+                    {task?.request_id &&
+                    task?.taskType?.taskType === 'Sample Pickup' ? (
+                      <Text
+                        style={{
+                          flex: 1,
+                          paddingLeft: 7,
+                          fontFamily: 'Montserrat-Medium',
+                          fontSize: 15,
+                          color: '#2F81F5',
+                        }}>
+                        Pickup Request
+                      </Text>
                     ) : (
-                        <View style={{ padding: 20, alignItems: 'center', justifyContent: 'center', marginTop: 200 }}>
-                            {/* <Text style={{ fontSize: 16, color: '#999', fontFamily: 'Montserrat_500Medium' }}>
+                      <Text
+                        style={{
+                          flex: 1,
+                          paddingLeft: 7,
+                          fontFamily: 'Montserrat-Medium',
+                          fontSize: 15,
+                          color: '#2F81F5',
+                        }}>
+                        {task?.taskType?.taskType}
+                      </Text>
+                    )}
+                  </View>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 13,
+                    }}>
+                    {(task?.request_id &&
+                      task?.taskType?.taskType === 'Sample Pickup') ||
+                    task?.taskType?.taskType === 'Sample Pickup' ||
+                    task?.taskType?.taskType === 'Cash Collection' ? (
+                      <TouchableOpacity
+                        onPress={() => makeCall(task?.client?.contact_number)}>
+                        <Image
+                          style={{width: 20, height: 20}}
+                          source={require('../../../assets/call.png')}
+                        />
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        onPress={() => makeCall(task?.pickUpLocation?.contact)}>
+                        <Image
+                          style={{width: 20, height: 20}}
+                          source={require('../../../assets/call.png')}
+                        />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+
+                <View style={{flexDirection: 'row', padding: 15}}>
+                  <View style={{flex: 1}}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 5,
+                      }}>
+                      <Image
+                        style={{
+                          width: 12,
+                          height: 12,
+                          resizeMode: 'contain',
+                          marginRight: 12,
+                        }}
+                        source={require('../../../assets/asicon1.png')}
+                      />
+
+                      <Text
+                        style={{
+                          fontFamily: 'Montserrat-Medium',
+                          fontSize: 13,
+                          color: '#0C0D36',
+                          flexShrink: 1,
+                        }}>
+                        Task ID: {task?.displayId ?? 'NA'}
+                      </Text>
+                    </View>
+
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        marginBottom: 5,
+                      }}>
+                      <Image
+                        style={{
+                          width: 13,
+                          height: 13,
+                          resizeMode: 'contain',
+                          marginRight: 12,
+                          marginTop: 1,
+                        }}
+                        source={require('../../../assets/asicon2.png')}
+                      />
+
+                      <Text
+                        style={{
+                          flex: 1,
+                          fontFamily: 'Montserrat-Medium',
+                          fontSize: 13,
+                          color: '#0C0D36',
+                          lineHeight: 20,
+                        }}>
+                        {task?.taskType?.taskType === 'Sample Pickup' ||
+                        task?.taskType?.taskType === 'Cash Collection'
+                          ? task?.client?.address ?? 'No Address'
+                          : task?.pickUpLocation?.address ?? 'No Address'}
+                      </Text>
+                    </View>
+
+                    {/* <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        marginBottom: 5,
+                      }}>
+                      <Image
+                        style={{
+                          width: 13,
+                          height: 13,
+                          resizeMode: 'contain',
+                          marginRight: 12,
+                          marginTop: 1,
+                        }}
+                        source={require('../../../assets/asicon2.png')}
+                      />
+                      {(task?.request_id &&
+                        task?.taskType?.taskType === 'Sample Pickup') ||
+                      task?.taskType?.taskType === 'Sample Pickup' ||
+                      task?.taskType?.taskType === 'Cash Collection' ? (
+                        <Text
+                          style={{
+                            flex: 1,
+                            fontFamily: 'Montserrat-Medium',
+                            fontSize: 13,
+                            color: '#0C0D36',
+                            lineHeight: 20,
+                          }}>
+                          {task?.client?.address ?? 'No Address'}
+                        </Text>
+                      ) : (
+                        <Text
+                          style={{
+                            flex: 1,
+                            fontFamily: 'Montserrat-Medium',
+                            fontSize: 13,
+                            color: '#0C0D36',
+                            lineHeight: 20,
+                          }}>
+                          {task?.pickUpLocation?.address ?? 'No Address'}
+                        </Text>
+                      )}
+                    </View> */}
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 5,
+                      }}>
+                      <Image
+                        style={{
+                          width: 13,
+                          height: 13,
+                          resizeMode: 'contain',
+                          marginRight: 12,
+                        }}
+                        source={require('../../../assets/asicon3.png')}
+                      />
+                      <Text
+                        style={{
+                          flex: 1,
+                          fontFamily: 'Montserrat-Medium',
+                          fontSize: 13,
+                          color: '#0C0D36',
+                        }}>
+                        {formatTime12Hour(task?.preferredTime?.start_time)} -{' '}
+                        {formatTime12Hour(task?.preferredTime?.end_time)}
+                      </Text>
+                    </View>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 5,
+                      }}>
+                      <Image
+                        style={{
+                          width: 13,
+                          height: 13,
+                          resizeMode: 'contain',
+                          marginRight: 12,
+                        }}
+                        source={require('../../../assets/asicon4.png')}
+                      />
+
+                      {task?.assigned?.assigner?.employee_name && (
+                        <Text
+                          style={{
+                            flex: 1,
+                            fontFamily: 'Montserrat-Medium',
+                            fontSize: 13,
+                            color: '#0C0D36',
+                          }}>
+                          Assigned By: {task.assigned.assigner.employee_name}
+                        </Text>
+                      )}
+                    </View>
+                    {/* {
+                                            task?.pickUpLocation?.client_name && (
+                                                <View style={{ position: 'relative' }}>
+                                                    <Image style={{ position: 'absolute', left: 0, top: 0, width: 16, height: 16 }} source={require('../../../assets/asicon4.png')} />
+                                                    <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
+                                                        {task?.pickUpLocation?.client_name}
+                                                    </Text>
+                                                </View>
+                                            )
+
+                                        } */}
+
+                    {(task?.pickUpLocation?.client_name ||
+                      task?.pickUpLocation?.centreName) && (
+                      <View
+                        style={{flexDirection: 'row', alignItems: 'center'}}>
+                        <Image
+                          style={{
+                            width: 13,
+                            height: 13,
+                            resizeMode: 'contain',
+                            marginRight: 12,
+                          }}
+                          source={
+                            task.pickUpLocation.client_name
+                              ? require('../../../assets/asicon4.png') // client icon
+                              : require('../../../assets/asicon05.png') // center icon
+                          }
+                        />
+                        <Text
+                          style={{
+                            flex: 1,
+                            fontFamily: 'Montserrat-Medium',
+                            fontSize: 13,
+                            color: '#0C0D36',
+                          }}>
+                          {task.pickUpLocation.client_name ||
+                            task.pickUpLocation.centreName}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {task?.isUrgent && (
+                    <View key={task.id || index}>
+                      <View style={{position: 'relative', marginTop: 30}}>
+                        <View
+                          style={{
+                            width: 16,
+                            height: 16,
+                            borderWidth: 2,
+                            borderColor: '#F43232',
+                            borderRadius: 50,
+                            position: 'absolute',
+                            left: 0,
+                            top: 2,
+                          }}></View>
+                        <View
+                          style={{
+                            width: 8,
+                            height: 8,
+                            backgroundColor: '#F43232',
+                            borderRadius: 50,
+                            position: 'absolute',
+                            left: 4,
+                            top: 6,
+                          }}></View>
+                        <Text
+                          style={{
+                            fontFamily: 'Montserrat-SemiBold',
+                            color: '#F43232',
+                            paddingLeft: 20,
+                          }}>
+                          Urgent
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+                </View>
+
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.scrollContainer}>
+                  {task?.taskFrequency == 'Once' && (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        gap: 4,
+                        paddingHorizontal: 15,
+                      }}>
+                      <Text style={styles.oncetxt}>
+                        {formatDate2(task?.preferredDate)}
+                      </Text>
+                      <Text style={styles.oncetxt}>
+                        {formatTime12Hour(task?.preferredTime?.start_time)} -{' '}
+                        {formatTime12Hour(task?.preferredTime?.end_time)}
+                      </Text>
+                    </View>
+                  )}
+                  {task?.taskFrequency == 'Custom days' && (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        gap: 4,
+                        paddingHorizontal: 15,
+                      }}>
+                      <Text style={styles.oncetxt}>
+                        {task?.fromDate} - {task?.toDate}
+                      </Text>
+                    </View>
+                  )}
+                  {task?.taskFrequency == 'Weekly/Daily' && (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        gap: 4,
+                        paddingHorizontal: 15,
+                      }}>
+                      {Object.entries(task?.selectedDays || {}).map(
+                        ([day, selected]) =>
+                          selected ? (
+                            <Text key={day} style={styles.oncetxt}>
+                              {day.charAt(0).toUpperCase() + day.slice(1)}
+                            </Text>
+                          ) : null,
+                      )}
+                      {/* <Text style={styles.oncetxt}>{task?.fromDate}</Text>
+                                                                                                   <Text style={styles.oncetxt}>{task?.toDate}</Text> */}
+                    </View>
+                  )}
+                </ScrollView>
+
+                <View
+                  style={{
+                    borderTopWidth: 1,
+                    borderTopColor: '#ECEDF0',
+                    padding: 15,
+                    marginTop: 12,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  }}>
+                  {task.verifiedById != null ? (
+                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                      <Image
+                        style={{width: 22, height: 22}}
+                        source={require('../../../assets/tick.png')}
+                      />
+                      <Text
+                        style={{
+                          fontFamily: 'Montserrat-SemiBold',
+                          fontSize: 12,
+                          color: '#2F81F5',
+                          paddingLeft: 8,
+                        }}>
+                        Verified at {formatDateTime(task.updated_at)}
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text
+                      style={{
+                        fontFamily: 'Montserrat-SemiBold',
+                        fontSize: 12,
+                        color: '#2F81F5',
+                        paddingLeft: 8,
+                      }}>
+                      {/* Task Completed at {formatDateTime(task.updated_at)} */}
+                      Pending verification
+                    </Text>
+                  )}
+                </View>
+              </View>
+            ))
+          ) : (
+            <View
+              style={{
+                padding: 20,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginTop: 200,
+              }}>
+              {/* <Text style={{ fontSize: 16, color: '#999', fontFamily: 'Montserrat_500Medium' }}>
                                 No Data Found
                             </Text> */}
-                            <Image style={{ width: 200, height: 200, marginTop: -50 }}
-                                source={require('../../../assets/empty.png')}
-                                resizeMode="contain"
-                            />
-                        </View>
-                    )}
+              <Image
+                style={{width: 200, height: 200, marginTop: -50}}
+                source={require('../../../assets/empty.png')}
+                resizeMode="contain"
+              />
+            </View>
+          )}
+        </View>
 
-                </View>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={filter}
+          onRequestClose={() => setFilter(false)}>
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              {/* Header */}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: 15,
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#ECEDF0',
+                }}>
+                <Text style={styles.modalText}>Filter by:</Text>
+                <TouchableOpacity onPress={() => setFilter(false)}>
+                  <Image
+                    style={{width: 18, height: 18}}
+                    source={require('../../../assets/mdlclose.png')}
+                  />
+                </TouchableOpacity>
+              </View>
 
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={filter}
-                    onRequestClose={() => setFilter(false)}
-                >
-                    <View style={styles.modalBackground}>
-                        <View style={styles.modalContainer}>
-
-                            {/* Header */}
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 15, borderBottomWidth: 1, borderBottomColor: '#ECEDF0' }}>
-                                <Text style={styles.modalText}>Filter by:</Text>
-                                <TouchableOpacity onPress={() => setFilter(false)}>
-                                    <Image style={{ width: 18, height: 18 }} source={require('../../../assets/mdlclose.png')} />
-                                </TouchableOpacity>
-                            </View>
-
-                            {/* Body */}
-                            <View style={{ padding: 15 }}>
-
-                                {/* Date Range */}
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, marginTop: 10, marginBottom: 10, }}>
-
-                                    <View style={{ flex: 1, }}>
-                                        <Text style={styles.label}>From Date:</Text>
-                                        <TouchableOpacity onPress={() => setShowFromDatePicker(true)}
-                                            style={{
-                                                borderWidth: 1,
-                                                borderColor: '#ECEDF0',
-                                                backgroundColor: '#FAFAFA',
-                                                paddingHorizontal: 12,
-                                                borderRadius: 5,
-                                                height: 50,
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                marginBottom: 10,
-                                            }}
-                                        >
-                                            <Text style={fromDate ? styles.dateText : styles.placeholderText}>
-                                                {fromDate || 'From Date'}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                    <View style={{ flex: 1, }}>
-                                        <Text style={styles.label}>To Date:</Text>
-                                        <TouchableOpacity onPress={() => setShowToDatePicker(true)}
-                                            style={{
-                                                borderWidth: 1,
-                                                borderColor: '#ECEDF0',
-                                                backgroundColor: '#FAFAFA',
-                                                paddingHorizontal: 12,
-                                                borderRadius: 5,
-                                                height: 50,
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                marginBottom: 10,
-                                            }}
-                                        >
-                                            <Text style={toDate ? styles.dateText : styles.placeholderText}>
-                                                {toDate || 'To Date'}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-
-
-                                {showFromDatePicker && (
-                                    <DateTimePicker
-                                        value={new Date()}
-                                        mode="date"
-                                        display="default"
-                                        onChange={handleFromDateChange}
-                                    />
-                                )}
-
-                                {showToDatePicker && (
-                                    <DateTimePicker
-                                        value={new Date()}
-                                        mode="date"
-                                        display="default"
-                                        onChange={handleToDateChange}
-                                    />
-                                )}
-
-
-                                {/* Client Picker */}
-                                <View>
-                                    <Text style={styles.label}>Client</Text>
-                                    <View style={styles.pickerContainer}>
-                                        <Picker
-                                            selectedValue={selectClient}
-                                            onValueChange={(itemValue) => setSelectClient(itemValue)}
-                                            style={styles.picker}
-                                            dropdownIconColor={lightTheme.inputText}
-                                        >
-                                            {clients.length > 0 ? (
-                                                clients.map(client => (
-                                                    <Picker.Item
-                                                        key={client.id}
-                                                        label={client.client_name}
-                                                        value={client.id}
-
-                                                    />
-                                                ))
-                                            ) : (
-                                                <Picker.Item label="No Clients Found" value="" />
-                                            )}
-                                        </Picker>
-                                    </View>
-                                </View>
-
-                                {/* Task Type */}
-                                <View>
-                                    <Text style={styles.label}>Task Type</Text>
-                                    <View style={styles.pickerContainer}>
-                                        <Picker
-                                            selectedValue={selectTask}
-                                            onValueChange={(itemValue) => {
-                                                // Prevent changing to default if already selected
-                                                if (itemValue !== "") {
-                                                    setSelectTask(itemValue);
-                                                }
-                                            }}
-                                            style={styles.picker}
-                                            dropdownIconColor={lightTheme.inputText}
-                                        >
-                                            <Picker.Item label="-select-" value="" />
-                                            {allTaskType.map((item) => (
-                                                <Picker.Item key={item.id} label={item.taskType} value={item.id} />
-                                            ))}
-                                        </Picker>
-                                    </View>
-                                </View>
-
-                                {/* Priority */}
-                                <View>
-                                    <Text style={styles.label}>Priority</Text>
-                                    <View style={styles.pickerContainer}>
-                                        <Picker
-                                            selectedValue={selectPriority}
-                                            onValueChange={(itemValue) => setSelectPriority(itemValue)}
-                                            style={styles.picker}
-                                            dropdownIconColor={lightTheme.inputText}
-                                        >
-
-                                            <Picker.Item label="Normal" value="false" />
-                                            <Picker.Item label="Urgent" value="true" />
-                                        </Picker>
-                                    </View>
-                                </View>
-
-                                {/* Footer Buttons */}
-                                <View style={{ borderTopWidth: 1, borderTopColor: '#ECEDF0', paddingVertical: 25, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between' }}>
-                                    <TouchableOpacity
-                                        style={{ width: '47%', backgroundColor: '#EFF6FF', borderRadius: 28, padding: 12 }}
-                                        onPress={() => {
-                                            setFromDate(null);
-                                            setToDate(null);
-                                            setSelectClient(null);
-                                            setSelectTask(null);
-                                            setSelectPriority(null);
-                                            setFilter(false);
-                                            fetchData(); // reset API
-                                        }}
-                                    >
-                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#2F81F5', textAlign: 'center' }}>Reset All</Text>
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity
-                                        style={{ width: '47%', backgroundColor: '#2F81F5', borderRadius: 28, padding: 12 }}
-                                        onPress={applyFilters}
-                                    >
-                                        <Text style={{ fontFamily: 'Montserrat-SemiBold', color: '#fff', textAlign: 'center' }}>
-                                            Apply Filters
-                                        </Text>
-                                    </TouchableOpacity>
-
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-                </Modal>
-
-
-            </ScrollView>
-            {loading && (
+              {/* Body */}
+              <View style={{padding: 15}}>
+                {/* Date Range */}
                 <View
-                    style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                        justifyContent: 'center',
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    gap: 10,
+                    marginTop: 10,
+                    marginBottom: 10,
+                  }}>
+                  <View style={{flex: 1}}>
+                    <Text style={styles.label}>From Date:</Text>
+                    <TouchableOpacity
+                      onPress={() => setShowFromDatePicker(true)}
+                      style={{
+                        borderWidth: 1,
+                        borderColor: '#ECEDF0',
+                        backgroundColor: '#FAFAFA',
+                        paddingHorizontal: 12,
+                        borderRadius: 5,
+                        height: 50,
+                        flexDirection: 'row',
                         alignItems: 'center',
-                        zIndex: 9999,
-                    }}
-                >
-                    <ActivityIndicator size="large" color="#FFFFFF" />
-                    <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Proccessing...</Text>
+                        marginBottom: 10,
+                      }}>
+                      <Text
+                        style={
+                          fromDate ? styles.dateText : styles.placeholderText
+                        }>
+                        {fromDate || 'From Date'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={{flex: 1}}>
+                    <Text style={styles.label}>To Date:</Text>
+                    <TouchableOpacity
+                      onPress={() => setShowToDatePicker(true)}
+                      style={{
+                        borderWidth: 1,
+                        borderColor: '#ECEDF0',
+                        backgroundColor: '#FAFAFA',
+                        paddingHorizontal: 12,
+                        borderRadius: 5,
+                        height: 50,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 10,
+                      }}>
+                      <Text
+                        style={
+                          toDate ? styles.dateText : styles.placeholderText
+                        }>
+                        {toDate || 'To Date'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-            )}
 
-            <CustomAlert
-                visible={alertVisible}
-                type={alertData.type}
-                title={alertData.title}
-                message={alertData.message}
-                onClose={() => setAlertVisible(false)}
-            />
-        </SafeAreaView>
-    )
+                {showFromDatePicker && (
+                  <DateTimePicker
+                    value={new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={handleFromDateChange}
+                  />
+                )}
+
+                {showToDatePicker && (
+                  <DateTimePicker
+                    value={new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={handleToDateChange}
+                  />
+                )}
+
+                {/* Client Picker */}
+                <View>
+                  <Text style={styles.label}>Client</Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={selectClient}
+                      onValueChange={itemValue => setSelectClient(itemValue)}
+                      style={styles.picker}
+                      dropdownIconColor={lightTheme.inputText}>
+                      {clients.length > 0 ? (
+                        clients.map(client => (
+                          <Picker.Item
+                            key={client.id}
+                            label={client.client_name}
+                            value={client.id}
+                          />
+                        ))
+                      ) : (
+                        <Picker.Item label="No Clients Found" value="" />
+                      )}
+                    </Picker>
+                  </View>
+                </View>
+
+                {/* Task Type */}
+                <View>
+                  <Text style={styles.label}>Task Type</Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={selectTask}
+                      onValueChange={itemValue => {
+                        // Prevent changing to default if already selected
+                        if (itemValue !== '') {
+                          setSelectTask(itemValue);
+                        }
+                      }}
+                      style={styles.picker}
+                      dropdownIconColor={lightTheme.inputText}>
+                      <Picker.Item label="-select-" value="" />
+                      {allTaskType.map(item => (
+                        <Picker.Item
+                          key={item.id}
+                          label={item.taskType}
+                          value={item.id}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
+                </View>
+
+                {/* Priority */}
+                <View>
+                  <Text style={styles.label}>Priority</Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={selectPriority}
+                      onValueChange={itemValue => setSelectPriority(itemValue)}
+                      style={styles.picker}
+                      dropdownIconColor={lightTheme.inputText}>
+                      <Picker.Item label="Normal" value="false" />
+                      <Picker.Item label="Urgent" value="true" />
+                    </Picker>
+                  </View>
+                </View>
+
+                {/* Footer Buttons */}
+                <View
+                  style={{
+                    borderTopWidth: 1,
+                    borderTopColor: '#ECEDF0',
+                    paddingVertical: 25,
+                    marginTop: 12,
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                  }}>
+                  <TouchableOpacity
+                    style={{
+                      width: '47%',
+                      backgroundColor: '#EFF6FF',
+                      borderRadius: 28,
+                      padding: 12,
+                    }}
+                    onPress={() => {
+                      setFromDate(null);
+                      setToDate(null);
+                      setSelectClient(null);
+                      setSelectTask(null);
+                      setSelectPriority(null);
+                      setFilter(false);
+                      fetchData(); // reset API
+                    }}>
+                    <Text
+                      style={{
+                        fontFamily: 'Montserrat-SemiBold',
+                        color: '#2F81F5',
+                        textAlign: 'center',
+                      }}>
+                      Reset All
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={{
+                      width: '47%',
+                      backgroundColor: '#2F81F5',
+                      borderRadius: 28,
+                      padding: 12,
+                    }}
+                    onPress={applyFilters}>
+                    <Text
+                      style={{
+                        fontFamily: 'Montserrat-SemiBold',
+                        color: '#fff',
+                        textAlign: 'center',
+                      }}>
+                      Apply Filters
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </ScrollView>
+      {loading && (
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999,
+          }}>
+          <ActivityIndicator size="large" color="#FFFFFF" />
+          <Text style={{color: '#FFFFFF', marginTop: 10}}>Proccessing...</Text>
+        </View>
+      )}
+
+      <CustomAlert
+        visible={alertVisible}
+        type={alertData.type}
+        title={alertData.title}
+        message={alertData.message}
+        onClose={() => setAlertVisible(false)}
+      />
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 15,
-        backgroundColor: '#fff',
-    },
-    label: {
-        fontSize: 16,
-        marginBottom: 8,
-        color: lightTheme.text,
-    },
-    pickerContainer: {
-        backgroundColor: lightTheme.inputBackground,
-        borderWidth: 1,
-        borderColor: lightTheme.border,
-        borderRadius: 8,
-        overflow: 'hidden',
-        marginBottom: 16,
-    },
-    picker: {
-        height: 50,
-        color: lightTheme.inputText, // Works on iOS and sometimes Android
-    },
-    tcbtn: {
-        borderWidth: 1,
-        borderColor: '#0C0D36',
-        borderRadius: 8,
-        marginRight: 4,
-        paddingHorizontal: 16,
-        paddingVertical: 9,
-    },
-    active: {
-        backgroundColor: '#2F81F5',
-        borderColor: '#2F81F5',
-    },
-    acttext: {
-        fontFamily: 'Montserrat-Medium',
-        fontSize: 12,
-        color: '#0C0D36',
-    },
-    testactive: {
-        color: '#fff',
-    },
-    mainbox: {
-        backgroundColor: '#fff',
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.3,
-        shadowRadius: 15,
-        elevation: 3,
-        marginTop: 20,
-        borderRadius: 15,
-        marginBottom: 20,
-    },
-    oncetxt: {
-        fontFamily: 'Montserrat-Medium',
-        fontSize: 12,
-        color: '#2F81F5',
-        backgroundColor: 'rgba(48, 133, 254, 0.1)',
-        borderWidth: 1,
-        borderColor: '#2F81F5',
-        borderRadius: 16,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-    },
-    // Modal Start 
-    modalBackground: {
-        flex: 1,
-        justifyContent: 'flex-end',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.3)',
-    },
-    modalContainer: {
-        fontFamily: 'Montserrat-Medium',
-        width: '100%',
-        backgroundColor: '#fff',
-        borderTopEndRadius: 20,
-        borderTopLeftRadius: 20,
-    },
-    modalText: {
-        fontFamily: 'Montserrat-Medium',
-        fontSize: 16,
-        color: '#0C0D36',
-    },
-    label: {
-        fontFamily: 'Montserrat-Medium',
-        fontSize: 15,
-        color: '#0C0D36',
-        paddingBottom: 10,
-    },
-    input: {
-        fontFamily: 'Montserrat-Medium',
-        height: 54,
-        borderWidth: 1,
-        borderColor: '#ECEDF0',
-        backgroundColor: '#FAFAFA',
-        paddingHorizontal: 15,
-        marginBottom: 15,
-        borderRadius: 10,
-    },
-    pickerContainer: {
-        fontFamily: 'Montserrat-Medium',
-        height: 54,
-        borderWidth: 1,
-        borderColor: '#ECEDF0',
-        backgroundColor: '#FAFAFA',
-        paddingHorizontal: 0,
-        marginBottom: 15,
-        borderRadius: 10,
-    },
-    textarea: {
-        fontFamily: 'Montserrat-Medium',
-        height: 54,
-        borderWidth: 1,
-        borderColor: '#ECEDF0',
-        backgroundColor: '#FAFAFA',
-        paddingHorizontal: 15,
-        marginBottom: 15,
-        borderRadius: 10,
-    },
-    //   
+  container: {
+    flex: 1,
+    padding: 15,
+    backgroundColor: '#fff',
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 8,
+    color: lightTheme.text,
+  },
+  pickerContainer: {
+    backgroundColor: lightTheme.inputBackground,
+    borderWidth: 1,
+    borderColor: lightTheme.border,
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  picker: {
+    height: 50,
+    color: lightTheme.inputText, // Works on iOS and sometimes Android
+  },
+  tcbtn: {
+    borderWidth: 1,
+    borderColor: '#0C0D36',
+    borderRadius: 8,
+    marginRight: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+  },
+  active: {
+    backgroundColor: '#2F81F5',
+    borderColor: '#2F81F5',
+  },
+  acttext: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 12,
+    color: '#0C0D36',
+  },
+  testactive: {
+    color: '#fff',
+  },
+  mainbox: {
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 3,
+    marginTop: 20,
+    borderRadius: 15,
+    marginBottom: 20,
+  },
+  oncetxt: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 12,
+    color: '#2F81F5',
+    backgroundColor: 'rgba(48, 133, 254, 0.1)',
+    borderWidth: 1,
+    borderColor: '#2F81F5',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  // Modal Start
+  modalBackground: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  modalContainer: {
+    fontFamily: 'Montserrat-Medium',
+    width: '100%',
+    backgroundColor: '#fff',
+    borderTopEndRadius: 20,
+    borderTopLeftRadius: 20,
+  },
+  modalText: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 16,
+    color: '#0C0D36',
+  },
+  label: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 15,
+    color: '#0C0D36',
+    paddingBottom: 10,
+  },
+  input: {
+    fontFamily: 'Montserrat-Medium',
+    height: 54,
+    borderWidth: 1,
+    borderColor: '#ECEDF0',
+    backgroundColor: '#FAFAFA',
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    borderRadius: 10,
+  },
+  pickerContainer: {
+    fontFamily: 'Montserrat-Medium',
+    height: 54,
+    borderWidth: 1,
+    borderColor: '#ECEDF0',
+    backgroundColor: '#FAFAFA',
+    paddingHorizontal: 0,
+    marginBottom: 15,
+    borderRadius: 10,
+  },
+  textarea: {
+    fontFamily: 'Montserrat-Medium',
+    height: 54,
+    borderWidth: 1,
+    borderColor: '#ECEDF0',
+    backgroundColor: '#FAFAFA',
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    borderRadius: 10,
+  },
+  //
 
+  label: {
+    fontSize: 13,
+    fontFamily: 'Montserrat-Medium',
+    color: '#0C0D36',
+    marginBottom: 5,
+  },
+  dateInput: {
+    fontFamily: 'Montserrat-Medium',
+    flex: 1,
+    height: 50,
+    backgroundColor: '#FAFAFA',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ECEDF0',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    // marginHorizontal: 5,
+    fontSize: 16,
+  },
+  dateText: {
+    fontSize: 15,
+    fontFamily: 'Montserrat-Medium',
+    color: '#0C0D36',
+  },
+  placeholderText: {
+    fontSize: 14,
+    fontFamily: 'Montserrat-Medium',
+    color: '#0C0D36',
+  },
+});
 
-    label: {
-        fontSize: 13,
-        fontFamily: 'Montserrat-Medium',
-        color: '#0C0D36',
-        marginBottom: 5,
-    },
-    dateInput: {
-        fontFamily: 'Montserrat-Medium',
-        flex: 1,
-        height: 50,
-        backgroundColor: '#FAFAFA',
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#ECEDF0',
-        justifyContent: 'center',
-        paddingHorizontal: 12,
-        // marginHorizontal: 5,
-        fontSize: 16,
-    },
-    dateText: {
-        fontSize: 15,
-        fontFamily: 'Montserrat-Medium',
-        color: '#0C0D36',
-    },
-    placeholderText: {
-        fontSize: 14,
-        fontFamily: 'Montserrat-Medium',
-        color: '#0C0D36',
-    }
-
-})
-
-export default Completed
+export default Completed;

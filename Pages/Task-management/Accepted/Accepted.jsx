@@ -14,6 +14,7 @@ import {
   FlatList,
   RefreshControl,
   ActivityIndicator,
+  PermissionsAndroid,
 } from 'react-native';
 // import { useFonts, Montserrat-SemiBold, Montserrat-Medium, Montserrat-Regular } from '@expo-google-fonts/montserrat';
 import TaskService from '../../Services/task_service';
@@ -809,14 +810,18 @@ function Accepted({navigation}) {
 
                 <View style={{flexDirection: 'row', padding: 15}}>
                   <View style={{flex: 1}}>
-                    <View style={{position: 'relative', marginBottom: 5}}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 5,
+                      }}>
                       <Image
                         style={{
-                          position: 'absolute',
-                          left: 0,
-                          top: 0,
                           width: 12,
                           height: 12,
+                          resizeMode: 'contain',
+                          marginRight: 12,
                         }}
                         source={require('../../../assets/asicon1.png')}
                       />
@@ -825,86 +830,88 @@ function Accepted({navigation}) {
                           fontFamily: 'Montserrat-Medium',
                           fontSize: 13,
                           color: '#0C0D36',
-                          paddingLeft: 20,
+                          flexShrink: 1,
                         }}>
                         Task ID: {task?.displayId ?? 'NA'}
                       </Text>
                     </View>
-                    <View style={{position: 'relative', marginBottom: 5}}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        marginBottom: 5,
+                      }}>
                       <Image
                         style={{
-                          position: 'absolute',
-                          left: 0,
-                          top: 0,
-                          width: 11,
+                          width: 13,
                           height: 13,
+                          resizeMode: 'contain',
+                          marginRight: 12,
+                          marginTop: 1,
                         }}
                         source={require('../../../assets/asicon2.png')}
                       />
-                      {(task?.request_id &&
-                        task?.taskType?.taskType === 'Sample Pickup') ||
-                      task?.taskType?.taskType === 'Sample Pickup' ||
-                      task?.taskType?.taskType === 'Cash Collection' ? (
-                        <Text
-                          style={{
-                            fontFamily: 'Montserrat-Medium',
-                            fontSize: 13,
-                            color: '#0C0D36',
-                            paddingLeft: 20,
-                          }}>
-                          {task?.client?.address ?? 'No Address'}
-                        </Text>
-                      ) : (
-                        <Text
-                          style={{
-                            fontFamily: 'Montserrat-Medium',
-                            fontSize: 13,
-                            color: '#0C0D36',
-                            paddingLeft: 20,
-                          }}>
-                          {task?.pickUpLocation?.address ?? 'No Address'}
-                        </Text>
-                      )}
+                      <Text
+                        style={{
+                          flex: 1,
+                          fontFamily: 'Montserrat-Medium',
+                          fontSize: 13,
+                          color: '#0C0D36',
+                          lineHeight: 20,
+                        }}>
+                        {task?.taskType?.taskType === 'Sample Pickup' ||
+                        task?.taskType?.taskType === 'Cash Collection'
+                          ? task?.client?.address ?? 'No Address'
+                          : task?.pickUpLocation?.address ?? 'No Address'}
+                      </Text>
                     </View>
-                    <View style={{position: 'relative', marginBottom: 5}}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 5,
+                      }}>
                       <Image
                         style={{
-                          position: 'absolute',
-                          left: 0,
-                          top: 0,
                           width: 13,
                           height: 13,
+                          resizeMode: 'contain',
+                          marginRight: 12,
                         }}
                         source={require('../../../assets/asicon3.png')}
                       />
                       <Text
                         style={{
+                          flex: 1,
                           fontFamily: 'Montserrat-Medium',
                           fontSize: 13,
                           color: '#0C0D36',
-                          paddingLeft: 20,
                         }}>
                         {formatTime12Hour(task?.preferredTime?.start_time)} -{' '}
                         {formatTime12Hour(task?.preferredTime?.end_time)}
                       </Text>
                     </View>
-                    <View style={{position: 'relative', marginBottom: 5}}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 5,
+                      }}>
                       <Image
                         style={{
-                          position: 'absolute',
-                          left: 0,
-                          top: 0,
                           width: 13,
                           height: 13,
+                          resizeMode: 'contain',
+                          marginRight: 12,
                         }}
                         source={require('../../../assets/asicon4.png')}
                       />
                       <Text
                         style={{
+                          flex: 1,
                           fontFamily: 'Montserrat-Medium',
                           fontSize: 13,
                           color: '#0C0D36',
-                          paddingLeft: 20,
                         }}>
                         Assigned By: {task?.assigned?.assigner?.employee_name}
                       </Text>
@@ -918,14 +925,14 @@ function Accepted({navigation}) {
                                         </View> */}
                     {(task?.pickUpLocation?.client_name ||
                       task?.pickUpLocation?.centreName) && (
-                      <View style={{position: 'relative'}}>
+                      <View
+                        style={{flexDirection: 'row', alignItems: 'center'}}>
                         <Image
                           style={{
-                            position: 'absolute',
-                            left: 0,
-                            top: 0,
-                            width: 16,
-                            height: 16,
+                            width: 13,
+                            height: 13,
+                            resizeMode: 'contain',
+                            marginRight: 12,
                           }}
                           source={
                             task.pickUpLocation.client_name
@@ -935,10 +942,10 @@ function Accepted({navigation}) {
                         />
                         <Text
                           style={{
+                            flex: 1,
                             fontFamily: 'Montserrat-Medium',
                             fontSize: 13,
                             color: '#0C0D36',
-                            paddingLeft: 20,
                           }}>
                           {task.pickUpLocation.client_name ||
                             task.pickUpLocation.centreName}
@@ -1170,65 +1177,73 @@ function Accepted({navigation}) {
                 showsVerticalScrollIndicator={true}
                 keyboardShouldPersistTaps="handled"
                 nestedScrollEnabled={true}>
-                {/* ITEM DETAILS */}
-                <View style={styles.itemsSection}>
-                  <Text style={styles.itemsSectionTitle}>Item Details</Text>
+                <ScrollView
+                  style={styles.modalScrollView}
+                  contentContainerStyle={styles.modalScrollContent}
+                  showsVerticalScrollIndicator={true}
+                  keyboardShouldPersistTaps="handled"
+                  nestedScrollEnabled={true}>
+                  {/* ITEM DETAILS */}
+                  <View style={styles.itemsSection}>
+                    <Text style={styles.itemsSectionTitle}>Item Details</Text>
 
-                  {acceptedTaskLoading ? (
-                    <ActivityIndicator size="small" color="#2F81F5" />
-                  ) : acceptedTaskDetails?.items?.length > 0 ? (
-                    acceptedTaskDetails.items.map((item, index) => (
-                      <View key={item.id ?? index} style={styles.itemCard}>
-                        <View style={styles.itemHeader}>
-                          <View
-                            style={[
-                              styles.itemColorDot,
-                              {
-                                backgroundColor: item.item?.color || '#401717',
-                              },
-                            ]}
-                          />
+                    {acceptedTaskLoading ? (
+                      <ActivityIndicator size="small" color="#2F81F5" />
+                    ) : acceptedTaskDetails?.items?.length > 0 ? (
+                      acceptedTaskDetails.items.map((item, index) => (
+                        <View key={item.id ?? index} style={styles.itemCard}>
+                          <View style={styles.itemHeader}>
+                            <View
+                              style={[
+                                styles.itemColorDot,
+                                {
+                                  backgroundColor:
+                                    item.item?.color || '#401717',
+                                },
+                              ]}
+                            />
 
-                          <View style={styles.itemTitleContainer}>
-                            <Text style={styles.itemName}>
-                              {item.item?.itemName || 'N/A'}
-                            </Text>
+                            <View style={styles.itemTitleContainer}>
+                              <Text style={styles.itemName}>
+                                {item.item?.itemName || 'N/A'}
+                              </Text>
 
-                            <Text style={styles.itemDescription}>
-                              {item.item?.description || 'Data In Use'}
-                            </Text>
+                              <Text style={styles.itemDescription}>
+                                {item.item?.description || 'Data In Use'}
+                              </Text>
+                            </View>
+
+                            <View style={styles.statusIndicator} />
                           </View>
 
-                          <View style={styles.statusIndicator} />
+                          <View style={styles.itemDivider} />
+
+                          <View style={styles.itemDetailsRow}>
+                            <View style={styles.itemDetailColumn}>
+                              <Text style={styles.itemLabel}>Quantity</Text>
+                              <Text style={styles.itemValue}>
+                                {item.quantity ?? 0}
+                              </Text>
+                            </View>
+
+                            <View style={styles.itemDetailColumn}>
+                              <Text style={styles.itemLabel}>Collected At</Text>
+                              <Text style={styles.itemValue}>
+                                {item.isCollected
+                                  ? item.collectedAt || 'Collected'
+                                  : 'Not Collected Yet'}
+                              </Text>
+                            </View>
+                          </View>
                         </View>
-
-                        <View style={styles.itemDivider} />
-
-                        <View style={styles.itemDetailsRow}>
-                          <View style={styles.itemDetailColumn}>
-                            <Text style={styles.itemLabel}>Quantity</Text>
-                            <Text style={styles.itemValue}>
-                              {item.quantity ?? 0}
-                            </Text>
-                          </View>
-
-                          <View style={styles.itemDetailColumn}>
-                            <Text style={styles.itemLabel}>Collected At</Text>
-                            <Text style={styles.itemValue}>
-                              {item.isCollected
-                                ? item.collectedAt || 'Collected'
-                                : 'Not Collected Yet'}
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-                    ))
-                  ) : (
-                    <Text style={styles.noItemsText}>
-                      {acceptedTaskDetails ? 'No items found' : ''}
-                    </Text>
-                  )}
-                </View>
+                      ))
+                    ) : (
+                      <Text style={styles.noItemsText}>
+                        {acceptedTaskDetails ? 'No items found' : ''}
+                      </Text>
+                    )}
+                  </View>
+                </ScrollView>
 
                 {/* DESCRIPTION AND COMMENTS */}
                 <View style={{padding: 15}}>
@@ -1268,10 +1283,13 @@ function Accepted({navigation}) {
 
                   <TextInput
                     style={styles.textarea}
-                    value={selectedItem?.description || 'No Description'}
-                    placeholder="Description here..."
+                    value={selectedItem?.description || ''}
+                    placeholder="Description here.."
                     multiline={true}
                     editable={false}
+                    scrollEnabled={false}
+                    textAlignVertical="top"
+                    autoCapitalize="none"
                   />
 
                   {/* COMMENTS HEADING */}
@@ -1284,9 +1302,9 @@ function Accepted({navigation}) {
                         <View style={styles.phleImg}>
                           <Image
                             style={{
-                              width: 25,
-                              height: 25,
-                              borderRadius: 12.5,
+                              width: 50,
+                              height: 50,
+                              borderRadius: 25,
                             }}
                             source={
                               item?.commentor?.employeePhoto
@@ -1327,7 +1345,6 @@ function Accepted({navigation}) {
                                   height: 200,
                                   resizeMode: 'cover',
                                   marginVertical: 5,
-                                  borderRadius: 8,
                                 }}
                                 source={{
                                   uri: `${BASE_API_URL}/${item.attachment.path.replace(
@@ -1600,14 +1617,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   textarea: {
-    fontFamily: 'Montserrat-Regular',
-    height: 54,
+    minHeight: 54,
     borderWidth: 1,
     borderColor: '#ECEDF0',
     backgroundColor: '#FAFAFA',
     paddingHorizontal: 15,
+    paddingVertical: 10,
     marginBottom: 15,
     borderRadius: 10,
+    fontFamily: 'Montserrat-Regular',
+    fontSize: 14,
+    lineHeight: 21,
+    color: '#222222',
   },
 
   itemsSection: {
@@ -1730,11 +1751,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
 
-  itemsSection: {
-    marginTop: 12,
-  },
-
-  itemCard: {
+ itemCard: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#DCE3EF',
@@ -1843,26 +1860,13 @@ const styles = StyleSheet.create({
     borderColor: '#E5E5E5',
     padding: 12,
   },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
+
   buttonClose: {
     backgroundColor: '#aaa',
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderRadius: 8,
     marginRight: 10,
-  },
-  buttonSave: {
-    backgroundColor: '#3085FE',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
   },
 
   modalBackground: {
@@ -1974,6 +1978,295 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 15,
+  },
+  paddingBottom1: {
+    paddingBottom: 100,
+  },
+
+  container: {
+    flex: 1,
+    padding: 15,
+    backgroundColor: '#fff',
+  },
+
+  scrollView: {
+    paddingBottom: 20,
+  },
+
+  tcbtn: {
+    borderWidth: 1,
+    borderColor: '#0C0D36',
+    borderRadius: 8,
+    marginRight: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+  },
+
+  active: {
+    backgroundColor: '#2F81F5',
+    borderColor: '#2F81F5',
+  },
+
+  acttext: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 12,
+    color: '#0C0D36',
+  },
+
+  testactive: {
+    color: '#fff',
+  },
+
+  mainbox: {
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 3,
+    marginTop: 20,
+    borderRadius: 15,
+    marginBottom: 20,
+  },
+
+  oncetxt: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 12,
+    color: '#2F81F5',
+    backgroundColor: 'rgba(48, 133, 254, 0.1)',
+    borderWidth: 1,
+    borderColor: '#2F81F5',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+
+  // More Information Modal
+  modalBackground: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+
+  modalContainer: {
+    width: '100%',
+    height: '85%',
+    maxHeight: '85%',
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    overflow: 'hidden',
+  },
+
+  mdlNewContainer: {
+    maxHeight: '70%',
+  },
+
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ECEDF0',
+  },
+
+  closeButton: {
+    padding: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  modalText: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 16,
+    color: '#0C0D36',
+  },
+
+  modalScrollView: {
+    flex: 1,
+    minHeight: 0,
+  },
+
+  modalScrollContent: {
+    paddingBottom: 12,
+  },
+
+  label: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 15,
+    color: '#0C0D36',
+    paddingBottom: 10,
+  },
+
+  input: {
+    flex: 1,
+    minHeight: 46,
+    maxHeight: 100,
+    borderWidth: 1,
+    borderColor: '#ECEDF0',
+    backgroundColor: '#FAFAFA',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 0,
+    borderRadius: 10,
+    fontFamily: 'Montserrat-Regular',
+    fontSize: 14,
+    color: '#0C0D36',
+    textAlignVertical: 'top',
+  },
+
+  // Comments
+  phleBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginBottom: 15,
+    paddingHorizontal: 12,
+  },
+
+  phleImg: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#edf1f3',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+
+  phleText: {
+    flex: 1,
+    minWidth: 0,
+    backgroundColor: '#edf1f3',
+    borderRadius: 10,
+    padding: 10,
+  },
+
+  phleFlexBox: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingBottom: 6,
+    gap: 8,
+  },
+
+  phleTitle: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 13,
+    color: '#2F81F5',
+    flex: 1,
+    flexShrink: 1,
+  },
+
+  phleTime: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 10,
+    color: '#0C0D36',
+    flexShrink: 0,
+  },
+
+  phleDesc: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 13,
+    color: '#0C0D36',
+    marginTop: 8,
+  },
+
+  // Fixed Bottom Comment Composer
+  commentComposer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 12,
+    gap: 8,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#ECEDF0',
+  },
+
+  commentInput: {
+    flex: 1,
+    minHeight: 46,
+    maxHeight: 100,
+    borderWidth: 1,
+    borderColor: '#ECEDF0',
+    backgroundColor: '#FAFAFA',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: '#0C0D36',
+    fontFamily: 'Montserrat-Regular',
+    fontSize: 14,
+    textAlignVertical: 'top',
+  },
+
+  attachmentBtn: {
+    width: 46,
+    height: 46,
+    padding: 0,
+    marginBottom: 0,
+    borderRadius: 10,
+    backgroundColor: '#eee',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  sendBtn: {
+    width: 46,
+    height: 46,
+    padding: 0,
+    marginBottom: 0,
+    borderRadius: 10,
+    backgroundColor: '#007BFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // Full Image Preview Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Reject Remarks Modal
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#0C0D36',
+    marginBottom: 10,
+  },
+
+  textArea: {
+    height: 120,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    textAlignVertical: 'top',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 20,
+    color: '#0C0D36',
+  },
+
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+
+  buttonSave: {
+    backgroundColor: '#3085FE',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
   },
 });
 

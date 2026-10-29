@@ -60,6 +60,7 @@ function Collected({navigation}) {
   const [fullImageUri, setFullImageUri] = useState(null);
   const [loading, setLoading] = useState(true);
   const [images, setImages] = useState([]);
+
   const [commentText, setCommentText] = useState('');
   const [modalVisible2, setModalVisible2] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -137,7 +138,24 @@ function Collected({navigation}) {
   //         setLoadingMore(false);
   //     }, 500);
   // };
+  // const fetchAcceptedTask = async taskId => {
+  //   try {
+  //     const response = await TaskService.viewAcceptedTask({
+  //       taskId: taskId,
+  //     });
 
+  //     console.log('Accepted task response:', response);
+
+  //     if (response?.status === 1) {
+  //       setAcceptedTaskDetails(response.data);
+  //     } else {
+  //       setAcceptedTaskDetails(null);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching accepted task:', error);
+  //     setAcceptedTaskDetails(null);
+  //   }
+  // };
   const sendComment = async () => {
     if (!commentText.trim()) return;
 
@@ -198,9 +216,12 @@ function Collected({navigation}) {
       // console.error('Error fetching task comments:', error);
     }
     setModalVisible(true);
+
     setSelectedTaskDesc(task);
     setSelectedClientId(task.client.id);
+
     setItemTaskId(task.id);
+    // fetchAcceptedTask(task.id);
   };
 
   const fetchData = async () => {
@@ -318,182 +339,6 @@ function Collected({navigation}) {
       showAlertModal('Unable to open navigation', true);
     }
   };
-
-  // const navigateToUserLocation = async task => {
-  //   try {
-  //     const pickupCoordinates = task?.pickUpLocation?.coordinates;
-  //     const dropCoordinates = task?.dropLocation?.coordinates;
-
-  //     if (!pickupCoordinates || !dropCoordinates) {
-  //       showAlertModal('Pickup or drop location not available', true);
-  //       return;
-  //     }
-
-  //     const isValidCoordinates = coordinates => {
-  //       const parts = coordinates.split(',');
-
-  //       if (parts.length !== 2) return false;
-
-  //       const lat = Number(parts[0].trim());
-  //       const lng = Number(parts[1].trim());
-
-  //       return (
-  //         Number.isFinite(lat) &&
-  //         Number.isFinite(lng) &&
-  //         Math.abs(lat) <= 90 &&
-  //         Math.abs(lng) <= 180
-  //       );
-  //     };
-
-  //     if (
-  //       !isValidCoordinates(pickupCoordinates) ||
-  //       !isValidCoordinates(dropCoordinates)
-  //     ) {
-  //       showAlertModal('Invalid pickup or drop coordinates', true);
-  //       return;
-  //     }
-
-  //     // Request Android location permission
-  //     if (Platform.OS === 'android') {
-  //       const granted = await PermissionsAndroid.request(
-  //         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-  //       );
-
-  //       if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-  //         showAlertModal('Location permission is required', true);
-  //         return;
-  //       }
-  //     }
-
-  //     // Get rider's current location
-  //     Geolocation.getCurrentPosition(
-  //       position => {
-  //         const {latitude, longitude} = position.coords;
-
-  //         const origin = `${latitude},${longitude}`;
-  //         const pickup = pickupCoordinates
-  //           .split(',')
-  //           .map(value => value.trim())
-  //           .join(',');
-  //         const drop = dropCoordinates
-  //           .split(',')
-  //           .map(value => value.trim())
-  //           .join(',');
-
-  //         // Current location → Pickup → Drop
-  //         const url =
-  //           `https://www.google.com/maps/dir/?api=1` +
-  //           `&origin=${origin}` +
-  //           `&destination=${drop}` +
-  //           `&waypoints=${pickup}` +
-  //           `&travelmode=driving`;
-
-  //         Linking.openURL(url).catch(error => {
-  //           console.error('Could not open Google Maps:', error);
-  //           showAlertModal('Failed to open Google Maps', true);
-  //         });
-  //       },
-  //       error => {
-  //         console.error('Current location error:', error);
-  //         showAlertModal(
-  //           'Unable to get current location. Please enable GPS.',
-  //           true,
-  //         );
-  //       },
-  //       {
-  //         enableHighAccuracy: true,
-  //         timeout: 20000,
-  //         maximumAge: 5000,
-  //       },
-  //     );
-  //   } catch (error) {
-  //     console.error('Navigation error:', error);
-  //     showAlertModal('Unable to open navigation', true);
-  //   }
-  // };
-
-  // const navigateToUserLocation = task => {
-  //   const pickupCoordinates = task?.pickUpLocation?.coordinates;
-  //   const dropCoordinates = task?.dropLocation?.coordinates;
-
-  //   if (!pickupCoordinates || !dropCoordinates) {
-  //     showAlertModal('Pickup or drop location not available', true);
-  //     return;
-  //   }
-
-  //   const isValidCoordinates = coordinates => {
-  //     const parts = coordinates.split(',');
-
-  //     if (parts.length !== 2) return false;
-
-  //     const lat = Number(parts[0].trim());
-  //     const lng = Number(parts[1].trim());
-
-  //     return (
-  //       Number.isFinite(lat) &&
-  //       Number.isFinite(lng) &&
-  //       Math.abs(lat) <= 90 &&
-  //       Math.abs(lng) <= 180
-  //     );
-  //   };
-
-  //   if (
-  //     !isValidCoordinates(pickupCoordinates) ||
-  //     !isValidCoordinates(dropCoordinates)
-  //   ) {
-  //     showAlertModal('Invalid pickup or drop coordinates', true);
-  //     return;
-  //   }
-
-  //   const origin = pickupCoordinates
-  //     .split(',')
-  //     .map(value => value.trim())
-  //     .join(',');
-
-  //   const destination = dropCoordinates
-  //     .split(',')
-  //     .map(value => value.trim())
-  //     .join(',');
-
-  //   const url =
-  //     `https://www.google.com/maps/dir/?api=1` +
-  //     `&origin=${origin}` +
-  //     `&destination=${destination}` +
-  //     `&travelmode=driving`;
-
-  //   Linking.openURL(url).catch(error => {
-  //     console.error('Could not open Google Maps:', error);
-  //     showAlertModal('Failed to open Google Maps.', true);
-  //   });
-  // };
-
-  // const navigateToUserLocation = task => {
-  //   console.log('pickup location:  ', task?.pickUpLocation?.coordinates);
-  //   console.log('Drop location:  ', task?.dropLocation?.coordinates);
-  //   // return
-  //   const locationString = task?.pickUpLocation?.coordinates;
-
-  //   if (!locationString) {
-  //     showAlertModal('Location not available', true);
-  //     return;
-  //   }
-
-  //   const [lat, long] = locationString
-  //     .split(',')
-  //     .map(coord => parseFloat(coord.trim()));
-
-  //   if (isNaN(lat) || isNaN(long)) {
-  //     showAlertModal('Invalid location coordinates', true);
-  //     return;
-  //   }
-
-  //   const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${long}&travelmode=driving`;
-
-  //   Linking.openURL(url).catch(err => {
-  //     console.error('Could not open Google Maps', err);
-  //     showAlertModal('Failed to open Google Maps.', true);
-  //   });
-  // };
 
   const onCollectModalOpen = async task_Id => {
     setTaskId(task_Id);
@@ -900,7 +745,11 @@ function Collected({navigation}) {
                         />
                       </TouchableOpacity>
                     )}
-                    <TouchableOpacity onPress={() => handleOpenModal(task)}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        handleOpenModal(task);
+                        // fetchAcceptedTask(task.id);
+                      }}>
                       <Image
                         style={{width: 28, height: 28}}
                         source={require('../../../assets/dotimg.png')}
@@ -911,35 +760,78 @@ function Collected({navigation}) {
 
                 <View style={{flexDirection: 'row', padding: 15}}>
                   <View style={{flex: 1}}>
-                    <View style={{position: 'relative', marginBottom: 5}}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 5,
+                      }}>
                       <Image
                         style={{
-                          position: 'absolute',
-                          left: 0,
-                          top: 0,
                           width: 12,
                           height: 12,
+                          resizeMode: 'contain',
+                          marginRight: 12,
                         }}
                         source={require('../../../assets/asicon1.png')}
                       />
+
                       <Text
                         style={{
                           fontFamily: 'Montserrat-Medium',
                           fontSize: 13,
                           color: '#0C0D36',
-                          paddingLeft: 20,
+                          flexShrink: 1,
                         }}>
                         Task ID: {task?.displayId ?? 'NA'}
                       </Text>
                     </View>
-                    <View style={{position: 'relative', marginBottom: 5}}>
+
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        marginBottom: 5,
+                      }}>
                       <Image
                         style={{
-                          position: 'absolute',
-                          left: 0,
-                          top: 0,
-                          width: 11,
+                          width: 13,
                           height: 13,
+                          resizeMode: 'contain',
+                          marginRight: 12,
+                          marginTop: 1,
+                        }}
+                        source={require('../../../assets/asicon2.png')}
+                      />
+
+                      <Text
+                        style={{
+                          flex: 1,
+                          fontFamily: 'Montserrat-Medium',
+                          fontSize: 13,
+                          color: '#0C0D36',
+                          lineHeight: 20,
+                        }}>
+                        {task?.taskType?.taskType === 'Sample Pickup' ||
+                        task?.taskType?.taskType === 'Cash Collection'
+                          ? task?.client?.address ?? 'No Address'
+                          : task?.pickUpLocation?.address ?? 'No Address'}
+                      </Text>
+                    </View>
+
+                    {/* <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        marginBottom: 5,
+                      }}>
+                      <Image
+                        style={{
+                          width: 13,
+                          height: 13,
+                          resizeMode: 'contain',
+                          marginRight: 12,
+                          marginTop: 1,
                         }}
                         source={require('../../../assets/asicon2.png')}
                       />
@@ -949,84 +841,103 @@ function Collected({navigation}) {
                       task?.taskType?.taskType === 'Cash Collection' ? (
                         <Text
                           style={{
+                            flex: 1,
                             fontFamily: 'Montserrat-Medium',
                             fontSize: 13,
                             color: '#0C0D36',
-                            paddingLeft: 20,
+                            lineHeight: 20,
                           }}>
                           {task?.client?.address ?? 'No Address'}
                         </Text>
                       ) : (
                         <Text
                           style={{
+                            flex: 1,
                             fontFamily: 'Montserrat-Medium',
                             fontSize: 13,
                             color: '#0C0D36',
-                            paddingLeft: 20,
+                            lineHeight: 20,
                           }}>
                           {task?.pickUpLocation?.address ?? 'No Address'}
                         </Text>
                       )}
-                    </View>
-                    <View style={{position: 'relative', marginBottom: 5}}>
+                    </View> */}
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 5,
+                      }}>
                       <Image
                         style={{
-                          position: 'absolute',
-                          left: 0,
-                          top: 0,
                           width: 13,
                           height: 13,
+                          resizeMode: 'contain',
+                          marginRight: 12,
                         }}
                         source={require('../../../assets/asicon3.png')}
                       />
                       <Text
                         style={{
+                          flex: 1,
                           fontFamily: 'Montserrat-Medium',
                           fontSize: 13,
                           color: '#0C0D36',
-                          paddingLeft: 20,
                         }}>
                         {formatTime12Hour(task?.preferredTime?.start_time)} -{' '}
                         {formatTime12Hour(task?.preferredTime?.end_time)}
                       </Text>
                     </View>
-                    {/* <View style={{ position: 'relative' }}>
-                                            <Image style={{ position: 'absolute', left: 0, top: 0, width: 16, height: 16 }} source={require('../../../assets/asicon4.png')} />
-                                            <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
-                                                {task?.pickUpLocation?.client_name ?? task?.pickUpLocation?.centreName ?? '...'}
-                                            </Text>
-                                        </View> */}
-                    <View style={{position: 'relative', marginBottom: 5}}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 5,
+                      }}>
                       <Image
                         style={{
-                          position: 'absolute',
-                          left: 0,
-                          top: 0,
                           width: 13,
                           height: 13,
+                          resizeMode: 'contain',
+                          marginRight: 12,
                         }}
                         source={require('../../../assets/asicon4.png')}
                       />
-                      <Text
-                        style={{
-                          fontFamily: 'Montserrat-Medium',
-                          fontSize: 13,
-                          color: '#0C0D36',
-                          paddingLeft: 20,
-                        }}>
-                        Assigned By: {task?.assigned?.assigner.employee_name}
-                      </Text>
+
+                      {task?.assigned?.assigner?.employee_name && (
+                        <Text
+                          style={{
+                            flex: 1,
+                            fontFamily: 'Montserrat-Medium',
+                            fontSize: 13,
+                            color: '#0C0D36',
+                          }}>
+                          Assigned By: {task.assigned.assigner.employee_name}
+                        </Text>
+                      )}
                     </View>
+                    {/* {
+                                            task?.pickUpLocation?.client_name && (
+                                                <View style={{ position: 'relative' }}>
+                                                    <Image style={{ position: 'absolute', left: 0, top: 0, width: 16, height: 16 }} source={require('../../../assets/asicon4.png')} />
+                                                    <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 13, color: '#0C0D36', paddingLeft: 20 }}>
+                                                        {task?.pickUpLocation?.client_name}
+                                                    </Text>
+                                                </View>
+                                            )
+
+                                        } */}
+
                     {(task?.pickUpLocation?.client_name ||
                       task?.pickUpLocation?.centreName) && (
-                      <View style={{position: 'relative'}}>
+                      <View
+                        style={{flexDirection: 'row', alignItems: 'center'}}>
                         <Image
                           style={{
-                            position: 'absolute',
-                            left: 0,
-                            top: 0,
-                            width: 16,
-                            height: 16,
+                            width: 13,
+                            height: 13,
+                            resizeMode: 'contain',
+                            marginRight: 12,
                           }}
                           source={
                             task.pickUpLocation.client_name
@@ -1036,10 +947,10 @@ function Collected({navigation}) {
                         />
                         <Text
                           style={{
+                            flex: 1,
                             fontFamily: 'Montserrat-Medium',
                             fontSize: 13,
                             color: '#0C0D36',
-                            paddingLeft: 20,
                           }}>
                           {task.pickUpLocation.client_name ||
                             task.pickUpLocation.centreName}
@@ -1314,10 +1225,15 @@ function Collected({navigation}) {
                     <Text style={styles.label}>Description</Text>
                     <TextInput
                       style={styles.textarea}
-                      readOnly
-                      placeholder="Description here.."
+                      value={
+                        selectedItem?.description || 'NO Description here..'
+                      }
+                      placeholder="NO Description here.."
                       multiline={true}
-                      value={selectedItem?.description || 'No Descriptions'}
+                      editable={false}
+                      scrollEnabled={false}
+                      textAlignVertical="top"
+                      autoCapitalize="none"
                     />
                   </View>
 
@@ -1392,9 +1308,9 @@ function Collected({navigation}) {
                             <View style={styles.phleImg}>
                               <Image
                                 style={{
-                                  width: 25,
-                                  height: 25,
-                                  borderRadius: 12.5,
+                                  width: 50,
+                                  height: 50,
+                                  borderRadius: 25,
                                 }}
                                 source={
                                   item?.commentor?.employeePhoto
@@ -1663,13 +1579,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   textarea: {
-    height: 54,
+    minHeight: 54,
     borderWidth: 1,
     borderColor: '#ECEDF0',
     backgroundColor: '#FAFAFA',
     paddingHorizontal: 15,
+    paddingVertical: 10,
     marginBottom: 15,
     borderRadius: 10,
+    fontFamily: 'Montserrat-Regular',
+    fontSize: 14,
+    lineHeight: 21,
+    color: '#222222',
   },
   //
   mdlNewContainer: {
@@ -1802,6 +1723,12 @@ const styles = StyleSheet.create({
     borderColor: '#E5E5E5',
     padding: 12,
   },
+  statusIndicator: {
+    width: 22,
+    height: 10,
+    borderRadius: 6,
+    marginLeft: 8,
+  },
   noImgSelected: {
     fontFamily: 'Montserrat-SemiBold',
     fontSize: 13,
@@ -1831,6 +1758,97 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
+  },
+  itemCard: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#DCE3EF',
+    borderRadius: 12,
+    marginHorizontal: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 13,
+    marginBottom: 10,
+  },
+
+  itemHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  itemColorDot: {
+    width: 19,
+    height: 19,
+    borderRadius: 10,
+    marginRight: 12,
+  },
+
+  itemTitleContainer: {
+    flex: 1,
+  },
+
+  itemName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#111111',
+  },
+
+  itemDescription: {
+    fontSize: 13,
+    color: '#555555',
+    marginTop: 2,
+  },
+
+  itemDivider: {
+    height: 1,
+    backgroundColor: '#DCE3EF',
+    marginVertical: 12,
+  },
+
+  itemDetailsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+
+  itemDetailColumn: {
+    flex: 1,
+    paddingRight: 5,
+  },
+
+  itemLabel: {
+    fontSize: 12,
+    color: '#666666',
+    marginBottom: 4,
+  },
+
+  itemValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#111111',
+  },
+
+  noItemsText: {
+    fontSize: 13,
+    color: '#777777',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+  },
+  modalScrollView: {
+    flex: 1,
+    minHeight: 0,
+  },
+
+  modalScrollContent: {
+    paddingBottom: 12,
+  },
+  itemsSectionTitle: {
+    fontSize: 16,
+    fontWeight: '350',
+    color: '#050404',
+    marginBottom: 10,
+    marginLeft: 15,
+  },
+  itemsSection: {
+    marginTop: 12,
   },
 });
 

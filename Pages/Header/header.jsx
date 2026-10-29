@@ -68,8 +68,13 @@ const header = ({ navigation, profileImage }) => {
 
   return (
     <View>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+        <View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
           <TouchableOpacity
             onPress={() => navigation.navigate('Profile')}
             activeOpacity={0.8}
@@ -79,34 +84,56 @@ const header = ({ navigation, profileImage }) => {
               overflow: 'hidden',
               borderRadius: 22.5,
               backgroundColor: '#F1F5F9',
-            }}
-          >
-
-            <Image
-              style={{
-                width: 45,
-                height: 45,
-                borderRadius: 22.5,
-              }}
-              resizeMode="cover"
-              source={
-                profileImage
-                  ? {
-                    uri: profileImage.startsWith('http')
-                      ? profileImage
-                      : `${BASE_API_URL.replace(/\/$/, '')}/${profileImage.replace(/^\//, '')}`,
-                    cache: 'force-cache',
-                  }
-                  : require('../../assets/user1.png')
-              }
-            />
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            {profileImage ? (
+              <Image
+                style={{
+                  width: 45,
+                  height: 45,
+                  borderRadius: 22.5,
+                }}
+                resizeMode="cover"
+                source={{
+                  uri: profileImage.startsWith('http')
+                    ? profileImage
+                    : `${BASE_API_URL.replace(
+                        /\/$/,
+                        '',
+                      )}/${profileImage.replace(/^\//, '')}`,
+                  cache: 'force-cache',
+                }}
+              />
+            ) : (
+              <Text
+                style={{
+                  fontFamily: 'Montserrat-SemiBold',
+                  fontSize: 22,
+                  color: '#3085FE',
+                  textTransform: 'uppercase',
+                }}>
+                {userName ? userName.charAt(0) : ''}
+              </Text>
+            )}
           </TouchableOpacity>
-          <Text numberOfLines={1} ellipsizeMode="tail" style={{ fontFamily: 'Montserrat-SemiBold', fontSize: 19, color: '#3085FE', paddingLeft: 8, width: 180, }}>Hi {userName} !</Text>
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            style={{
+              fontFamily: 'Montserrat-SemiBold',
+              fontSize: 19,
+              color: '#3085FE',
+              paddingLeft: 8,
+              width: 180,
+            }}>
+            Hi {userName} !
+          </Text>
         </View>
         <Pressable
           onPress={() => navigation.navigate('Notification')}
           hitSlop={10}
-          style={({ pressed }) => [
+          style={({pressed}) => [
             {
               position: 'relative',
               width: 50,
@@ -116,9 +143,8 @@ const header = ({ navigation, profileImage }) => {
               justifyContent: 'center',
               alignItems: 'center',
             },
-            pressed && { opacity: 0.7 },
-          ]}
-        >
+            pressed && {opacity: 0.7},
+          ]}>
           <View pointerEvents="none">
             <NotificationCount />
           </View>
@@ -157,10 +183,9 @@ const header = ({ navigation, profileImage }) => {
             </View>
           )} */}
         </Pressable>
-
       </View>
     </View>
-  )
+  );
 }
 
 export default React.memo(header);
