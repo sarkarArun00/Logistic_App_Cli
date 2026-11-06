@@ -104,7 +104,6 @@ function Progress({navigation}) {
   const [sharedTaskId, storeTaskId] = useState(null);
 
   const [alertVisible, setAlertVisible] = useState(false);
-
   const [alertData, setAlertData] = useState({
     type: 'success',
     title: '',
@@ -118,7 +117,7 @@ function Progress({navigation}) {
 
     if (collectModalVisible2) {
       // Clear images on every open
-      // setImages([]);
+      setImages([]);
       setDeliveryRemarks('');
     }
 
@@ -139,14 +138,14 @@ function Progress({navigation}) {
 
   useEffect(() => {
     if (collectModalVisible) {
-      // setImages([]);
+      setImages([]);
       setCollectCommentText('');
     }
   }, [collectModalVisible]);
 
   useEffect(() => {
     if (collectModalVisible3) {
-      // setImages([]);
+      setImages([]);
       setDeliveryRemarks('');
       setItemIds([]);
     }
@@ -172,6 +171,7 @@ function Progress({navigation}) {
   };
 
   const onRefresh = useCallback(() => {
+    setImages([]);
     fetchData();
     getClientsAll();
     wait(2000).then(() => setRefreshing(false));
@@ -259,6 +259,7 @@ function Progress({navigation}) {
 
   // Camera End
   const handleOpenModal = async task => {
+    setImages([]); // Clear previous attachment
     try {
       const response = await TaskService.getTaskComments({taskId: task.id});
       setSelectedTask(response.data);
@@ -317,7 +318,12 @@ function Progress({navigation}) {
       const hasPermission = await requestPermission('camera');
 
       if (!hasPermission) {
-        showAlertModal('Camera access is needed to take pictures.', true);
+        showAlert(
+          'alert!',
+          'Alert!',
+          'Camera access is needed to take pictures.',
+          true,
+        );
         return;
       }
 
@@ -345,7 +351,12 @@ function Progress({navigation}) {
           response.errorMessage,
         );
 
-        showAlertModal(response.errorMessage || 'Camera error occurred.', true);
+        showAlert(
+          'alert!',
+          'Alert!',
+          response.errorMessage || 'Camera error occurred.',
+          true,
+        );
 
         return;
       }
@@ -353,7 +364,12 @@ function Progress({navigation}) {
       const image = response.assets?.[0];
 
       if (!image?.uri) {
-        showAlertModal('Unable to capture image. Please try again.', true);
+        showAlert(
+          'alert!',
+          'Alert!',
+          'Unable to capture image. Please try again.',
+          true,
+        );
         return;
       }
 
@@ -367,7 +383,12 @@ function Progress({navigation}) {
       const compressedImage = await compressImage(image.uri);
 
       if (!compressedImage?.uri) {
-        showAlertModal('Unable to process image. Please try again.', true);
+        showAlert(
+          'error',
+          'Error',
+          'Unable to process image. Please try again.',
+          true,
+        );
         return;
       }
 
@@ -375,7 +396,9 @@ function Progress({navigation}) {
     } catch (error) {
       console.error('Camera processing failed:', error);
 
-      showAlertModal(
+      showAlert(
+        'error',
+        'Error',
         'Unable to process the captured image. Please try again.',
         true,
       );
@@ -544,13 +567,14 @@ function Progress({navigation}) {
 
     Linking.openURL(url).catch(err => {
       console.error('Could not open Google Maps', err);
-      showAlertModal('Failed to open Google Maps.', true);
+      showAlert('error', 'Failed', 'Failed to open Google Maps.', true);
     });
   };
 
   const [getTaskType, setTaskType] = useState('');
   const [taskItem, storeTaskItem] = useState('');
   const onCollectModalOpen = async task => {
+    setImages([]); // Clear previous task images
     storeTaskItem(task);
     setTaskId(task.id);
     // This is for Item Delivery
@@ -638,7 +662,7 @@ function Progress({navigation}) {
         setItemIds([]);
         setImages([]);
       } else {
-        showAlertModal('Failed to Deliver', true);
+        showAlert('alert!', 'Alert!', 'Failed to Deliver', true);
         showAlert('error', 'Failed', 'Failed to Deliver.');
       }
     } catch (error) {
@@ -1161,7 +1185,7 @@ function Progress({navigation}) {
                       </Text>
                     </View>
 
-                    <View
+                    {/* <View
                       style={{
                         flexDirection: 'row',
                         alignItems: 'flex-start',
@@ -1191,9 +1215,9 @@ function Progress({navigation}) {
                           ? task?.client?.address ?? 'No Address'
                           : task?.pickUpLocation?.address ?? 'No Address'}
                       </Text>
-                    </View>
+                    </View> */}
 
-                    {/* <View
+                    <View
                       style={{
                         flexDirection: 'row',
                         alignItems: 'flex-start',
@@ -1221,7 +1245,8 @@ function Progress({navigation}) {
                             color: '#0C0D36',
                             lineHeight: 20,
                           }}>
-                          {task?.client?.address ?? 'No Address'}
+                          Address:
+                          {task?.client?.address?.trim() || 'No Address'}
                         </Text>
                       ) : (
                         <Text
@@ -1232,10 +1257,12 @@ function Progress({navigation}) {
                             color: '#0C0D36',
                             lineHeight: 20,
                           }}>
-                          {task?.pickUpLocation?.address ?? 'No Address'}
+                          Address:
+                          {task?.pickUpLocation?.address?.trim() ||
+                            'No Address'}
                         </Text>
                       )}
-                    </View> */}
+                    </View>
                     <View
                       style={{
                         flexDirection: 'row',
@@ -2803,7 +2830,7 @@ function Progress({navigation}) {
           formatDate={formatDate}
           empId={getUserId}
           taskId={taskId}
-          showAlert={(msg, isErr) => showAlertModal(msg, isErr)}
+          showAlert={(msg, isErr) => showAlert('alert!', 'Alert!', msg, isErr)}
           isFromTask={true}
           onOpenGateway={async ({amount, mode}) => {
             // ✅ later integrate gateway
@@ -2834,18 +2861,33 @@ function Progress({navigation}) {
               console.log('API RESPONSE:', data);
 
               if (data?.status === 1) {
-                showAlertModal('Submitted Successfully!', false);
+                showAlert(
+                  'success',
+                  'Success!',
+                  'Submitted Successfully!',
+                  false,
+                );
                 setModalVisible(false);
                 onRefresh();
                 navigation.navigate('Receipt', {page: 'Progress'});
                 return data;
               }
 
-              showAlertModal(data?.message || 'Something went wrong', true);
+              showAlert(
+                'warning',
+                'Failed!',
+                data?.message || 'Something went wrong',
+                true,
+              );
               return data;
             } catch (e) {
               console.log('submit error:', e?.message, e);
-              showAlertModal(e?.message || 'Something went wrong', true);
+              showAlert(
+                'error',
+                'Error!',
+                e?.message || 'Something went wrong',
+                true,
+              );
               return {status: 0, message: e?.message || 'Unknown error'};
             } finally {
               setIsSubmitting(false);

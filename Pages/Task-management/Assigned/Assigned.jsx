@@ -94,11 +94,13 @@ function Assigned({navigation}) {
   };
 
   useEffect(() => {
+    setImages([]);
     fetchData();
   }, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
+    setImages([]);
     fetchData();
     wait(2000).then(() => setRefreshing(false));
   }, []);
@@ -140,7 +142,6 @@ function Assigned({navigation}) {
         navigation.navigate('Accepted');
         setLoading(false);
       } else {
-        showAlertModal('Error Failed to accept task. Please try again.', true);
         showAlert(
           'error',
           'Failed',
@@ -173,7 +174,7 @@ function Assigned({navigation}) {
         setTaskId(null);
         setModalVisible3(false);
       } else {
-        Alert.alert(response.data);
+        showAlert('error', 'Error', response.data);
       }
     } catch (error) {
       console.error('Error rejecting task:', error);
@@ -190,6 +191,8 @@ function Assigned({navigation}) {
   };
 
   const handleOpenModal = async task => {
+    setImages([]); // Clear previous attachment
+
     setModalVisible(true);
     setSelectedTaskDesc(task);
     try {
@@ -362,7 +365,12 @@ function Assigned({navigation}) {
       const hasPermission = await requestPermission('camera');
 
       if (!hasPermission) {
-        showAlertModal('Camera access is needed to take pictures.', true);
+        showAlert(
+          'warning',
+          'Warning!',
+          'Camera access is needed to take pictures.',
+          true,
+        );
         return;
       }
 
@@ -383,7 +391,12 @@ function Assigned({navigation}) {
       if (response.errorCode) {
         console.log('Camera error:', response.errorCode, response.errorMessage);
 
-        showAlertModal(response.errorMessage || 'Camera error occurred.', true);
+        showAlert(
+          'error',
+          'Error',
+          response.errorMessage || 'Camera error occurred.',
+          true,
+        );
 
         return;
       }
@@ -391,7 +404,12 @@ function Assigned({navigation}) {
       const image = response.assets?.[0];
 
       if (!image?.uri) {
-        showAlertModal('Unable to capture image. Please try again.', true);
+        showAlert(
+          'warning',
+          'Warning!',
+          'Unable to capture image. Please try again.',
+          true,
+        );
         return;
       }
 
@@ -401,7 +419,9 @@ function Assigned({navigation}) {
     } catch (error) {
       console.log('Camera error:', error);
 
-      showAlertModal(
+      showAlert(
+        'error',
+        'Error',
         error?.message || 'Unable to process the captured image.',
         true,
       );
@@ -434,7 +454,9 @@ function Assigned({navigation}) {
           response.errorMessage,
         );
 
-        showAlertModal(
+        showAlert(
+          'error',
+          'Error',
           response.errorMessage || 'Unable to open gallery.',
           true,
         );
@@ -445,7 +467,12 @@ function Assigned({navigation}) {
       const image = response.assets?.[0];
 
       if (!image?.uri) {
-        showAlertModal('Unable to select image. Please try again.', true);
+        showAlert(
+          'warning',
+          'Required!',
+          'Unable to select image. Please try again.',
+          true,
+        );
         return;
       }
 
@@ -455,7 +482,9 @@ function Assigned({navigation}) {
     } catch (error) {
       console.log('Gallery error:', error);
 
-      showAlertModal(
+      showAlert(
+        'warning',
+        'Required!',
         error?.message || 'Unable to process the selected image.',
         true,
       );
@@ -790,7 +819,7 @@ function Assigned({navigation}) {
                       </Text>
                     </View>
 
-                    <View
+                    {/* <View
                       style={{
                         flexDirection: 'row',
                         alignItems: 'flex-start',
@@ -820,9 +849,9 @@ function Assigned({navigation}) {
                           ? task?.client?.address ?? 'No Address'
                           : task?.pickUpLocation?.address ?? 'No Address'}
                       </Text>
-                    </View>
+                    </View> */}
 
-                    {/* <View
+                    <View
                       style={{
                         flexDirection: 'row',
                         alignItems: 'flex-start',
@@ -850,7 +879,8 @@ function Assigned({navigation}) {
                             color: '#0C0D36',
                             lineHeight: 20,
                           }}>
-                          {task?.client?.address ?? 'No Address'}
+                          Address:
+                          {task?.client?.address?.trim() || 'No Address'}
                         </Text>
                       ) : (
                         <Text
@@ -861,10 +891,12 @@ function Assigned({navigation}) {
                             color: '#0C0D36',
                             lineHeight: 20,
                           }}>
-                          {task?.pickUpLocation?.address ?? 'No Address'}
+                          Address:
+                          {task?.pickUpLocation?.address?.trim() ||
+                            'No Address'}
                         </Text>
                       )}
-                    </View> */}
+                    </View>
                     <View
                       style={{
                         flexDirection: 'row',

@@ -33,10 +33,14 @@ import {lightTheme} from '../GlobalStyles';
 import NotificationCount from '../Notifications/NotificationCount';
 import AppPicker from '../Components/AppPicker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import CustomAlert from '../Components/CustomAlert';
 
 const wait = timeout => {
   return new Promise(resolve => setTimeout(resolve, timeout));
 };
+
+// ✅ CHANGED: local-date formatter (toISOString() shifts the date in IST)
+const formatApiDate = date => dayjs(date).format('YYYY-MM-DD');
 
 function Wallet({navigation, progress = 0.5}) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -48,6 +52,7 @@ function Wallet({navigation, progress = 0.5}) {
   const [refreshing, setRefreshing] = useState(false);
   const animatedWidth = useRef(new Animated.Value(0)).current;
   const [employees, setEmployees] = useState([]);
+  const [alertVisible, setAlertVisible] = useState(false);
 
   const [amount, setAmount] = useState('');
   const [remarks, setRemarks] = useState('');
@@ -66,16 +71,31 @@ function Wallet({navigation, progress = 0.5}) {
   const [animatedValue] = useState(new Animated.Value(0)); // for counter
   const [displayedAmount, setDisplayedAmount] = useState(0); // number to show
   const [fromDate, setFromDate] = useState(new Date());
-  const [toDate, setToDate] = useState(new Date());
+  const [toDate, setToDate] = useState(new Date()); // ✅ CHANGED: always today (read-only in UI)
 
   const [showFromPicker, setShowFromPicker] = useState(false);
-  const [showToPicker, setShowToPicker] = useState(false);
+  // ✅ CHANGED: removed showToPicker (To Date is not editable anymore)
   const [selectTransactiontype, setTransactiontype] = useState(false);
 
   const [showBalance, setShowBalance] = useState(false);
   const [activeTransactionId, setActiveTransactionId] = useState(null);
   const [userId, setUserId] = useState(null);
 
+  const [alertData, setAlertData] = useState({
+    type: 'success',
+    title: '',
+    message: '',
+  });
+
+  const showAlert = (type, title, message) => {
+    setAlertData({
+      type,
+      title,
+      message,
+    });
+
+    setAlertVisible(true);
+  };
   const user = {
     name: AsyncStorage.getItem('user_name'),
     email: AsyncStorage.getItem('user_email'),
@@ -182,12 +202,6 @@ function Wallet({navigation, progress = 0.5}) {
 
   const getTransactionHistory = async () => {
     try {
-      const today = new Date();
-      const tenDaysAgo = new Date(today);
-      tenDaysAgo.setDate(today.getDate() - 10);
-
-      const formattedFrom = tenDaysAgo.toISOString().split('T')[0];
-      const formattedToday = today.toISOString().split('T')[0];
       let requestData = {
         fromDate: '',
         toDate: '',
@@ -234,27 +248,48 @@ function Wallet({navigation, progress = 0.5}) {
   const handleEmployeeTransfer = async () => {
     try {
       if (!selectEmployee) {
-        showAlertModal('Please select an employee.', true);
+        showAlert('warning', 'Required!', 'Please select an employee.');
+
         setLoading(false);
         return;
       } else if (!selectType) {
-        showAlertModal('Transfer Type is required.', true);
+        showAlert('warning', 'Required!', 'Transfer Type is required.');
         return;
       } else if (!amount || !remarks) {
-        showAlertModal('Amount and Remarks are required.', true);
+        showAlert('warning', 'Required!', 'Amount and Remarks are required.');
         return;
       } else if (amount > details.walletBalance) {
-        showAlertModal("You don't have sufficient balance.", true);
+        showAlert(
+          'warning',
+          'Warning!',
+          "You don't have sufficient balance.",
+          true,
+        );
         return;
       } else if (selectEmployee == userId) {
-        showAlertModal('You cannot send money to your own account.', true);
+        showAlert(
+          'warning',
+          'Warning!',
+          'You cannot send money to your own account.',
+          true,
+        );
         return;
       } else if (amount == 0) {
-        showAlertModal("You can't transfer less then Rs 1", true);
+        showAlert(
+          'warning',
+          'Warning!',
+          "You can't transfer less than Rs 1",
+          true,
+        );
         return;
       }
       if (amount != details.walletBalance) {
-        showAlertModal('Please transfer the total holding amount!', true);
+        showAlert(
+          'warning',
+          'Required!',
+          'Please transfer the total holding amount!',
+          true,
+        );
         return;
       }
 
@@ -269,7 +304,12 @@ function Wallet({navigation, progress = 0.5}) {
       setLoading(true);
       await TaskService.transferToEmp(employeePayload).then(res => {
         if (res[0].status == 1) {
-          showAlertModal('Transfer to employee successful.', false);
+          showAlert(
+            'success',
+            'Success',
+            'Transfer to employee successful.',
+            false,
+          );
           setModalVisible(false);
           resetForm();
           onRefresh();
@@ -278,25 +318,36 @@ function Wallet({navigation, progress = 0.5}) {
           setLoading(false);
           setModalVisible(false);
         } else {
-          showAlertModal('Failed Transfer to employee.', true);
+          showAlert('error', 'Error', 'Failed Transfer to employee.', true);
           setModalVisible(false);
           setLoading(false);
         }
       });
     } catch (error) {
-      showAlertModal('Employee transfer failed.', true);
+      showAlert('warning', 'Warning!', 'Employee transfer failed.', true);
     }
   };
 
   const handleOrganizationCashTransfer = async () => {
     if (amount > details.walletBalance) {
-      showAlertModal("You don't have sufficient balance.", true);
+      showAlert(
+        'warning',
+        'Required!',
+        "You don't have sufficient balance.",
+        true,
+      );
       return;
     }
     if (amount != details.walletBalance) {
-      showAlertModal('Please transfer the total holding amount!', true);
+      showAlert(
+        'warning',
+        'Required!',
+        'Please transfer the total holding amount!',
+        true,
+      );
       return;
     }
+
     const orgPayload = {
       centreId: Number(selectCenter),
       paymentMode: selectPaymode,
@@ -307,11 +358,16 @@ function Wallet({navigation, progress = 0.5}) {
 
     TaskService.transferToOrg(orgPayload).then(res => {
       if (res.status == 1) {
-        showAlertModal('Transfer request placed successfully!', false);
+        showAlert(
+          'success',
+          'Success',
+          'Transfer request placed successfully!',
+          false,
+        );
         resetForm();
         onRefresh();
       } else {
-        showAlertModal(res.data, true);
+        showAlert('error', 'Error!', res.data, true);
       }
     });
 
@@ -320,19 +376,29 @@ function Wallet({navigation, progress = 0.5}) {
 
   const handleOrgaizationPayment = async () => {
     if (!selectPaymode) {
-      showAlertModal('Please select a payment mode.', true);
+      showAlert('warning', 'Required!', 'Please select a payment mode.', true);
       return;
     }
     if (amount <= 0) {
-      showAlertModal('Please enter a valid amount.', true);
+      showAlert('warning', 'Required!', 'Please enter a valid amount.', true);
       return;
     }
     if (amount > details.walletBalance) {
-      showAlertModal("You don't have sufficient balance.", true);
+      showAlert(
+        'warning',
+        'Required!',
+        "You don't have sufficient balance.",
+        true,
+      );
       return;
     }
     if (amount != details.walletBalance) {
-      showAlertModal('Please transfer the total holding amount!', true);
+      showAlert(
+        'warning',
+        'Required!',
+        'Please transfer the total holding amount!',
+        true,
+      );
       return;
     }
 
@@ -352,7 +418,7 @@ function Wallet({navigation, progress = 0.5}) {
     const transactionId = paymentData.razorpay_payment_id;
     setTransactionId(transactionId);
 
-    showAlertModal('Payment Successful!', false);
+    showAlert('success', 'Success', 'Payment Successful!', false);
 
     const orgPayload = {
       centreId: Number(selectCenter) || null,
@@ -364,11 +430,16 @@ function Wallet({navigation, progress = 0.5}) {
 
     TaskService.transferToOrg(orgPayload).then(res => {
       if (res.status == 1) {
-        showAlertModal('Transfer request placed successfully!', false);
+        showAlert(
+          'success',
+          'Success',
+          'Transfer request placed successfully!',
+          false,
+        );
         resetForm();
         onRefresh();
       } else {
-        showAlertModal(res.data, true);
+        showAlert('error', 'Error', res.data, true);
       }
     });
 
@@ -377,17 +448,14 @@ function Wallet({navigation, progress = 0.5}) {
 
   const handlePaymentFailure = error => {
     setShowPayment(false);
-    showAlertModal('Payment Failed or Dismissed', true);
+    showAlert('error', 'Payment Error!', 'Payment Failed or Dismissed', true);
   };
 
   const showFromDatePicker = () => {
     setShowFromPicker(true);
   };
 
-  const showToDatePicker = () => {
-    setShowToPicker(true);
-  };
-
+  // ✅ CHANGED: From Date only. To Date is always today, so no To picker logic needed.
   const onFromChange = (event, selectedDate) => {
     if (Platform.OS === 'android') {
       setShowFromPicker(false); // Always hide manually on Android
@@ -395,63 +463,52 @@ function Wallet({navigation, progress = 0.5}) {
 
     if (event?.type === 'set' || Platform.OS === 'ios') {
       if (selectedDate) {
-        setFromDate(selectedDate);
-
-        if (selectedDate > toDate) {
-          setToDate(selectedDate);
-          showAlertModal(
-            'To Date auto-updated to match From Date: ' +
-              selectedDate.toDateString(),
-            true,
-          );
-        }
-      }
-    }
-  };
-
-  const onToChange = (event, selectedDate) => {
-    if (Platform.OS === 'android') {
-      setShowToPicker(false); // Always hide manually on Android
-    }
-
-    if (event?.type === 'set' || Platform.OS === 'ios') {
-      if (selectedDate) {
-        if (selectedDate >= fromDate) {
-          setToDate(selectedDate);
-        } else {
-          showAlertModal('To date cannot be before From date', true);
-        }
+        const today = new Date();
+        // From date can never be in the future
+        setFromDate(selectedDate > today ? today : selectedDate);
+        // To date is always current date
+        setToDate(today);
       }
     }
   };
 
   const submitFilter = async () => {
-    const today = new Date();
-    const tenDaysAgo = new Date(today);
-    tenDaysAgo.setDate(today.getDate() - 10);
-
-    const formattedFrom = tenDaysAgo.toISOString().split('T')[0];
-    const formattedTo = toDate.toISOString().split('T')[0];
     try {
-      let requestData = {
-        fromDate: formattedFrom,
-        toDate: formattedTo,
-        transactionType: selectTransactiontype,
-        client: selectClient,
+      // Show the loader while the filtered transaction request is running.
+      setLoading(true);
+
+      // ✅ CHANGED: To Date is ALWAYS today's date
+      const today = new Date();
+
+      // ✅ CHANGED: use local date format (not toISOString → UTC shift)
+      const requestData = {
+        fromDate: formatApiDate(fromDate),
+        toDate: formatApiDate(today),
+        transactionType: selectTransactiontype || '',
+        client: selectClient || '',
         limit: 0,
       };
 
-      TaskService.getMyTransactions(requestData).then(res => {
-        if (res.status == 1) {
-          setTransactions(res.data);
-          setFilter(false);
-          return;
-        } else {
-          setTransactions([]);
-        }
-      });
+      console.log('Filter Request:', requestData);
+
+      // Await the API call so the finally block runs after the response arrives.
+      const res = await TaskService.getMyTransactions(requestData);
+
+      console.log('Filtered Transaction Response:', res);
+
+      if (res?.status === 1 && Array.isArray(res.data) && res.data.length > 0) {
+        setTransactions(res.data);
+      } else {
+        // Empty result or unsuccessful response: show the existing empty state.
+        setTransactions([]);
+      }
+
+      // Close the filter modal whether results are found or not.
+      setFilter(false);
     } catch (error) {
-      console.error('Error fetching transaction history:', error);
+      console.error('Error fetching filtered transaction history:', error);
+      setTransactions([]);
+      setFilter(false);
     } finally {
       setLoading(false);
     }
@@ -463,6 +520,13 @@ function Wallet({navigation, progress = 0.5}) {
     setselectClient('');
     setFromDate(today);
     setToDate(today);
+  };
+
+  // ✅ CHANGED: "Reset All" button → reset fields AND reload default list
+  const handleResetAll = () => {
+    resetFilter();
+    setFilter(false);
+    getTransactionHistory();
   };
 
   const isActiveTrans = id => {
@@ -641,7 +705,11 @@ function Wallet({navigation, progress = 0.5}) {
               </Text>
             </View>
             <TouchableOpacity
-              onPress={() => setFilter(true)}
+              onPress={() => {
+                // ✅ CHANGED: make sure To Date is today every time filter opens
+                setToDate(new Date());
+                setFilter(true);
+              }}
               style={{
                 width: 50,
                 height: 50,
@@ -871,8 +939,8 @@ function Wallet({navigation, progress = 0.5}) {
                     placeholder="-select-"
                     disabled={selectType === 'Employee'}
                     items={[
-                      {label: 'Cash', value: 'cash'},
-                      {label: 'Online', value: 'online'},
+                      {label: 'Cash', value: 'Cash'},
+                      {label: 'Online', value: 'Online'},
                     ]}
                   />
                 </View>
@@ -929,7 +997,9 @@ function Wallet({navigation, progress = 0.5}) {
                   <TouchableOpacity
                     onPress={() => {
                       if (!selectType) {
-                        showAlertModal(
+                        showAlert(
+                          'warning',
+                          'Required!',
                           'Please select Transfer Type fisrt.',
                           true,
                         );
@@ -1006,6 +1076,7 @@ function Wallet({navigation, progress = 0.5}) {
                     justifyContent: 'space-between',
                     gap: 12,
                   }}>
+                  {/* From Date (editable) */}
                   <View style={{flex: 1}}>
                     <Text style={styles.label}>From Date:</Text>
                     <TouchableOpacity
@@ -1037,24 +1108,26 @@ function Wallet({navigation, progress = 0.5}) {
                         mode="date"
                         display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                         onChange={onFromChange}
-                        maximumDate={new Date(2100, 11, 31)}
+                        maximumDate={new Date()} // ✅ CHANGED: no future dates
                       />
                     )}
                   </View>
+
+                  {/* ✅ CHANGED: To Date is always current date, read-only */}
                   <View style={{flex: 1}}>
                     <Text style={styles.label}>To Date:</Text>
-                    <TouchableOpacity
-                      onPress={showToDatePicker}
+                    <View
                       style={{
                         borderWidth: 1,
                         borderColor: '#ECEDF0',
-                        backgroundColor: '#FAFAFA',
+                        backgroundColor: '#F0F0F0',
                         paddingHorizontal: 12,
                         borderRadius: 5,
                         height: 50,
                         flexDirection: 'row',
                         alignItems: 'center',
                         marginBottom: 10,
+                        opacity: 0.7,
                       }}>
                       <Text
                         style={{
@@ -1062,20 +1135,9 @@ function Wallet({navigation, progress = 0.5}) {
                           fontSize: 14,
                           fontWeight: '500',
                         }}>
-                        {toDate.toDateString()}
+                        {new Date().toDateString()}
                       </Text>
-                    </TouchableOpacity>
-
-                    {showToPicker && (
-                      <DateTimePicker
-                        value={toDate}
-                        mode="date"
-                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                        onChange={onToChange}
-                        minimumDate={fromDate}
-                        maximumDate={new Date(2100, 11, 31)}
-                      />
-                    )}
+                    </View>
                   </View>
                 </View>
                 <View>
@@ -1131,7 +1193,8 @@ function Wallet({navigation, progress = 0.5}) {
                       borderRadius: 28,
                       padding: 12,
                     }}
-                    onPress={() => resetFilter()}>
+                    onPress={() => handleResetAll()} // ✅ CHANGED
+                  >
                     <Text
                       style={{
                         fontFamily: 'Montserrat-SemiBold',
@@ -1182,6 +1245,14 @@ function Wallet({navigation, progress = 0.5}) {
           <Text style={{color: '#FFFFFF', marginTop: 10}}>Proccessing...</Text>
         </View>
       )}
+
+      <CustomAlert
+        visible={alertVisible}
+        type={alertData.type}
+        title={alertData.title}
+        message={alertData.message}
+        onClose={() => setAlertVisible(false)}
+      />
     </SafeAreaView>
   );
 }

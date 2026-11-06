@@ -487,7 +487,7 @@ function Completed({navigation}) {
                       </Text>
                     </View>
 
-                    <View
+                    {/* <View
                       style={{
                         flexDirection: 'row',
                         alignItems: 'flex-start',
@@ -517,9 +517,9 @@ function Completed({navigation}) {
                           ? task?.client?.address ?? 'No Address'
                           : task?.pickUpLocation?.address ?? 'No Address'}
                       </Text>
-                    </View>
+                    </View> */}
 
-                    {/* <View
+                    <View
                       style={{
                         flexDirection: 'row',
                         alignItems: 'flex-start',
@@ -547,7 +547,8 @@ function Completed({navigation}) {
                             color: '#0C0D36',
                             lineHeight: 20,
                           }}>
-                          {task?.client?.address ?? 'No Address'}
+                          Address:
+                          {task?.client?.address?.trim() || 'No Address'}
                         </Text>
                       ) : (
                         <Text
@@ -558,10 +559,12 @@ function Completed({navigation}) {
                             color: '#0C0D36',
                             lineHeight: 20,
                           }}>
-                          {task?.pickUpLocation?.address ?? 'No Address'}
+                          Address:
+                          {task?.pickUpLocation?.address?.trim() ||
+                            'No Address'}
                         </Text>
                       )}
-                    </View> */}
+                    </View>
                     <View
                       style={{
                         flexDirection: 'row',
@@ -759,32 +762,82 @@ function Completed({navigation}) {
                     alignItems: 'center',
                   }}>
                   {task.verifiedById != null ? (
-                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        alignSelf: 'flex-start',
+                        backgroundColor: '#E9FBEA',
+                        borderRadius: 24,
+                        paddingVertical: 4,
+                        paddingHorizontal: 12,
+                      }}>
                       <Image
-                        style={{width: 22, height: 22}}
+                        style={{width: 24, height: 24, resizeMode: 'contain'}}
                         source={require('../../../assets/tick.png')}
                       />
                       <Text
                         style={{
                           fontFamily: 'Montserrat-SemiBold',
                           fontSize: 12,
-                          color: '#2F81F5',
+                          color: '#16852B',
                           paddingLeft: 8,
                         }}>
                         Verified at {formatDateTime(task.updated_at)}
                       </Text>
                     </View>
                   ) : (
-                    <Text
+                    <View
                       style={{
-                        fontFamily: 'Montserrat-SemiBold',
-                        fontSize: 12,
-                        color: '#2F81F5',
-                        paddingLeft: 8,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        alignSelf: 'flex-start',
+                        backgroundColor: '#FFF3E0',
+                        borderRadius: 24,
+                        paddingVertical: 4,
+                        paddingHorizontal: 12,
                       }}>
-                      {/* Task Completed at {formatDateTime(task.updated_at)} */}
-                      Pending verification
-                    </Text>
+                      <View
+                        style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: 12,
+                          borderWidth: 2,
+                          borderColor: '#F59E0B',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginRight: 8,
+                        }}>
+                        <View
+                          style={{
+                            width: 2,
+                            height: 7,
+                            backgroundColor: '#F59E0B',
+                            position: 'absolute',
+                            top: 4,
+                          }}
+                        />
+                        <View
+                          style={{
+                            width: 6,
+                            height: 2,
+                            backgroundColor: '#F59E0B',
+                            position: 'absolute',
+                            right: 4,
+                            bottom: 6,
+                            transform: [{rotate: '25deg'}],
+                          }}
+                        />
+                      </View>
+                      <Text
+                        style={{
+                          fontFamily: 'Montserrat-SemiBold',
+                          fontSize: 12,
+                          color: '#D97706',
+                        }}>
+                        Pending Verification
+                      </Text>
+                    </View>
                   )}
                 </View>
               </View>

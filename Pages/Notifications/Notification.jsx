@@ -20,7 +20,7 @@ import dayjs from 'dayjs';
 import {useNotification} from '../../Context/NotificationContext';
 import {useGlobalAlert} from '../../Context/GlobalAlertContext';
 import {Modal, ScrollView} from 'react-native';
-
+import CustomAlert from '../Components/CustomAlert';
 function Notification({navigation}) {
   const [selectedTab, setSelectedTab] = useState('General');
   const [notifications, setNotifications] = useState([]);
@@ -32,6 +32,7 @@ function Notification({navigation}) {
   const timeoutRef = useRef(null);
   const {setNotificationCount} = useNotification();
   const {showAlertModal, hideAlert} = useGlobalAlert();
+  const [alertVisible, setAlertVisible] = useState(false);
 
   const [approvalModalVisible, setApprovalModalVisible] = useState(false);
   const [selectedApprovalData, setSelectedApprovalData] = useState(null);
@@ -41,6 +42,22 @@ function Notification({navigation}) {
 
   const [approvalDetails, setApprovalDetails] = useState(null);
   const [notificationId, setNotificationId] = useState(null);
+
+  const [alertData, setAlertData] = useState({
+    type: 'success',
+    title: '',
+    message: '',
+  });
+
+  const showAlert = (type, title, message) => {
+    setAlertData({
+      type,
+      title,
+      message,
+    });
+
+    setAlertVisible(true);
+  };
 
   useEffect(() => {
     // const fetchData = async () => {
@@ -154,7 +171,7 @@ function Notification({navigation}) {
     if (response.status == 1) {
       fetchNotifications();
     } else {
-      showAlertModal(response.data, true);
+      showAlert('error', 'Error', response.data, true);
     }
   };
 
@@ -192,10 +209,17 @@ function Notification({navigation}) {
 
         setRefreshApprovals(prev => prev + 1);
 
-        Alert.alert('Approval successful');
+        // Alert.alert('Approval successful');
+        showAlert('success', 'Success', 'Approval successful.');
       } else {
         console.log('Approval failed:', response);
-        Alert.alert(response.message);
+        showAlert(
+          'error',
+          'Error',
+          typeof response?.message === 'string'
+            ? response.message
+            : 'Approval failed.',
+        );
       }
     } catch (error) {
       console.error('Error approving employee:', error);
@@ -219,6 +243,52 @@ function Notification({navigation}) {
     }
   };
 
+  // const openApprovalModal = async (item, actionType) => {
+  //   try {
+  //     setApprovalAction(actionType);
+  //     setApprovalModalVisible(true);
+  //     setApprovalModalLoading(true);
+  //     setApprovalDetails(null);
+  //     setNotificationId(item.id);
+  //     const referenceId = String(item?.referenceId ?? '').trim();
+
+  //     const isCashReceipt = referenceId.toUpperCase().startsWith('CR/');
+
+  //     let response;
+
+  //     if (isCashReceipt) {
+  //       // Example: CR/260915/0004
+  //       response = await TaskService.getReqDenomination({
+  //         receiptId: referenceId,
+  //       });
+  //     } else {
+  //       // Fund transfer or other Logistic approval
+  //       response = await TaskService.getLogisticDenomination({
+  //         empId: item?.srcEmp ?? null,
+  //       });
+  //     }
+
+  //     console.log(
+  //       isCashReceipt ? 'Cash receipt denomination:' : 'Logistic denomination:',
+  //       response,
+  //     );
+
+  //     if (response?.status === 1) {
+  //       setApprovalDetails(response?.data ?? null);
+  //     } else {
+  //       setApprovalDetails(null);
+  //     }
+
+  //     console.log('resss check', response?.data);
+  //   } catch (error) {
+  //     console.log('Error fetching denomination:', error);
+
+  //     setApprovalDetails(null);
+  //   } finally {
+  //     setApprovalModalLoading(false);
+  //   }
+  // };
+
   const openApprovalModal = async (item, actionType) => {
     try {
       setApprovalAction(actionType);
@@ -226,19 +296,17 @@ function Notification({navigation}) {
       setApprovalModalLoading(true);
       setApprovalDetails(null);
       setNotificationId(item.id);
-      const referenceId = String(item?.referenceId ?? '').trim();
 
+      const referenceId = String(item?.referenceId ?? '').trim();
       const isCashReceipt = referenceId.toUpperCase().startsWith('CR/');
 
       let response;
 
       if (isCashReceipt) {
-        // Example: CR/260915/0004
         response = await TaskService.getReqDenomination({
           receiptId: referenceId,
         });
       } else {
-        // Fund transfer or other Logistic approval
         response = await TaskService.getLogisticDenomination({
           empId: item?.srcEmp ?? null,
         });
@@ -253,6 +321,13 @@ function Notification({navigation}) {
         setApprovalDetails(response?.data ?? null);
       } else {
         setApprovalDetails(null);
+
+        showAlert({
+          type: 'error',
+          title: 'Error',
+          message: response?.message || 'Unable to fetch denomination details.',
+        });
+        setAlertVisible(true);
       }
 
       console.log('resss check', response?.data);
@@ -260,6 +335,13 @@ function Notification({navigation}) {
       console.log('Error fetching denomination:', error);
 
       setApprovalDetails(null);
+
+      const errorMessage =
+        typeof error?.response?.data?.message === 'string'
+          ? error.response.data.message
+          : 'Something went wrong while fetching denomination details.';
+
+      showAlert('error', 'Error', errorMessage);
     } finally {
       setApprovalModalLoading(false);
     }
@@ -608,8 +690,8 @@ function Notification({navigation}) {
                               <Image
                                 source={
                                   item.denomination_type === 'Coin'
-                                    ? require('../../assets/coins.png')
-                                    : require('../../assets/Iconmoney.png')
+                                    ? require('../../assets/coinss.png')
+                                    : require('../../assets/cash.png')
                                 }
                                 style={styles.denominationImage}
                               />
@@ -739,6 +821,13 @@ function Notification({navigation}) {
           </Modal>
         </>
       )}
+      <CustomAlert
+        visible={alertVisible}
+        type={alertData.type}
+        title={alertData.title}
+        message={alertData.message}
+        onClose={() => setAlertVisible(false)}
+      />
     </SafeAreaView>
   );
 }

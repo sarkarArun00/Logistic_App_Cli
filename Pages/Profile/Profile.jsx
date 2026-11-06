@@ -12,6 +12,7 @@ import {
   PermissionsAndroid,
   Platform,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import {AuthContext} from '../../Context/AuthContext';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
@@ -43,6 +44,7 @@ function Profile({navigation}) {
   const [viewerVisible, setViewerVisible] = useState(false);
   const [userName, setUserName] = useState('');
   const [alertVisible, setAlertVisible] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
   const displayName =
     userName?.trim() ||
     userInfo?.employeeName?.trim() ||
@@ -379,7 +381,7 @@ function Profile({navigation}) {
               </View>
             </TouchableOpacity> */}
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => {
                 if (userInfo?.employeePhoto && !imageError) {
@@ -405,6 +407,75 @@ function Profile({navigation}) {
                     resizeMode="cover"
                     onError={() => setImageError(true)}
                   />
+                ) : (
+                  <Text
+                    style={{
+                      fontSize: 30,
+                      fontWeight: 'bold',
+                      color: '#334155',
+                    }}>
+                    {displayName ? displayName.charAt(0).toUpperCase() : '?'}
+                  </Text>
+                )}
+              </View>
+            </TouchableOpacity> */}
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                if (userInfo?.employeePhoto && !imageError && !imageLoading) {
+                  setViewerVisible(true);
+                }
+              }}
+              accessibilityRole="imagebutton"
+              accessibilityLabel="View profile photo">
+              <View
+                style={{
+                  width: 70,
+                  height: 70,
+                  borderRadius: 35,
+                  overflow: 'hidden',
+                  backgroundColor: '#F1F5F9',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}>
+                {userInfo?.employeePhoto && !imageError ? (
+                  <>
+                    {imageLoading && (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          width: '100%',
+                          height: '100%',
+                          backgroundColor: '#E2E8F0',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          zIndex: 1,
+                        }}>
+                        <ActivityIndicator size="small" color="#64748B" />
+                      </View>
+                    )}
+
+                    <Image
+                      source={{
+                        uri: BASE_API_URL + userInfo.employeePhoto,
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                      }}
+                      resizeMode="cover"
+                      onLoad={() => {
+                        setTimeout(() => {
+                          setImageLoading(false);
+                        }, 1000);
+                      }}
+                      onError={() => {
+                        setImageLoading(false);
+                        setImageError(true);
+                      }}
+                    />
+                  </>
                 ) : (
                   <Text
                     style={{

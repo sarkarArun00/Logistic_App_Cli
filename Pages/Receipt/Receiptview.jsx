@@ -306,30 +306,130 @@ body{ font-family: "Montserrat", sans-serif; background:#f0f4f8; padding:20px;  
     }
   };
 
-  const getStatusColor = (authoriseStatus, generateStatus) => {
-    if (authoriseStatus == 0 || generateStatus == 0) {
-      return '#DC3545'; // Rejected - Red
-    } else if (authoriseStatus == 1) {
-      return '#28A745'; // Settled - Blue
-    } else if (generateStatus == 1) {
-      return '#007BFF'; // Approved - Green
-    } else {
-      return '#6C757D'; // Interim - Orange (default fallback)
-    }
-  };
+  // const getStatusColor = (authoriseStatus, generateStatus , receiptStatus) => {
+  //   if (
+  //     authoriseStatus == 0 ||
+  //     generateStatus == 0 ||
+  //     receiptStatus == null
+  //   ) {
 
-  const getStatusLabel = (authoriseStatus, generateStatus) => {
-    console.log('status check', authoriseStatus, generateStatus);
-    if (authoriseStatus == 1 && generateStatus == 1) {
-      return 'Authorized';
-    } else if (authoriseStatus == 0 || generateStatus == 0) {
-      return 'Rejected';
-    } else if (generateStatus == 1 && authoriseStatus == null) {
-      return 'Unauthorized';
-    } else if (generateStatus == 1 && authoriseStatus == 0) {
-      return 'Rejected';
-    } else {
-      return 'Interim';
+  //     return '#DC3545'; // Rejected - Red
+  //   } else if (authoriseStatus == 1) {
+  //     return '#28A745'; // Settled - Blue
+  //   } else if (generateStatus == 1) {
+  //     return '#007BFF'; // Approved - Green
+  //   } else {
+  //     return '#6C757D'; // Interim - Orange (default fallback)
+  //   }
+  // };
+
+  // const getStatusLabel = (authoriseStatus, generateStatus, receiptStatus) => {
+  //   console.log('status check', authoriseStatus, generateStatus, receiptStatus);
+
+  //   if (
+  //     authoriseStatus == 1 &&
+  //     generateStatus == 1 &&
+  //     receiptStatus == 1
+  //   ) {
+  //     return 'Authorized';
+  //   } else if (
+  //     authoriseStatus == 0 ||
+  //     generateStatus == 0 ||
+  //     receiptStatus == null
+  //   ) {
+  //     return 'Rejected';
+  //   } else if (
+  //     generateStatus == 1 ||
+  //     authoriseStatus == 0 ||
+  //     receiptStatus == 1
+  //   ) {
+  //     return 'Unauthorized';
+  //   } else if (
+  //     generateStatus == 0 ||
+  //     authoriseStatus == 1 ||
+  //     receiptStatus == 0
+  //   ) {
+  //     return 'Settled';
+  //   } else {
+  //     return 'Interim';
+  //   }
+
+  // };
+
+  // const getStatusColor = (authoriseStatus, generateStatus, receiptStatus) => {
+  //   const authorize = Number(authoriseStatus);
+  //   const generate = Number(generateStatus);
+  //   const receipt = receiptStatus?.toUpperCase();
+
+  //   if (authorize === 0 || generate === 0 || receipt === 'REJECTED') {
+  //     return '#DC3545'; // Rejected - Red
+  //   }
+
+  //   if (generate === 1 || authorize === 1 || receipt === 'SETTLED') {
+  //     return '#28A745'; // Settled - Green
+  //   }
+
+  //   if (authorize === 1) {
+  //     return '#007BFF'; // Authorized - Blue
+  //   }
+
+  //   if (generate === 1) {
+  //     return '#28A745'; // Approved - Green
+  //   }
+
+  //   return '#6C757D'; // Interim - Grey
+  // };
+
+  // const getStatusLabel = (authoriseStatus, generateStatus, receiptStatus) => {
+  //   const authorize = Number(authoriseStatus);
+  //   const generate = Number(generateStatus);
+  //   const receipt = receiptStatus?.toUpperCase();
+
+  //   console.log('Status Check:', authorize, generate, receipt);
+
+  //   if (authorize === 0 || generate === 0 || receipt === 'REJECTED') {
+  //     return 'Rejected';
+  //   }
+
+  //   if (generate === 0 || (authorize === 1 && receipt === 'SETTLED')) {
+  //     return 'Settled';
+  //   }
+
+  //   if (authorize === 1) {
+  //     return 'Authorized';
+  //   }
+
+  //   if (generate === 1) {
+  //     return 'Approved';
+  //   }
+
+  //   return 'Interim';
+  // };
+
+  const getReceiptStatus = receiptStatus => {
+    const status = receiptStatus?.trim()?.toUpperCase();
+
+    switch (status) {
+      case 'SETTLED':
+        return {label: 'Settled', color: '#28A745'};
+
+      case 'AUTHORIZED':
+        return {label: 'Authorized', color: '#007BFF'};
+
+      case 'APPROVED':
+        return {label: 'Approved', color: '#28A745'};
+
+      case 'REJECTED':
+        return {label: 'Rejected', color: '#DC3545'};
+
+      case 'INTERIM':
+        return {label: 'Interim', color: '#6C757D'};
+
+      case 'UNAUTHORIZED':
+        return {label: 'Unauthorized', color: '#FFC107'};
+
+      default:
+        return {label: 'Interim', color: '#6C757D'};
     }
   };
 
@@ -353,62 +453,182 @@ body{ font-family: "Montserrat", sans-serif; background:#f0f4f8; padding:20px;  
     return `${monthName} ${day} ${year} at ${hourFormatted}:${minutes} ${ampm}`;
   };
 
-  // const downloadReceipt = async item => {
+  const receiptStatusInfo = getReceiptStatus(receiptData?.receipt_status);
+
+  const downloadReceipt = async item => {
+    try {
+      console.log('Downloading receipt:', item.receiptId);
+
+      const url = await TaskService.openReceiptInBrowser(item.receiptId);
+      console.log('Downloading receipt: url ', url);
+      const supported = await Linking.canOpenURL(url);
+
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.log('Cannot open URL:', url);
+      }
+    } catch (error) {
+      console.log('downloadReceipt error:', error);
+    }
+  };
+
+  // const downloadReceipt = async receiptId => {
   //   try {
-  //     console.log('Downloading receipt:', item.receiptId);
+  //     // safety: accept either the ID string or the whole object
+  //     const id =
+  //       typeof receiptId === 'string'
+  //         ? receiptId
+  //         : receiptId?.receiptId || receiptId?.data?.receiptId;
 
-  //     const url = await TaskService.openReceiptInBrowser(item.receiptId);
-  //     console.log('Downloading receipt: url ', url);
-  //     const supported = await Linking.canOpenURL(url);
-
-  //     if (supported) {
-  //       await Linking.openURL(url);
-  //     } else {
-  //       console.log('Cannot open URL:', url);
+  //     if (!id) {
+  //       console.log('receiptId missing:', receiptId);
+  //       return;
   //     }
-  //   } catch (error) {
-  //     console.log('downloadReceipt error:', error);
+
+  //     const fileName = `${id.replace(/\//g, '-')}.pdf`;
+
+  //     // your function, unchanged
+  //     const url = `https://lims-testing-api.nirnayanhealthcare.com/accounts/payment/downloadReceipt/${id}`;
+  //     console.log('Downloading receipt: url', url);
+
+  //     const res = await ReactNativeBlobUtil.config({
+  //       addAndroidDownloads: {
+  //         useDownloadManager: true,
+  //         notification: true,
+  //         title: fileName,
+  //         description: 'Downloading receipt',
+  //         path: `${ReactNativeBlobUtil.fs.dirs.DownloadDir}/${fileName}`,
+  //         mime: 'application/pdf',
+  //         mediaScannable: true,
+  //       },
+  //     }).fetch('GET', url, {
+  //       // Authorization: `Bearer ${token}`, // add only if your API needs it
+  //     });
+
+  //     console.log('Saved to:', res.path());
+  //   } catch (e) {
+  //     console.log('download error', e);
   //   }
   // };
 
-  const downloadReceipt = async receiptId => {
-    try {
-      // safety: accept either the ID string or the whole object
-      const id =
-        typeof receiptId === 'string'
-          ? receiptId
-          : receiptId?.receiptId || receiptId?.data?.receiptId;
+  // const downloadReceipt = async receiptArg => {
+  //   try {
+  //     const id =
+  //       typeof receiptArg === 'string'
+  //         ? receiptArg
+  //         : receiptArg?.receiptId || receiptArg?.data?.receiptId;
 
-      if (!id) {
-        console.log('receiptId missing:', receiptId);
-        return;
-      }
+  //     if (!id) {
+  //       console.log('receiptId missing:', receiptArg);
+  //       return;
+  //     }
 
-      const fileName = `${id.replace(/\//g, '-')}.pdf`;
+  //     const fileName = `${id.replace(/\//g, '-')}.pdf`;
+  //     const url = `https://lims-testing-api.nirnayanhealthcare.com/accounts/payment/downloadReceipt/${id}`;
+  //     const {fs} = ReactNativeBlobUtil;
+  //     const headers = {
+  //       // Authorization: `Bearer ${token}`, // add only if your API needs it
+  //     };
 
-      // your function, unchanged
-      const url = `https://lims-testing-api.nirnayanhealthcare.com/accounts/payment/downloadReceipt/${id}`;
-      console.log('Downloading receipt: url', url);
+  //     // ---------- iOS ----------
+  //     if (Platform.OS === 'ios') {
+  //       const iosRes = await ReactNativeBlobUtil.config({
+  //         fileCache: true,
+  //         path: `${fs.dirs.DocumentDir}/${fileName}`,
+  //       }).fetch('GET', url, headers);
+  //       ReactNativeBlobUtil.ios.openDocument(iosRes.path());
+  //       return;
+  //     }
 
-      const res = await ReactNativeBlobUtil.config({
-        addAndroidDownloads: {
-          useDownloadManager: true,
-          notification: true,
-          title: fileName,
-          description: 'Downloading receipt',
-          path: `${ReactNativeBlobUtil.fs.dirs.DownloadDir}/${fileName}`,
-          mime: 'application/pdf',
-          mediaScannable: true,
-        },
-      }).fetch('GET', url, {
-        // Authorization: `Bearer ${token}`, // add only if your API needs it
-      });
+  //     // ---------- ANDROID ----------
+  //     // Permission only needed on Android 9 and below
+  //     if (Platform.Version < 29) {
+  //       const granted = await PermissionsAndroid.request(
+  //         PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+  //       );
+  //       if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+  //         Alert.alert('Permission Denied', 'Storage permission is required.');
+  //         return;
+  //       }
+  //     }
 
-      console.log('Saved to:', res.path());
-    } catch (e) {
-      console.log('download error', e);
-    }
-  };
+  //     ToastAndroid.show('Downloading receipt...', ToastAndroid.SHORT);
+
+  //     // Step 1: download to app cache (always allowed)
+  //     const cachePath = `${fs.dirs.CacheDir}/${fileName}`;
+  //     if (await fs.exists(cachePath)) {
+  //       await fs.unlink(cachePath);
+  //     }
+
+  //     const res = await ReactNativeBlobUtil.config({
+  //       fileCache: true,
+  //       path: cachePath,
+  //     }).fetch('GET', url, headers);
+
+  //     const httpStatus = res.info().status;
+  //     console.log('HTTP status:', httpStatus, 'cache path:', res.path());
+
+  //     if (httpStatus !== 200) {
+  //       Alert.alert('Download failed', `Server returned status ${httpStatus}`);
+  //       return;
+  //     }
+
+  //     // Step 2: make sure the file is a real PDF (starts with %PDF)
+  //     const head = await fs.readStream(res.path(), 'utf8', 8);
+  //     let firstChunk = '';
+  //     await new Promise(resolve => {
+  //       head.open();
+  //       head.onData(chunk => {
+  //         firstChunk += chunk;
+  //       });
+  //       head.onEnd(resolve);
+  //       head.onError(resolve);
+  //     });
+  //     console.log('File starts with:', firstChunk.slice(0, 5));
+  //     if (!firstChunk.startsWith('%PDF')) {
+  //       Alert.alert('Download failed', 'Server did not return a valid PDF.');
+  //       return;
+  //     }
+
+  //     // Step 3: save into public Downloads folder
+  //     if (Platform.Version >= 29) {
+  //       // Android 10+ : MediaStore (no permission needed)
+  //       await ReactNativeBlobUtil.MediaCollection.copyToMediaStore(
+  //         {
+  //           name: fileName,
+  //           parentFolder: '',
+  //           mimeType: 'application/pdf',
+  //         },
+  //         'Download',
+  //         res.path(),
+  //       );
+  //     } else {
+  //       // Android 9 and below : normal copy + scan
+  //       const publicPath = `${fs.dirs.DownloadDir}/${fileName}`;
+  //       if (await fs.exists(publicPath)) {
+  //         await fs.unlink(publicPath);
+  //       }
+  //       await fs.cp(res.path(), publicPath);
+  //       await fs.scanFile([{path: publicPath, mime: 'application/pdf'}]);
+  //     }
+
+  //     ToastAndroid.show('Receipt saved in Downloads', ToastAndroid.LONG);
+
+  //     // Step 4: open the PDF
+  //     try {
+  //       await ReactNativeBlobUtil.android.actionViewIntent(
+  //         res.path(),
+  //         'application/pdf',
+  //       );
+  //     } catch (e) {
+  //       console.log('open pdf error:', e);
+  //     }
+  //   } catch (e) {
+  //     console.log('download error', e);
+  //     Alert.alert('Download failed', String(e?.message || e));
+  //   }
+  // };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -511,16 +731,36 @@ body{ font-family: "Montserrat", sans-serif; background:#f0f4f8; padding:20px;  
                   .replace(/\b\w/g, char => char.toUpperCase())}
               </Text>
             </View>
+
             <View style={styles.flexDv}>
+              <Text style={styles.sndTitle}>Receipt Status</Text>
+
+              <View
+                style={{
+                  backgroundColor: receiptStatusInfo.color,
+                  paddingVertical: 5,
+                  paddingHorizontal: 12,
+                  borderRadius: 15,
+                  alignSelf: 'flex-start',
+                }}>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    color: '#FFFFFF',
+                    fontFamily: 'Montserrat-Medium',
+                  }}>
+                  {receiptStatusInfo.label}
+                </Text>
+              </View>
+            </View>
+
+            {/* <View style={styles.flexDv}>
               <Text style={styles.sndTitle}>Receipt Status</Text>
               <Text style={styles.sndSubTitle}>
                 <View
                   style={{
                     // alignSelf: 'flex-start',
-                    backgroundColor: getStatusColor(
-                      receiptData?.authoriseStatus,
-                      receiptData?.generateStatus,
-                    ),
+                    backgroundColor: getStatusColor(receiptData?.receipStatus),
                     paddingVertical: 2,
                     paddingHorizontal: 8,
                     borderRadius: 12,
@@ -532,14 +772,11 @@ body{ font-family: "Montserrat", sans-serif; background:#f0f4f8; padding:20px;  
                       color: '#fff',
                       fontFamily: 'Montserrat-Medium',
                     }}>
-                    {getStatusLabel(
-                      receiptData?.authoriseStatus,
-                      receiptData?.generateStatus,
-                    )}
+                    {getStatusLabel(receiptData?.receipStatus)}
                   </Text>
                 </View>
               </Text>
-            </View>
+            </View> */}
           </View>
         </View>
 

@@ -87,6 +87,7 @@ function Collected({navigation}) {
   };
 
   useEffect(() => {
+    setImages([]);
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -209,6 +210,7 @@ function Collected({navigation}) {
   };
 
   const handleOpenModal = async task => {
+    setImages([]); // Clear previous attachment
     try {
       const response = await TaskService.getTaskComments({taskId: task.id});
       setSelectedTask(response.data);
@@ -221,6 +223,7 @@ function Collected({navigation}) {
     setSelectedClientId(task.client.id);
 
     setItemTaskId(task.id);
+    setImages([]); // Clear previous attachment
     // fetchAcceptedTask(task.id);
   };
 
@@ -241,6 +244,7 @@ function Collected({navigation}) {
   };
 
   const onRefresh = useCallback(() => {
+    setImages([]);
     fetchData();
     getAllOperationEmpp();
     wait(2000).then(() => setRefreshing(false));
@@ -252,7 +256,12 @@ function Collected({navigation}) {
       const dropCoordinates = task?.dropLocation?.coordinates;
 
       if (!pickupCoordinates || !dropCoordinates) {
-        showAlertModal('Pickup or drop location not available', true);
+        showAlert(
+          'warning',
+          'Warning!',
+          'Pickup or drop location not available',
+          true,
+        );
         return;
       }
 
@@ -275,7 +284,7 @@ function Collected({navigation}) {
         !isValidCoordinates(pickupCoordinates) ||
         !isValidCoordinates(dropCoordinates)
       ) {
-        showAlertModal('Invalid location coordinates', true);
+        showAlert('warning', 'Warning!', 'Invalid location coordinates', true);
         return;
       }
 
@@ -285,7 +294,12 @@ function Collected({navigation}) {
         );
 
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          showAlertModal('Location permission is required', true);
+          showAlert(
+            'warning',
+            'Required!',
+            'Location permission is required',
+            true,
+          );
           return;
         }
       }
@@ -315,13 +329,15 @@ function Collected({navigation}) {
 
           Linking.openURL(url).catch(error => {
             console.error('Google Maps error:', error);
-            showAlertModal('Failed to open Google Maps', true);
+            showAlert('error', 'Failed', 'Failed to open Google Maps', true);
           });
         },
         error => {
           console.error('Current location error:', error);
 
-          showAlertModal(
+          showAlert(
+            'warning',
+            'Warning!',
             error.code === 3
               ? 'Location timed out. Enable GPS and try again.'
               : 'Unable to get current location. Check GPS and permissions.',
@@ -336,18 +352,27 @@ function Collected({navigation}) {
       );
     } catch (error) {
       console.error('Navigation error:', error);
-      showAlertModal('Unable to open navigation', true);
+      showAlert('error', 'Error', 'Unable to open navigation', true);
     }
   };
-
+  const handleDeleteImage = index => {
+    const updatedImages = images.filter((_, i) => i !== index);
+    setImages(updatedImages);
+  };
   const onCollectModalOpen = async task_Id => {
     setTaskId(task_Id);
     setHandoverModal(true);
+    setImages([]); // Clear previous task images
   };
 
   const onHandoverTask = async () => {
     if (!selectedValue) {
-      showAlertModal('Please select Operation Employee', true);
+      showAlert(
+        'warning',
+        'Required!',
+        'Please select Operation Employee',
+        true,
+      );
       return;
     }
     try {
@@ -357,7 +382,7 @@ function Collected({navigation}) {
       };
       const response = await TaskService.sampleHandover(request);
       if (response.status == 1 || response?.status === 200) {
-        showAlertModal('Task Handover Successfully.', false);
+        showAlert('success', 'Success', 'Task Handover Successfully.', false);
 
         setHandoverModal(false);
         setTimeout(() => {
@@ -366,7 +391,7 @@ function Collected({navigation}) {
         navigation.navigate('Completed');
         fetchData();
       } else {
-        showAlertModal('Task Handover Failed.', true);
+        showAlert('error', 'Error', 'Task Handover Failed.', true);
       }
     } catch (error) {
       console.error('Error handing over task:', error);
@@ -409,7 +434,9 @@ function Collected({navigation}) {
     const hasPermission = await requestPermission();
 
     if (!hasPermission) {
-      showAlertModal(
+      showAlert(
+        'warning',
+        'Required!',
         'Permission Required, Camera access is needed to take pictures',
         true,
       );
@@ -431,7 +458,9 @@ function Collected({navigation}) {
 
         if (response.errorCode) {
           console.error('Camera Error:', response.errorMessage);
-          showAlertModal(
+          showAlert(
+            'error',
+            'Failed!',
             response.errorMessage || 'Failed to open camera',
             true,
           );
@@ -445,7 +474,7 @@ function Collected({navigation}) {
             setImages([compressedImage]);
           } catch (error) {
             console.error('Image processing error:', error);
-            showAlertModal('Failed to process image', true);
+            showAlert('error', 'Failed!', 'Failed to process image', true);
           }
         }
       },
@@ -787,7 +816,7 @@ function Collected({navigation}) {
                       </Text>
                     </View>
 
-                    <View
+                    {/* <View
                       style={{
                         flexDirection: 'row',
                         alignItems: 'flex-start',
@@ -817,9 +846,9 @@ function Collected({navigation}) {
                           ? task?.client?.address ?? 'No Address'
                           : task?.pickUpLocation?.address ?? 'No Address'}
                       </Text>
-                    </View>
+                    </View> */}
 
-                    {/* <View
+                    <View
                       style={{
                         flexDirection: 'row',
                         alignItems: 'flex-start',
@@ -847,7 +876,8 @@ function Collected({navigation}) {
                             color: '#0C0D36',
                             lineHeight: 20,
                           }}>
-                          {task?.client?.address ?? 'No Address'}
+                          Address:
+                          {task?.client?.address?.trim() || 'No Address'}
                         </Text>
                       ) : (
                         <Text
@@ -858,10 +888,12 @@ function Collected({navigation}) {
                             color: '#0C0D36',
                             lineHeight: 20,
                           }}>
-                          {task?.pickUpLocation?.address ?? 'No Address'}
+                          Address:
+                          {task?.pickUpLocation?.address?.trim() ||
+                            'No Address'}
                         </Text>
                       )}
-                    </View> */}
+                    </View>
                     <View
                       style={{
                         flexDirection: 'row',

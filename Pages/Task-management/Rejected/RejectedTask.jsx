@@ -262,7 +262,12 @@ function RejectedTask({navigation}) {
       const hasPermission = await requestPermission('camera');
 
       if (!hasPermission) {
-        showAlertModal('Camera access is needed to take pictures.', true);
+        showAlert(
+          'warning',
+          'Failed',
+          'Camera access is needed to take pictures.',
+          true,
+        );
         return;
       }
 
@@ -283,7 +288,12 @@ function RejectedTask({navigation}) {
       if (response.errorCode) {
         console.log('Camera error:', response.errorCode, response.errorMessage);
 
-        showAlertModal(response.errorMessage || 'Camera error occurred.', true);
+        showAlert(
+          'error',
+          'Failed',
+          response.errorMessage || 'Camera error occurred.',
+          true,
+        );
 
         return;
       }
@@ -291,7 +301,12 @@ function RejectedTask({navigation}) {
       const image = response.assets?.[0];
 
       if (!image?.uri) {
-        showAlertModal('Unable to capture image. Please try again.', true);
+        showAlert(
+          'warning',
+          'Please try again.',
+          'Unable to capture image. Please try again.',
+          true,
+        );
         return;
       }
 
@@ -301,7 +316,9 @@ function RejectedTask({navigation}) {
     } catch (error) {
       console.log('Camera error:', error);
 
-      showAlertModal(
+      showAlert(
+        'error',
+        'Failed',
         error?.message || 'Unable to process the captured image.',
         true,
       );
@@ -334,7 +351,9 @@ function RejectedTask({navigation}) {
           response.errorMessage,
         );
 
-        showAlertModal(
+        showAlert(
+          'error',
+          'Failed',
           response.errorMessage || 'Unable to open gallery.',
           true,
         );
@@ -345,7 +364,12 @@ function RejectedTask({navigation}) {
       const image = response.assets?.[0];
 
       if (!image?.uri) {
-        showAlertModal('Unable to select image. Please try again.', true);
+        showAlert(
+          'warning',
+          'Please try again.',
+          'Unable to select image. Please try again.',
+          true,
+        );
         return;
       }
 
@@ -355,7 +379,9 @@ function RejectedTask({navigation}) {
     } catch (error) {
       console.log('Gallery error:', error);
 
-      showAlertModal(
+      showAlert(
+        'error',
+        'Failed',
         error?.message || 'Unable to process the selected image.',
         true,
       );
@@ -695,7 +721,7 @@ function RejectedTask({navigation}) {
                       </Text>
                     </View>
 
-                    <View
+                    {/* <View
                       style={{
                         flexDirection: 'row',
                         alignItems: 'flex-start',
@@ -725,51 +751,54 @@ function RejectedTask({navigation}) {
                           ? task?.client?.address ?? 'No Address'
                           : task?.pickUpLocation?.address ?? 'No Address'}
                       </Text>
-                    </View>
+                    </View> */}
 
-                    {/* <View
-                                       style={{
-                                         flexDirection: 'row',
-                                         alignItems: 'flex-start',
-                                         marginBottom: 5,
-                                       }}>
-                                       <Image
-                                         style={{
-                                           width: 13,
-                                           height: 13,
-                                           resizeMode: 'contain',
-                                           marginRight: 12,
-                                           marginTop: 1,
-                                         }}
-                                         source={require('../../../assets/asicon2.png')}
-                                       />
-                                       {(task?.request_id &&
-                                         task?.taskType?.taskType === 'Sample Pickup') ||
-                                       task?.taskType?.taskType === 'Sample Pickup' ||
-                                       task?.taskType?.taskType === 'Cash Collection' ? (
-                                         <Text
-                                           style={{
-                                             flex: 1,
-                                             fontFamily: 'Montserrat-Medium',
-                                             fontSize: 13,
-                                             color: '#0C0D36',
-                                             lineHeight: 20,
-                                           }}>
-                                           {task?.client?.address ?? 'No Address'}
-                                         </Text>
-                                       ) : (
-                                         <Text
-                                           style={{
-                                             flex: 1,
-                                             fontFamily: 'Montserrat-Medium',
-                                             fontSize: 13,
-                                             color: '#0C0D36',
-                                             lineHeight: 20,
-                                           }}>
-                                           {task?.pickUpLocation?.address ?? 'No Address'}
-                                         </Text>
-                                       )}
-                                     </View> */}
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        marginBottom: 5,
+                      }}>
+                      <Image
+                        style={{
+                          width: 13,
+                          height: 13,
+                          resizeMode: 'contain',
+                          marginRight: 12,
+                          marginTop: 1,
+                        }}
+                        source={require('../../../assets/asicon2.png')}
+                      />
+                      {(task?.request_id &&
+                        task?.taskType?.taskType === 'Sample Pickup') ||
+                      task?.taskType?.taskType === 'Sample Pickup' ||
+                      task?.taskType?.taskType === 'Cash Collection' ? (
+                        <Text
+                          style={{
+                            flex: 1,
+                            fontFamily: 'Montserrat-Medium',
+                            fontSize: 13,
+                            color: '#0C0D36',
+                            lineHeight: 20,
+                          }}>
+                          Address:
+                          {task?.client?.address?.trim() || 'No Address'}
+                        </Text>
+                      ) : (
+                        <Text
+                          style={{
+                            flex: 1,
+                            fontFamily: 'Montserrat-Medium',
+                            fontSize: 13,
+                            color: '#0C0D36',
+                            lineHeight: 20,
+                          }}>
+                          Address:
+                          {task?.pickUpLocation?.address?.trim() ||
+                            'No Address'}
+                        </Text>
+                      )}
+                    </View>
                     <View
                       style={{
                         flexDirection: 'row',

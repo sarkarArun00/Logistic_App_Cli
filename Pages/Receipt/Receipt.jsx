@@ -23,7 +23,6 @@ import {Picker} from '@react-native-picker/picker';
 // import Menu from '../Menu-bar/Menu'
 import TaskService from '../Services/task_service';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useGlobalAlert} from '../../Context/GlobalAlertContext';
 // import { globalApiClient, apiClient } from '../../Pages/Services/API';
 // import { BASE_API_URL } from '../Services/API'
 import {toWords} from 'number-to-words';
@@ -36,6 +35,7 @@ import {imageBase64, logoBase64} from './base64image';
 import _ from 'lodash';
 import PaymentReceiptModal from '../Components/PaymentReceiptModal';
 import {Linking} from 'react-native';
+import CustomAlert from '../Components/CustomAlert';
 // import { Buffer } from "buffer";
 // import FileViewer from "react-native-file-viewer";
 
@@ -60,11 +60,11 @@ function Receipt({navigation}) {
 
   const [loading, setLoading] = useState(true);
 
-  // const [showCustomAlert, setShowCustomAlert] = useState(false);
+  //const [showCustomAlert, setShowCustomAlert] = useState(false);
 
   const [allClients, setClients] = useState([]);
   const [clientsByLogistic, setClientsByLogistic] = useState([]);
-
+  const [alertVisible, setAlertVisible] = useState(false);
   const [amount, setAmount] = useState('');
   const [remarks, setRemarks] = useState('');
   // Ambar start
@@ -76,8 +76,6 @@ function Receipt({navigation}) {
   const [coinDenomination, setCoinDenomination] = useState([]);
   const [cashDenomination, setCashDenomination] = useState([]);
   // Ambar End
-
-  const {showAlertModal, hideAlert} = useGlobalAlert();
 
   const [query, setQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
@@ -96,6 +94,22 @@ function Receipt({navigation}) {
   const showDatePicker = mode => {
     setPickerMode(mode);
     setDatePickerVisibility(true);
+  };
+
+  const [alertData, setAlertData] = useState({
+    type: 'success',
+    title: '',
+    message: '',
+  });
+
+  const showAlert = (type, title, message) => {
+    setAlertData({
+      type,
+      title,
+      message,
+    });
+
+    setAlertVisible(true);
   };
 
   const hideDatePicker = () => {
@@ -728,27 +742,54 @@ function Receipt({navigation}) {
     }
   };
 
-  const getStatusColor = (authoriseStatus, generateStatus) => {
-    if (authoriseStatus == 0 || generateStatus == 0) {
-      return '#DC3545'; // Rejected - Red
-    } else if (authoriseStatus == 1 && generateStatus == 1) {
-      return '#28A745';
-    } else if (generateStatus == 1) {
-      return '#007BFF';
-    } else {
-      return '#6C757D'; // Interim - gray (default fallback)
-    }
-  };
+  // const getStatusColor = (authoriseStatus, generateStatus) => {
+  //   if (authoriseStatus == 0 || generateStatus == 0) {
+  //     return '#DC3545'; // Rejected - Red
+  //   } else if (authoriseStatus == 1 && generateStatus == 1) {
+  //     return '#28A745';
+  //   } else if (generateStatus == 1) {
+  //     return '#007BFF';
+  //   } else {
+  //     return '#6C757D'; // Interim - gray (default fallback)
+  //   }
+  // };
 
-  const getStatusLabel = (authoriseStatus, generateStatus) => {
-    if (authoriseStatus == 1 && generateStatus == 1) {
-      return 'Authorized';
-    } else if (authoriseStatus == 0 || generateStatus == 0) {
-      return 'Rejected';
-    } else if (generateStatus == 1 && authoriseStatus == null) {
-      return 'Unauthorized';
-    } else {
-      return 'Interim';
+  // const getStatusLabel = (authoriseStatus, generateStatus) => {
+  //   if (authoriseStatus == 1 && generateStatus == null) {
+  //     return 'Authorized';
+  //   } else if (authoriseStatus == 0 || generateStatus == 0) {
+  //     return 'Rejected';
+  //   } else if (generateStatus == 1 && authoriseStatus == 1) {
+  //     return 'Unauthorized';
+  //   } else {
+  //     return 'Interim';
+  //   }
+  // };
+
+  const getReceiptStatus = receiptStatus => {
+    const status = receiptStatus?.trim()?.toUpperCase();
+
+    switch (status) {
+      case 'SETTLED':
+        return {label: 'Settled', color: '#28A745'};
+
+      case 'AUTHORIZED':
+        return {label: 'Authorized', color: '#007BFF'};
+
+      case 'APPROVED':
+        return {label: 'Approved', color: '#28A745'};
+
+      case 'REJECTED':
+        return {label: 'Rejected', color: '#DC3545'};
+
+      case 'INTERIM':
+        return {label: 'Interim', color: '#6C757D'};
+
+      case 'UNAUTHORIZED':
+        return {label: 'Unauthorized', color: '#FFC107'};
+
+      default:
+        return {label: 'Interim', color: '#6C757D'};
     }
   };
 
@@ -942,7 +983,11 @@ function Receipt({navigation}) {
             '';
 
           if (!transaction_id) {
-            showAlertModal('Payment success but transaction id missing.', true);
+            showAlert(
+              'warning!',
+              'Warning!',
+              'Payment success but transaction id missing.',
+            );
             setIsSubmitting(false);
             return;
           }
@@ -953,13 +998,13 @@ function Receipt({navigation}) {
         },
         failed => {
           console.log('Gateway failed:', failed);
-          showAlertModal('Payment failed/cancelled.', true);
+          showAlert('error', 'Failed', 'Payment failed/cancelled.');
           setIsSubmitting(false);
         },
       );
     } catch (e) {
       console.log('startGatewayPayment error:', e);
-      showAlertModal('Unable to start payment.', true);
+      showAlert('error', 'Error', 'Unable to start payment.');
       setIsSubmitting(false);
     }
   };
@@ -1231,7 +1276,7 @@ function Receipt({navigation}) {
     const ctx = await buildPaymentContext(transaction_id, invoices);
 
     if (!ctx?.ok) {
-      showAlertModal(ctx?.error || 'Invalid data', true);
+      showAlert('error', 'Error', ctx?.error || 'Invalid data');
       return;
     }
 
@@ -1268,7 +1313,7 @@ function Receipt({navigation}) {
       console.log('PARSED RESPONSE:', data);
 
       if (data?.status === 1) {
-        showAlertModal('Submitted Successfully!', false);
+        showAlert('success', 'Success', 'Submitted Successfully!');
 
         setAmount('');
         setCounts({});
@@ -1279,11 +1324,11 @@ function Receipt({navigation}) {
         setDenominationMdl(false);
         setModalVisible(false);
       } else {
-        showAlertModal(data?.message || 'Something went wrong', true);
+        showAlert('error', 'Error', data?.message || 'Something went wrong');
       }
     } catch (e) {
       console.log('submitPayment error:', e?.message, e);
-      showAlertModal('Something went wrong', true);
+      showAlert('error', 'Error', 'Something went wrong');
     } finally {
       setIsSubmitting(false);
     }
@@ -1387,7 +1432,7 @@ function Receipt({navigation}) {
                 marginTop: 150,
               }}>
               <Image
-                source={require('../../assets/noDataFound.png')}
+                source={require('../../assets/empty.png')}
                 style={{
                   width: 250,
                   height: 200,
@@ -1395,7 +1440,7 @@ function Receipt({navigation}) {
                 }}
               />
 
-              <Text
+              {/* <Text
                 style={{
                   textAlign: 'center',
                   fontFamily: 'Montserrat-Medium',
@@ -1403,7 +1448,7 @@ function Receipt({navigation}) {
                   color: '#0C0D36',
                 }}>
                 No data found!
-              </Text>
+              </Text> */}
             </View>
           ) : (
             // <Text
@@ -1423,6 +1468,9 @@ function Receipt({navigation}) {
 
                 {receipts.length > 0 ? (
                   receipts.map((item, index) => {
+                    const receiptStatusInfo = getReceiptStatus(
+                      item.receipt_status,
+                    );
                     const dateObj = new Date(item.createdAt);
                     const formattedTime = dateObj.toLocaleTimeString([], {
                       hour: '2-digit',
@@ -1491,10 +1539,8 @@ function Receipt({navigation}) {
                                     <View
                                       style={{
                                         alignSelf: 'flex-start',
-                                        backgroundColor: getStatusColor(
-                                          item.authoriseStatus,
-                                          item.generateStatus,
-                                        ),
+                                        backgroundColor:
+                                          receiptStatusInfo.color,
                                         paddingVertical: 2,
                                         paddingHorizontal: 8,
                                         borderRadius: 12,
@@ -1505,10 +1551,7 @@ function Receipt({navigation}) {
                                           color: '#fff',
                                           fontFamily: 'Montserrat-Medium',
                                         }}>
-                                        {getStatusLabel(
-                                          item.authoriseStatus,
-                                          item.generateStatus,
-                                        )}
+                                        {receiptStatusInfo.label}
                                       </Text>
                                     </View>
                                   )}
@@ -1806,7 +1849,13 @@ function Receipt({navigation}) {
           empId={getUserId}
           taskId={null} // ✅ pass taskId
           isFromTask={true}
-          showAlert={(msg, isErr) => showAlertModal(msg, isErr)}
+          showAlert={(msg, isErr) =>
+            showAlert(
+              isErr ? 'error' : 'success',
+              isErr ? 'Error' : 'Success',
+              msg,
+            )
+          }
           onOpenGateway={async ({amount, mode}) => {
             // ✅ later integrate gateway
             // must return: { success: true, transaction_id: "..." }
@@ -1822,16 +1871,20 @@ function Receipt({navigation}) {
               console.log('API RESPONSE:', data);
 
               if (data?.status === 1) {
-                showAlertModal('Submitted Successfully!', false);
+                showAlert('success', 'Success', 'Submitted Successfully!');
                 setModalVisible(false);
                 return data;
               } else {
-                showAlertModal(data?.message || 'Something went wrong', true);
+                showAlert(
+                  'error',
+                  'Error',
+                  data?.message || 'Something went wrong',
+                );
                 return data;
               }
             } catch (e) {
               console.log('submit error:', e);
-              showAlertModal('Something went wrong', true);
+              showAlert('error', 'Error', 'Something went wrong');
               throw e;
             } finally {
               setIsSubmitting(false);
@@ -1857,6 +1910,13 @@ function Receipt({navigation}) {
           <Text style={{color: '#FFFFFF', marginTop: 10}}>Loading...</Text>
         </View>
       )}
+      <CustomAlert
+        visible={alertVisible}
+        type={alertData.type}
+        title={alertData.title}
+        message={alertData.message}
+        onClose={() => setAlertVisible(false)}
+      />
     </SafeAreaView>
   );
 }

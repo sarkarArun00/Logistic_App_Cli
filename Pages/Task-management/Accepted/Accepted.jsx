@@ -85,10 +85,12 @@ function Accepted({navigation}) {
   // });
 
   useEffect(() => {
+    setImages([]);
     fetchAcceptedData();
   }, []);
 
   const onRefresh = useCallback(() => {
+    setImages([]);
     setRefreshing(true);
     fetchAcceptedData();
     wait(2000).then(() => setRefreshing(false));
@@ -218,6 +220,7 @@ function Accepted({navigation}) {
   };
 
   const handleClose = () => {
+    setImages([]);
     setModalVisible3(false);
   };
 
@@ -350,7 +353,11 @@ function Accepted({navigation}) {
       const hasPermission = await requestPermission('camera');
 
       if (!hasPermission) {
-        showAlertModal('Camera access is needed to take pictures.', true);
+        showAlert(
+          'error',
+          'Error',
+          'Camera access is needed to take pictures.',
+        );
         return;
       }
 
@@ -371,7 +378,11 @@ function Accepted({navigation}) {
       if (response.errorCode) {
         console.log('Camera error:', response.errorCode, response.errorMessage);
 
-        showAlertModal(response.errorMessage || 'Camera error occurred.', true);
+        showAlert(
+          'warning',
+          'Camera Warning!',
+          response.errorMessage || 'Camera error occurred.',
+        );
 
         return;
       }
@@ -379,7 +390,11 @@ function Accepted({navigation}) {
       const image = response.assets?.[0];
 
       if (!image?.uri) {
-        showAlertModal('Unable to capture image. Please try again.', true);
+        showAlert(
+          'warning',
+          'Capture Image Warning!',
+          'Unable to capture image. Please try again.',
+        );
         return;
       }
 
@@ -389,7 +404,9 @@ function Accepted({navigation}) {
     } catch (error) {
       console.log('Camera error:', error);
 
-      showAlertModal(
+      showAlert(
+        'warning',
+        'Camera Captured Image Warning!',
         error?.message || 'Unable to process the captured image.',
         true,
       );
@@ -422,7 +439,9 @@ function Accepted({navigation}) {
           response.errorMessage,
         );
 
-        showAlertModal(
+        showAlert(
+          'warning',
+          'Gallery Warning!',
           response.errorMessage || 'Unable to open gallery.',
           true,
         );
@@ -433,7 +452,12 @@ function Accepted({navigation}) {
       const image = response.assets?.[0];
 
       if (!image?.uri) {
-        showAlertModal('Unable to select image. Please try again.', true);
+        showAlert(
+          'warning',
+          'Gallery Select Image Warning!',
+          'Unable to select image. Please try again.',
+          true,
+        );
         return;
       }
 
@@ -443,7 +467,9 @@ function Accepted({navigation}) {
     } catch (error) {
       console.log('Gallery error:', error);
 
-      showAlertModal(
+      showAlert(
+        'warning',
+        'Gallery Select Image Warning!',
         error?.message || 'Unable to process the selected image.',
         true,
       );
@@ -528,6 +554,8 @@ function Accepted({navigation}) {
   };
 
   const handleOpenModal = async task => {
+    setImages([]); // Clear previous attachment
+
     setModalVisible(true);
     setSelectedTaskDesc(task);
 
@@ -545,7 +573,7 @@ function Accepted({navigation}) {
     const locationString = task?.pickUpLocation?.coordinates;
 
     if (!locationString) {
-      showAlertModal('Location not available', true);
+      showAlert('warning', 'Location Warning!', 'Location not available', true);
       return;
     }
 
@@ -554,7 +582,12 @@ function Accepted({navigation}) {
       .map(coord => parseFloat(coord.trim()));
 
     if (isNaN(lat) || isNaN(long)) {
-      showAlertModal('Invalid location coordinates', true);
+      showAlert(
+        'warning',
+        'Invalid location Warning!',
+        'Invalid location coordinates',
+        true,
+      );
       return;
     }
 
@@ -562,7 +595,7 @@ function Accepted({navigation}) {
 
     Linking.openURL(url).catch(err => {
       console.error('Could not open Google Maps', err);
-      showAlertModal('Failed to open Google Maps.', true);
+      showAlert('error', 'Failed', 'Failed to open Google Maps.', true);
     });
   };
 
@@ -835,7 +868,54 @@ function Accepted({navigation}) {
                         Task ID: {task?.displayId ?? 'NA'}
                       </Text>
                     </View>
+
                     <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        marginBottom: 5,
+                      }}>
+                      <Image
+                        style={{
+                          width: 13,
+                          height: 13,
+                          resizeMode: 'contain',
+                          marginRight: 12,
+                          marginTop: 1,
+                        }}
+                        source={require('../../../assets/asicon2.png')}
+                      />
+                      {(task?.request_id &&
+                        task?.taskType?.taskType === 'Sample Pickup') ||
+                      task?.taskType?.taskType === 'Sample Pickup' ||
+                      task?.taskType?.taskType === 'Cash Collection' ? (
+                        <Text
+                          style={{
+                            flex: 1,
+                            fontFamily: 'Montserrat-Medium',
+                            fontSize: 13,
+                            color: '#0C0D36',
+                            lineHeight: 20,
+                          }}>
+                          Address:
+                          {task?.client?.address?.trim() || 'No Address'}
+                        </Text>
+                      ) : (
+                        <Text
+                          style={{
+                            flex: 1,
+                            fontFamily: 'Montserrat-Medium',
+                            fontSize: 13,
+                            color: '#0C0D36',
+                            lineHeight: 20,
+                          }}>
+                          Address:
+                          {task?.pickUpLocation?.address?.trim() ||
+                            'No Address'}
+                        </Text>
+                      )}
+                    </View>
+                    {/* <View
                       style={{
                         flexDirection: 'row',
                         alignItems: 'flex-start',
@@ -864,7 +944,7 @@ function Accepted({navigation}) {
                           ? task?.client?.address ?? 'No Address'
                           : task?.pickUpLocation?.address ?? 'No Address'}
                       </Text>
-                    </View>
+                    </View> */}
                     <View
                       style={{
                         flexDirection: 'row',
@@ -1751,7 +1831,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
 
- itemCard: {
+  itemCard: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#DCE3EF',
